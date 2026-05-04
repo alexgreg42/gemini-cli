@@ -6,6 +6,8 @@ context.
 
 ## Install
 
+Install Gemini CLI globally using `npm`:
+
 ```bash
 npm install -g @google/gemini-cli
 ```

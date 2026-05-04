@@ -193,6 +193,20 @@ Slash commands provide meta-level control over the CLI itself.
   - **`update`**:
     - **Description:** Update extensions. Usage: update <extension-names>|--all
 
+### `/gemma`
+
+- **Description:** Manage local Gemma models and LiteRT-LM server integration.
+- **Sub-commands:**
+  - **`setup`**:
+    - **Description:** Guide you through the setup of local Gemma models.
+  - **`status`**:
+    - **Description:** Check the status of the LiteRT-LM server and local model
+      availability.
+  - **`start`**:
+    - **Description:** Manually start the local LiteRT-LM server.
+  - **`stop`**:
+    - **Description:** Stop the running LiteRT-LM server.
+
 ### `/help` (or `/?`)
 
 - **Description:** Display help information about Gemini CLI, including

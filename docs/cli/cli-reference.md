@@ -5,6 +5,9 @@ and parameters.
 
 ## CLI commands
 
+The following commands are used to start and manage your Gemini CLI sessions
+from your terminal.
+
 | Command                            | Description                        | Example                                                      |
 | ---------------------------------- | ---------------------------------- | ------------------------------------------------------------ |
 | `gemini`                           | Start interactive REPL             | `gemini`                                                     |
@@ -42,6 +45,9 @@ These commands are available within the interactive REPL.
 | `/quit`              | Exit the interactive session                    |
 
 ## CLI Options
+
+Use the following global options to configure the behavior of Gemini CLI from
+the command line.
 
 | Option                           | Alias | Type    | Default   | Description                                                                                                                                                            |
 | -------------------------------- | ----- | ------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -87,6 +93,9 @@ These are convenient shortcuts that map to specific models:
 
 ## Extensions management
 
+Manage your Gemini CLI extensions with the following commands. Extensions allow
+you to add new tools and capabilities to the CLI.
+
 | Command                                            | Description                                  | Example                                                                        |
 | -------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
 | `gemini extensions install <source>`               | Install extension from Git URL or local path | `gemini extensions install https://github.com/user/my-extension`               |
@@ -106,6 +115,9 @@ See [Extensions Documentation](../extensions/index.md) for more details.
 
 ## MCP server management
 
+Connect Gemini CLI to external data sources and tools using the Model Context
+Protocol (MCP).
+
 | Command                                                       | Description                     | Example                                                                                              |
 | ------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `gemini mcp add <name> <command>`                             | Add stdio-based MCP server      | `gemini mcp add github npx -y @modelcontextprotocol/server-github`                                   |
@@ -120,6 +132,9 @@ See [MCP Server Integration](../tools/mcp-server.md) for more details.
 
 ## Skills management
 
+Manage your discovered agent skills to give Gemini CLI specialized expertise for
+specific tasks.
+
 | Command                          | Description                           | Example                                           |
 | -------------------------------- | ------------------------------------- | ------------------------------------------------- |
 | `gemini skills list`             | List all discovered agent skills      | `gemini skills list`                              |
@@ -132,3 +147,9 @@ See [MCP Server Integration](../tools/mcp-server.md) for more details.
 | `gemini skills disable --all`    | Disable all skills                    | `gemini skills disable --all`                     |
 
 See [Agent Skills Documentation](./skills.md) for more details.
+
+## Next steps
+
+- Explore the full [Command reference](../reference/commands.md) for interactive
+  slash commands.
+- Configure your session using [Settings](./settings.md).

@@ -43,7 +43,7 @@ cases, you can log in with your existing Google account:
 
 3. Select your Google account.
 
-4. Click on **Sign in**.
+4. Click **Sign in**.
 
 Certain account types may require you to configure a Google Cloud project. For
 more information, including other authentication methods, see
