@@ -176,17 +176,13 @@ module.exports = async ({ github, context, core }) => {
 
   // 4. Handle PR Contribution Policy (Nudge at 7d, Close at 14d)
   const PR_NUDGE_DAYS = 7;
-  const PR_CLOSE_DAYS = 14;
   const nudgeThreshold = new Date(
     now.getTime() - PR_NUDGE_DAYS * 24 * 60 * 60 * 1000,
-  );
-  const prCloseThreshold = new Date(
-    now.getTime() - PR_CLOSE_DAYS * 24 * 60 * 60 * 1000,
   );
 
   // Nudge
   await processItems(
-    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" -label:"status/pr-nudge-sent" created:${prCloseThreshold.toISOString()}..${nudgeThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" -label:"status/pr-nudge-sent" created:<${nudgeThreshold.toISOString()}`,
     async (pr) => {
       if (
         ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) ||
@@ -214,7 +210,7 @@ module.exports = async ({ github, context, core }) => {
 
   // Close
   await processItems(
-    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" created:<${prCloseThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" label:"status/pr-nudge-sent" updated:<${nudgeThreshold.toISOString()}`,
     async (pr) => {
       if (
         ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) ||
