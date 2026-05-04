@@ -80,6 +80,9 @@ vi.mock('./utils/terminalNotifications.js', () => ({
     terminalNotificationMocks.buildRunEventNotificationContent,
 }));
 
+import { EventEmitter } from 'node:events';
+const mockEmitter = new EventEmitter();
+
 vi.mock('@google/gemini-cli-core', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('@google/gemini-cli-core')>();
@@ -134,9 +137,13 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
       ...actual.coreEvents,
       emitFeedback: vi.fn(),
       emitConsoleLog: vi.fn(),
-      listenerCount: vi.fn().mockReturnValue(0),
-      on: vi.fn(),
-      off: vi.fn(),
+      listenerCount: (event: string) => mockEmitter.listenerCount(event),
+      on: (event: string, listener: (...args: unknown[]) => void) =>
+        mockEmitter.on(event, listener),
+      off: (event: string, listener: (...args: unknown[]) => void) =>
+        mockEmitter.off(event, listener),
+      emit: (event: string, ...args: unknown[]) =>
+        mockEmitter.emit(event, ...args),
       drainBacklogs: vi.fn(),
     },
   };
@@ -1322,6 +1329,47 @@ describe('gemini.tsx main function exit codes', () => {
     }
 
     expect(refreshAuthSpy).toHaveBeenCalledWith(AuthType.USE_GEMINI);
+  });
+
+  it('should reload core config when SettingsChanged event is emitted', async () => {
+    vi.stubEnv('SANDBOX', 'true');
+    const onSpy = vi.spyOn(coreEvents, 'on');
+    const mockConfig = createMockConfig({
+      isInteractive: () => true,
+      getQuestion: () => '',
+      getSandbox: () => undefined,
+    });
+    vi.mocked(loadCliConfig).mockResolvedValue(mockConfig);
+
+    const mockSettings = createMockSettings({
+      merged: {
+        security: { auth: {} },
+        ui: {},
+        general: { devtools: false, loadingPhrases: 'on', plan: {} },
+        skills: { enabled: true, disabled: [] },
+      },
+    });
+    vi.mocked(loadSettings).mockReturnValue(mockSettings);
+    vi.mocked(parseArguments).mockResolvedValue({
+      enabled: true,
+      allowedPaths: [],
+      networkAccess: false,
+    } as unknown as CliArgs);
+
+    try {
+      await act(async () => {
+        await main();
+      });
+    } catch (e) {
+      if (!(e instanceof MockProcessExitError)) throw e;
+    }
+
+    // Check if on(SettingsChanged) was called
+    const { CoreEvent } = await import('@google/gemini-cli-core');
+    expect(onSpy).toHaveBeenCalledWith(
+      CoreEvent.SettingsChanged,
+      expect.any(Function),
+    );
   });
 });
 

@@ -34,6 +34,14 @@ import { isWorkspaceTrusted } from './trustedFolders.js';
 import { ExtensionManager } from './extension-manager.js';
 import { RESUME_LATEST } from '../utils/sessionUtils.js';
 
+vi.mock('./settings.js', async (importOriginal) => {
+  const actual = (await importOriginal());
+  return {
+    ...actual,
+    loadSettings: vi.fn(),
+  };
+});
+
 vi.mock('./trustedFolders.js', () => ({
   isWorkspaceTrusted: vi.fn(() => ({ isTrusted: true, source: 'file' })), // Default to trusted
 }));
@@ -158,6 +166,7 @@ vi.mock('@google/gemini-cli-core', async () => {
       (_feature) =>
         `YOLO mode is disabled by your administrator. To enable it, please request an update to the settings at: https://goo.gle/manage-gemini-cli`,
     ),
+    Config: vi.fn().mockImplementation((params) => new actualServer.Config(params)),
     isHeadlessMode: vi.fn((opts) => {
       if (process.env['VITEST'] === 'true') {
         return (
@@ -4027,5 +4036,49 @@ describe('loadCliConfig acpMode and clientName', () => {
     );
     expect(config.getAcpMode()).toBe(false);
     expect(config.getClientName()).toBe('tui');
+  });
+
+  it('should provide an onReload callback that returns the latest merged settings', async () => {
+    process.argv = ['node', 'script.js'];
+    const argv = await parseArguments(createTestMergedSettings());
+    const initialSettings = createTestMergedSettings({
+      model: { name: 'initial-model' },
+    });
+
+    // We need to mock loadSettings which is called by onReload
+    const { loadSettings } = await import('./settings.js');
+    const mockLoadSettings = vi.mocked(loadSettings);
+
+    await loadCliConfig(initialSettings, 'test-session', argv);
+
+    // Check if onReload was passed to core
+     
+    const onReload = (ServerConfig.Config as unknown as Mock).mock.calls[0][0]
+      .onReload;
+    expect(onReload).toBeDefined();
+
+    const refreshedSettings = createTestMergedSettings({
+      model: { name: 'refreshed-model', compressionThreshold: 0.9 },
+      ide: { enabled: true },
+      experimental: {
+        contextManagement: true,
+        autoMemory: true,
+        memoryV2: true,
+      },
+      general: { topicUpdateNarration: true },
+      skills: { enabled: true, disabled: ['skill-1'] },
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockLoadSettings.mockReturnValue({ merged: refreshedSettings } as any);
+
+    const result = await onReload();
+
+    expect(result.settings.model).toBe('refreshed-model');
+    expect(result.settings.compressionThreshold).toBe(0.9);
+    expect(result.settings.ideMode).toBe(true);
+    expect(result.settings.contextManagement.enabled).toBe(true);
+    expect(result.settings.topicUpdateNarration).toBe(true);
+    expect(result.settings.experimentalAutoMemory).toBe(true);
+    expect(result.settings.experimentalMemoryV2).toBe(true);
   });
 });

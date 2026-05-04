@@ -165,8 +165,16 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
   };
 });
 
+const { commentJsonParseMock } = await vi.hoisted(async () => {
+  const { parse } = await import('comment-json');
+  return {
+    commentJsonParseMock: vi.fn((content: string) => parse(content)),
+  };
+});
+
 vi.mock('../utils/commentJson.js', () => ({
   updateSettingsFilePreservingFormat: vi.fn(),
+  parse: commentJsonParseMock,
 }));
 
 vi.mock('strip-json-comments', () => ({
@@ -1225,33 +1233,29 @@ describe('Settings Loading and Merging', () => {
 
     it('should handle JSON parsing errors gracefully', () => {
       (mockFsExistsSync as Mock).mockReturnValue(true); // Both files "exist"
-      const invalidJsonContent = 'invalid json';
-      const userReadError = new SyntaxError(
-        "Expected ',' or '}' after property value in JSON at position 10",
-      );
-      const workspaceReadError = new SyntaxError(
-        'Unexpected token i in JSON at position 0',
-      );
+      const invalidJsonContent = 'invalid';
+      const userReadError = new Error('Unexpected token i');
+      const workspaceReadError = new Error('Unexpected token i');
 
       (fs.readFileSync as Mock).mockImplementation(
         (p: fs.PathOrFileDescriptor) => {
           if (normalizePath(p) === normalizePath(USER_SETTINGS_PATH)) {
-            // Simulate JSON.parse throwing for user settings
-            vi.spyOn(JSON, 'parse').mockImplementationOnce(() => {
+            // Simulate parse throwing for user settings
+            commentJsonParseMock.mockImplementationOnce(() => {
               throw userReadError;
             });
-            return invalidJsonContent; // Content that would cause JSON.parse to throw
+            return invalidJsonContent;
           }
           if (
             normalizePath(p) === normalizePath(MOCK_WORKSPACE_SETTINGS_PATH)
           ) {
-            // Simulate JSON.parse throwing for workspace settings
-            vi.spyOn(JSON, 'parse').mockImplementationOnce(() => {
+            // Simulate parse throwing for workspace settings
+            commentJsonParseMock.mockImplementationOnce(() => {
               throw workspaceReadError;
             });
             return invalidJsonContent;
           }
-          return '{}'; // Default for other reads
+          return '{}';
         },
       );
 
@@ -1271,9 +1275,6 @@ describe('Settings Loading and Merging', () => {
           'Please fix the configuration file(s) and try again.',
         );
       }
-
-      // Restore JSON.parse mock if it was spied on specifically for this test
-      vi.restoreAllMocks(); // Or more targeted restore if needed
     });
 
     it('should resolve environment variables in user settings', () => {
@@ -2239,8 +2240,8 @@ describe('Settings Loading and Merging', () => {
       // Should set new value to false (inverted from true)
       expect(setValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'general',
-        expect.objectContaining({ enableAutoUpdate: false }),
+        'general.enableAutoUpdate',
+        false,
       );
     });
 
@@ -2260,21 +2261,21 @@ describe('Settings Loading and Merging', () => {
       );
 
       const setValueSpy = vi.spyOn(LoadedSettings.prototype, 'setValue');
+      const deleteValueSpy = vi.spyOn(LoadedSettings.prototype, 'deleteValue');
       const loadedSettings = loadSettings(MOCK_WORKSPACE_DIR);
 
       migrateDeprecatedSettings(loadedSettings, true);
 
       expect(setValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'general',
-        expect.objectContaining({ defaultApprovalMode: 'plan' }),
+        'general.defaultApprovalMode',
+        'plan',
       );
 
       // Verify removal
-      expect(setValueSpy).toHaveBeenCalledWith(
+      expect(deleteValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'tools',
-        expect.not.objectContaining({ approvalMode: 'plan' }),
+        'tools.approvalMode',
       );
     });
 
@@ -2312,42 +2313,34 @@ describe('Settings Loading and Merging', () => {
       // Check that general settings were migrated with inverted values
       expect(setValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'general',
-        expect.objectContaining({ enableAutoUpdate: true }),
+        'general.enableAutoUpdate',
+        true,
       );
       expect(setValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'general',
-        expect.objectContaining({ enableAutoUpdateNotification: false }),
+        'general.enableAutoUpdateNotification',
+        false,
       );
 
       // Check context.fileFiltering was migrated
       expect(setValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'context',
-        expect.objectContaining({
-          fileFiltering: expect.objectContaining({ enableFuzzySearch: true }),
-        }),
+        'context.fileFiltering.enableFuzzySearch',
+        true,
       );
 
       // Check ui.accessibility was migrated
       expect(setValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'ui',
-        expect.objectContaining({
-          accessibility: expect.objectContaining({
-            enableLoadingPhrases: false,
-          }),
-        }),
+        'ui.accessibility.enableLoadingPhrases',
+        false,
       );
 
       // Check that enableLoadingPhrases: false was further migrated to loadingPhrases: 'off'
       expect(setValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'ui',
-        expect.objectContaining({
-          loadingPhrases: 'off',
-        }),
+        'ui.loadingPhrases',
+        'off',
       );
     });
 
@@ -2367,10 +2360,8 @@ describe('Settings Loading and Merging', () => {
 
       expect(setValueSpy).toHaveBeenCalledWith(
         SettingScope.User,
-        'ui',
-        expect.objectContaining({
-          loadingPhrases: 'off',
-        }),
+        'ui.loadingPhrases',
+        'off',
       );
     });
 
@@ -2436,20 +2427,22 @@ describe('Settings Loading and Merging', () => {
       };
 
       const loadedSettings = createMockSettings(userSettingsContent);
-      const setValueSpy = vi.spyOn(loadedSettings, 'setValue');
+      const deleteValueSpy = vi.spyOn(loadedSettings, 'deleteValue');
 
       // Default is now removeDeprecated = true
       migrateDeprecatedSettings(loadedSettings);
 
-      // Should remove disableAutoUpdate and trust enableAutoUpdate: true
-      expect(setValueSpy).toHaveBeenCalledWith(SettingScope.User, 'general', {
-        enableAutoUpdate: true,
-      });
+      // Should remove disableAutoUpdate
+      expect(deleteValueSpy).toHaveBeenCalledWith(
+        SettingScope.User,
+        'general.disableAutoUpdate',
+      );
 
-      // Should remove disableFuzzySearch and trust enableFuzzySearch: false
-      expect(setValueSpy).toHaveBeenCalledWith(SettingScope.User, 'context', {
-        fileFiltering: { enableFuzzySearch: false },
-      });
+      // Should remove disableFuzzySearch
+      expect(deleteValueSpy).toHaveBeenCalledWith(
+        SettingScope.User,
+        'context.fileFiltering.disableFuzzySearch',
+      );
     });
 
     it('should preserve deprecated settings when removeDeprecated is explicitly false', () => {

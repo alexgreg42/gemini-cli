@@ -4248,4 +4248,45 @@ describe('ADKSettings', () => {
     const config = new Config(params);
     expect(config.getAgentSessionNoninteractiveEnabled()).toBe(true);
   });
+
+  describe('reloadConfig', () => {
+    it('should hydrate all configuration categories from onReload', async () => {
+      const mockOnReload = vi.fn().mockResolvedValue({
+        disabledSkills: ['skill-1'],
+        adminSkillsEnabled: false,
+        agents: { overrides: { 'agent-1': { enabled: true } } },
+        settings: {
+          model: 'new-model',
+          compressionThreshold: 0.8,
+          ideMode: true,
+          contextManagement: { enabled: true },
+          topicUpdateNarration: true,
+          experimentalAutoMemory: true,
+          experimentalMemoryV2: true,
+        },
+      });
+
+      const config = new Config({
+        ...baseParams,
+        onReload: mockOnReload,
+      });
+
+      await config.reloadConfig();
+
+      expect(config.getModel()).toBe('new-model');
+      expect(await config.getCompressionThreshold()).toBe(0.8);
+      expect(config.getIdeMode()).toBe(true);
+      expect(config.getContextManagementConfig().enabled).toBe(true);
+      expect(config.isTopicUpdateNarrationEnabled()).toBe(true);
+      expect(config.isAutoMemoryEnabled()).toBe(true);
+      expect(config.isMemoryV2Enabled()).toBe(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((config as any).disabledSkills).toEqual(['skill-1']);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((config as any).adminSkillsEnabled).toBe(false);
+      expect(config.getAgentsSettings().overrides?.['agent-1']?.enabled).toBe(
+        true,
+      );
+    });
+  });
 });
