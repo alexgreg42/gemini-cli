@@ -12,7 +12,11 @@ import {
   type SpawnSyncReturns,
   type ChildProcess,
 } from 'node:child_process';
-import { CoreEvent, coreEvents } from '@google/gemini-cli-core';
+import {
+  CoreEvent,
+  coreEvents,
+  getEditorCommand,
+} from '@google/gemini-cli-core';
 
 vi.mock('node:child_process', () => ({
   spawnSync: vi.fn(),
@@ -54,7 +58,7 @@ describe('editorUtils', () => {
     } as SpawnSyncReturns<Buffer>);
     await openFileInEditor('test.txt', null, undefined, 'vim');
     expect(spawnSync).toHaveBeenCalledWith(
-      'vim',
+      getEditorCommand('vim'),
       expect.arrayContaining(['test.txt']),
       expect.anything(),
     );
@@ -73,7 +77,7 @@ describe('editorUtils', () => {
     vi.mocked(spawn).mockReturnValue(mockChild as unknown as ChildProcess);
     await openFileInEditor('test.txt', null, undefined, 'vscode');
     expect(spawn).toHaveBeenCalledWith(
-      'code',
+      getEditorCommand('vscode'),
       expect.arrayContaining(['--wait', 'test.txt']),
       expect.anything(),
     );
