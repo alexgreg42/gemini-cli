@@ -109,7 +109,7 @@ describe('worktree utilities', () => {
     });
 
     it('should throw an error if git worktree add fails', async () => {
-      vi.mocked(fs.access).mockRejectedValue(new Error('ENOENT'));
+      vi.mocked(fs.promises.stat).mockRejectedValue({ code: 'ENOENT' } as any);
       vi.mocked(execa).mockRejectedValue(new Error('git failed'));
 
       await expect(createWorktree(projectRoot, worktreeName)).rejects.toThrow(
