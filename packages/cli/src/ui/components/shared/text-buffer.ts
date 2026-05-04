@@ -12,6 +12,7 @@ import { useState, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { LRUCache } from 'mnemonist';
 import {
   coreEvents,
+  CoreEvent,
   debugLogger,
   unescapePath,
   type EditorType,
@@ -29,7 +30,10 @@ import { Command } from '../../key/keyMatchers.js';
 import type { VimAction } from './vim-buffer-actions.js';
 import { handleVimAction } from './vim-buffer-actions.js';
 import { LRU_BUFFER_PERF_CACHE_LIMIT } from '../../constants.js';
-import { openFileInEditor } from '../../utils/editorUtils.js';
+import {
+  openFileInEditor,
+  EditorNotConfiguredError,
+} from '../../utils/editorUtils.js';
 import { useKeyMatchers } from '../../hooks/useKeyMatchers.js';
 
 export const LARGE_PASTE_LINE_THRESHOLD = 5;
@@ -3342,6 +3346,10 @@ export function useTextBuffer({
 
       dispatch({ type: 'set_text', payload: newText, pushToUndo: false });
     } catch (err) {
+      if (err instanceof EditorNotConfiguredError) {
+        coreEvents.emit(CoreEvent.RequestEditorSelection);
+        return;
+      }
       coreEvents.emitFeedback(
         'error',
         '[useTextBuffer] external editor error',

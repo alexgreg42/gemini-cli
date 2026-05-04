@@ -15,6 +15,13 @@ import {
   isTerminalEditor,
 } from '@google/gemini-cli-core';
 
+export class EditorNotConfiguredError extends Error {
+  constructor() {
+    super('No external editor configured');
+    this.name = 'EditorNotConfiguredError';
+  }
+}
+
 /**
  * Opens a file in an external editor and waits for it to close.
  * Handles raw mode switching to ensure the editor can interact with the terminal.
@@ -58,7 +65,7 @@ export async function openFileInEditor(
   }
 
   if (!command) {
-    command = process.platform === 'win32' ? 'notepad' : 'vi';
+    throw new EditorNotConfiguredError();
   }
 
   const [executable = '', ...initialArgs] = command.split(' ');
