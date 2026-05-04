@@ -34,9 +34,14 @@ jobs:
       - name: 'Install dependencies'
         run: 'npm ci'
 
+      - name: 'Build Gemini CLI'
+        run: 'npm run bundle'
+
       - name: 'Run Reflex Processes'
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          GEMINI_API_KEY: '${{ secrets.GEMINI_API_KEY }}'
+          GEMINI_MODEL: 'gemini-3-flash-preview'
         run: |
           if [ -d "tools/gemini-cli-bot/reflexes/scripts" ] && [ "$(ls -A tools/gemini-cli-bot/reflexes/scripts)" ]; then
             for script in tools/gemini-cli-bot/reflexes/scripts/*.ts; do
