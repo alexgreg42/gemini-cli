@@ -26,8 +26,9 @@ module.exports = async ({ github, context, core }) => {
     '🗓️ Public Roadmap',
   ];
 
-  const STALE_DAYS = 60;
-  const CLOSE_DAYS = 14;
+  // Optimizing for high backlog (2000+ issues)
+  const STALE_DAYS = 30; // Reduced from 60
+  const CLOSE_DAYS = 7;  // Reduced from 14
   const NO_RESPONSE_DAYS = 14;
 
   const now = new Date();
@@ -44,14 +45,15 @@ module.exports = async ({ github, context, core }) => {
   async function processItems(query, callback) {
     core.info(`Searching: ${query}`);
     try {
-      const response = await github.rest.search.issuesAndPullRequests({
+      // Use github.paginate to handle > 100 items per run
+      const items = await github.paginate(github.rest.search.issuesAndPullRequests, {
         q: query,
-        per_page: 100,
         sort: 'updated',
         order: 'asc',
+        per_page: 100,
       });
-      const items = response.data.items;
-      core.info(`Found ${items.length} items (batch limited).`);
+
+      core.info(`Found ${items.length} items.`);
       for (const item of items) {
         try {
           await callback(item);
@@ -65,10 +67,10 @@ module.exports = async ({ github, context, core }) => {
   }
 
   // 1. Handle No-Response (status/need-information)
-  // Removal: Check issues updated in the last 48h that have the label
-  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+  // Removal: Check issues updated recently that have the label
+  const checkRecentThreshold = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   await processItems(
-    `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}" updated:>${twoDaysAgo.toISOString()}`,
+    `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}" updated:>${checkRecentThreshold.toISOString()}`,
     async (item) => {
       const { data: comments } = await github.rest.issues.listComments({
         owner,
@@ -129,12 +131,44 @@ module.exports = async ({ github, context, core }) => {
     },
   );
 
-  // 2. Handle Stale Mark (60 days inactivity, no stale label)
+  // 2. Handle Stale Issues (30 days inactivity)
   const exemptQuery = EXEMPT_LABELS.map((l) => `-label:"${l}"`).join(' ');
+
+  // Removal: Remove stale label if there is new activity
   await processItems(
-    `repo:${owner}/${repo} is:open -label:"${STALE_LABEL}" ${exemptQuery} updated:<${staleThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:issue label:"${STALE_LABEL}" updated:>${checkRecentThreshold.toISOString()}`,
     async (item) => {
-      core.info(`Marking #${item.number} as stale.`);
+      const { data: comments } = await github.rest.issues.listComments({
+        owner,
+        repo,
+        issue_number: item.number,
+        sort: 'created',
+        direction: 'desc',
+        per_page: 5,
+      });
+
+      const lastComment = comments[0];
+      if (lastComment && lastComment.user?.type !== 'Bot') {
+        core.info(`Removing ${STALE_LABEL} from #${item.number} due to activity.`);
+        if (!dryRun) {
+          await github.rest.issues
+            .removeLabel({
+              owner,
+              repo,
+              issue_number: item.number,
+              name: STALE_LABEL,
+            })
+            .catch(() => {});
+        }
+      }
+    },
+  );
+
+  // Mark: Mark issues as stale
+  await processItems(
+    `repo:${owner}/${repo} is:open is:issue -label:"${STALE_LABEL}" ${exemptQuery} updated:<${staleThreshold.toISOString()}`,
+    async (item) => {
+      core.info(`Marking issue #${item.number} as stale.`);
       if (!dryRun) {
         await github.rest.issues.addLabels({
           owner,
@@ -146,23 +180,23 @@ module.exports = async ({ github, context, core }) => {
           owner,
           repo,
           issue_number: item.number,
-          body: `This item has been automatically marked as stale due to ${STALE_DAYS} days of inactivity. It will be closed in ${CLOSE_DAYS} days if no further activity occurs. Thank you!`,
+          body: `This issue has been automatically marked as stale due to ${STALE_DAYS} days of inactivity. It will be closed in ${CLOSE_DAYS} days if no further activity occurs. Thank you!`,
         });
       }
     },
   );
 
-  // 3. Handle Stale Close (14 days with stale label)
+  // Close: Handle Stale Close (7 days with stale label)
   await processItems(
-    `repo:${owner}/${repo} is:open label:"${STALE_LABEL}" ${exemptQuery} updated:<${closeThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:issue label:"${STALE_LABEL}" ${exemptQuery} updated:<${closeThreshold.toISOString()}`,
     async (item) => {
-      core.info(`Closing stale item #${item.number}.`);
+      core.info(`Closing stale issue #${item.number}.`);
       if (!dryRun) {
         await github.rest.issues.createComment({
           owner,
           repo,
           issue_number: item.number,
-          body: `This item has been closed due to ${CLOSE_DAYS} additional days of inactivity after being marked as stale. If you believe this is still relevant, feel free to comment or reopen. Thank you!`,
+          body: `This issue has been closed due to ${CLOSE_DAYS} additional days of inactivity after being marked as stale. If you believe this is still relevant, feel free to comment or reopen. Thank you!`,
         });
         await github.rest.issues.update({
           owner,
@@ -174,19 +208,15 @@ module.exports = async ({ github, context, core }) => {
     },
   );
 
-  // 4. Handle PR Contribution Policy (Nudge at 7d, Close at 14d)
+  // 3. Handle PR Contribution Policy (Nudge at 7d, Close 7d after nudge)
   const PR_NUDGE_DAYS = 7;
-  const PR_CLOSE_DAYS = 14;
   const nudgeThreshold = new Date(
     now.getTime() - PR_NUDGE_DAYS * 24 * 60 * 60 * 1000,
   );
-  const prCloseThreshold = new Date(
-    now.getTime() - PR_CLOSE_DAYS * 24 * 60 * 60 * 1000,
-  );
 
-  // Nudge
+  // Nudge: PRs older than 7 days without 'help wanted' and not yet nudged
   await processItems(
-    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" -label:"status/pr-nudge-sent" created:${prCloseThreshold.toISOString()}..${nudgeThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" -label:"status/pr-nudge-sent" created:<${nudgeThreshold.toISOString()}`,
     async (pr) => {
       if (
         ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) ||
@@ -212,9 +242,9 @@ module.exports = async ({ github, context, core }) => {
     },
   );
 
-  // Close
+  // Close: PRs that were nudged at least 7 days ago and still don't have 'help wanted'
   await processItems(
-    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" created:<${prCloseThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" label:"status/pr-nudge-sent" updated:<${nudgeThreshold.toISOString()}`,
     async (pr) => {
       if (
         ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) ||
@@ -223,14 +253,14 @@ module.exports = async ({ github, context, core }) => {
         return;
 
       core.info(
-        `Closing PR #${pr.number} per contribution policy (no 'help wanted').`,
+        `Closing PR #${pr.number} per contribution policy (no 'help wanted' after grace period).`,
       );
       if (!dryRun) {
         await github.rest.issues.createComment({
           owner,
           repo,
           issue_number: pr.number,
-          body: "This pull request is being closed as it has been open for 14 days without a 'help wanted' designation. We encourage you to find and contribute to existing 'help wanted' issues in our backlog! Thank you for your understanding.",
+          body: "This pull request is being closed as it has been open for at least 14 days (including a 7-day grace period) without a 'help wanted' designation. We encourage you to find and contribute to existing 'help wanted' issues in our backlog! Thank you for your understanding.",
         });
         await github.rest.pulls.update({
           owner,
