@@ -121,12 +121,19 @@ export async function createWorktree(
 ): Promise<string> {
   const worktreePath = getWorktreePath(projectRoot, name);
 
+  const worktreesBaseDir = path.join(projectRoot, '.gemini', 'worktrees');
+  const relative = path.relative(worktreesBaseDir, worktreePath);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Invalid worktree name');
+  }
+
   try {
-    await fs.access(worktreePath);
-    // Worktree path already exists, reuse it
-    return worktreePath;
-  } catch {
-    // Does not exist, proceed to create
+    const stats = await fs.promises.stat(worktreePath);
+    if (stats.isDirectory() && await isGeminiWorktree(worktreePath)) {
+      return worktreePath;
+    }
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
   }
 
   const branchName = `worktree-${name}`;
