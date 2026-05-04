@@ -86,7 +86,7 @@ describe('worktree utilities', () => {
 
   describe('createWorktree', () => {
     it('should execute git worktree add with correct branch and path if it does not exist', async () => {
-      vi.mocked(fs.access).mockRejectedValue(new Error('ENOENT'));
+      vi.mocked(fs.promises.stat).mockRejectedValue({ code: 'ENOENT' } as any);
       vi.mocked(execa).mockResolvedValue({ stdout: '' } as never);
 
       const resultPath = await createWorktree(projectRoot, worktreeName);
