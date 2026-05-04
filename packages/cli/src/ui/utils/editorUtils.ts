@@ -48,7 +48,7 @@ export async function openFileInEditor(
   }
 
   if (!command) {
-    command = process.env['VISUAL'] ?? process.env['EDITOR'];
+    command = process.env['VISUAL'] || process.env['EDITOR'];
     if (command) {
       const lowerCommand = command.toLowerCase();
       const isGui = ['code', 'cursor', 'subl', 'zed', 'atom'].some((gui) =>
