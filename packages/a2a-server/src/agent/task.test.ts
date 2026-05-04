@@ -460,4 +460,110 @@ describe('Task', () => {
       expect(task.currentPromptId).toBe(expectedPromptId2);
     });
   });
+
+  describe('Race Condition Fix', () => {
+    const mockConfig = createMockConfig();
+    const mockEventBus: ExecutionEventBus = {
+      publish: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+      once: vi.fn(),
+      removeAllListeners: vi.fn(),
+      finished: vi.fn(),
+    };
+
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('should NOT transition to input-required if a tool is still validating', async () => {
+      // @ts-expect-error - Calling private constructor
+      const task = new Task(
+        'task-id',
+        'context-id',
+        mockConfig as Config,
+        mockEventBus,
+      );
+
+      // Manually register two tool calls
+      task['_registerToolCall']('tool-1', 'awaiting_approval');
+      task['_registerToolCall']('tool-2', 'validating');
+
+      // Call checkInputRequiredState (private)
+      task['checkInputRequiredState']();
+
+      // Verify task state did NOT change to input-required
+      expect(task.taskState).not.toBe('input-required');
+      expect(mockEventBus.publish).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: expect.objectContaining({ state: 'input-required' }),
+        }),
+      );
+    });
+
+    it('should transition to input-required if all active tools are awaiting approval', async () => {
+      // @ts-expect-error - Calling private constructor
+      const task = new Task(
+        'task-id',
+        'context-id',
+        mockConfig as Config,
+        mockEventBus,
+      );
+
+      // Transition from submitted to working first to simulate normal flow
+      task.taskState = 'working';
+
+      // Manually register tool calls
+      task['_registerToolCall']('tool-1', 'awaiting_approval');
+
+      // Call checkInputRequiredState
+      task['checkInputRequiredState']();
+
+      // Verify task state changed to input-required
+      expect(task.taskState).toBe('input-required');
+      expect(mockEventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: expect.objectContaining({ state: 'input-required' }),
+        }),
+      );
+    });
+
+    it('handleEventDrivenToolCallsUpdate should ignore events for other schedulers', async () => {
+      // @ts-expect-error - Calling private constructor
+      const task = new Task(
+        'task-id',
+        'context-id',
+        mockConfig as Config,
+        mockEventBus,
+      );
+
+      const handleEventDrivenToolCallSpy = vi.spyOn(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        task as any,
+        'handleEventDrivenToolCall',
+      );
+
+      const otherEvent = {
+        type: 'tool-calls-update',
+        toolCalls: [{ request: { callId: '1' }, status: 'executing' }],
+        schedulerId: 'other-task-id',
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      task['handleEventDrivenToolCallsUpdate'](otherEvent as any);
+
+      expect(handleEventDrivenToolCallSpy).not.toHaveBeenCalled();
+
+      const ownEvent = {
+        type: 'tool-calls-update',
+        toolCalls: [{ request: { callId: '1' }, status: 'executing' }],
+        schedulerId: 'task-id',
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      task['handleEventDrivenToolCallsUpdate'](ownEvent as any);
+
+      expect(handleEventDrivenToolCallSpy).toHaveBeenCalled();
+    });
+  });
 });

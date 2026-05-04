@@ -413,7 +413,10 @@ export class Task {
   private handleEventDrivenToolCallsUpdate(
     event: ToolCallsUpdateMessage,
   ): void {
-    if (event.type !== MessageBusType.TOOL_CALLS_UPDATE) {
+    if (
+      event.type !== MessageBusType.TOOL_CALLS_UPDATE ||
+      event.schedulerId !== this.id
+    ) {
       return;
     }
 
@@ -508,7 +511,11 @@ export class Task {
     let isExecuting = false;
 
     for (const [callId, status] of this.pendingToolCalls.entries()) {
-      if (status === 'executing' || status === 'scheduled') {
+      if (
+        status === 'executing' ||
+        status === 'scheduled' ||
+        status === 'validating'
+      ) {
         isExecuting = true;
       } else if (
         status === 'awaiting_approval' &&

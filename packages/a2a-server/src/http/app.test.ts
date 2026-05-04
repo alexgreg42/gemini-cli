@@ -381,11 +381,11 @@ describe('E2E Tests', () => {
     ]);
 
     // 6. Tool 1 is awaiting approval.
-    const toolCallAwaitEvent = events[5].result as TaskStatusUpdateEvent;
-    expect(toolCallAwaitEvent.metadata?.['coderAgent']).toMatchObject({
+    const toolCallAwaitEvent1 = events[5].result as TaskStatusUpdateEvent;
+    expect(toolCallAwaitEvent1.metadata?.['coderAgent']).toMatchObject({
       kind: 'tool-call-confirmation',
     });
-    expect(toolCallAwaitEvent.status.message?.parts).toMatchObject([
+    expect(toolCallAwaitEvent1.status.message?.parts).toMatchObject([
       {
         data: {
           request: { callId: 'test-call-id-1' },
@@ -394,14 +394,28 @@ describe('E2E Tests', () => {
       },
     ]);
 
-    // 7. The final event is "input-required".
-    const finalEvent = events[6].result as TaskStatusUpdateEvent;
+    // 7. Tool 2 is awaiting approval.
+    const toolCallAwaitEvent2 = events[6].result as TaskStatusUpdateEvent;
+    expect(toolCallAwaitEvent2.metadata?.['coderAgent']).toMatchObject({
+      kind: 'tool-call-confirmation',
+    });
+    expect(toolCallAwaitEvent2.status.message?.parts).toMatchObject([
+      {
+        data: {
+          request: { callId: 'test-call-id-2' },
+          status: 'awaiting_approval',
+        },
+      },
+    ]);
+
+    // 8. The final event is "input-required".
+    const finalEvent = events[7].result as TaskStatusUpdateEvent;
     expect(finalEvent.final).toBe(true);
     expect(finalEvent.status.state).toBe('input-required');
 
     // The scheduler now waits for approval, so no more events are sent.
     assertUniqueFinalEventIsLast(events);
-    expect(events.length).toBe(7);
+    expect(events.length).toBe(8);
   });
 
   it('should handle multiple tool calls sequentially in YOLO mode', async () => {
