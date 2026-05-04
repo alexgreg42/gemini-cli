@@ -22,7 +22,7 @@ import type { SelectionListItem } from '../hooks/useSelectionList.js';
 import { TabHeader, type Tab } from './shared/TabHeader.js';
 import { useKeypress, type Key } from '../hooks/useKeypress.js';
 import { Command } from '../key/keyMatchers.js';
-import { TextInput } from './shared/TextInput.js';
+import { AutocompleteTextInput } from './shared/AutocompleteTextInput.js';
 import { formatCommand } from '../key/keybindingUtils.js';
 import {
   useTextBuffer,
@@ -396,10 +396,12 @@ const TextQuestionView: React.FC<TextQuestionViewProps> = ({
 
       <Box flexDirection="row" marginBottom={1}>
         <Text color={theme.status.success}>{'> '}</Text>
-        <TextInput
+        <AutocompleteTextInput
           buffer={buffer}
           placeholder={placeholder}
           onSubmit={handleSubmit}
+          availableWidth={availableWidth}
+          suggestionsPosition="below"
         />
       </Box>
 
@@ -948,10 +950,12 @@ const ChoiceQuestionView: React.FC<ChoiceQuestionViewProps> = ({
                   />
                 )}
                 <Text color={theme.text.primary}> </Text>
-                <TextInput
+                <AutocompleteTextInput
                   buffer={customBuffer}
                   placeholder={placeholder}
                   focus={context.isSelected}
+                  availableWidth={availableWidth}
+                  suggestionsPosition="below"
                   onSubmit={(val) => {
                     if (question.multiSelect) {
                       const fullAnswer = buildAnswerString(
