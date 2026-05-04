@@ -86,7 +86,7 @@ describe('worktree utilities', () => {
 
   describe('createWorktree', () => {
     it('should execute git worktree add with correct branch and path if it does not exist', async () => {
-      vi.mocked(fs.promises.stat).mockRejectedValue({ code: 'ENOENT' } as any);
+      vi.mocked(fs.stat).mockRejectedValue({ code: 'ENOENT' });
       vi.mocked(execa).mockResolvedValue({ stdout: '' } as never);
 
       const resultPath = await createWorktree(projectRoot, worktreeName);
@@ -100,7 +100,9 @@ describe('worktree utilities', () => {
     });
 
     it('should return existing path and not call git if it already exists', async () => {
-      vi.mocked(fs.promises.stat).mockResolvedValue({ isDirectory: () => true } as any);
+      vi.mocked(fs.stat).mockResolvedValue({
+        isDirectory: () => true,
+      } as never);
 
       const resultPath = await createWorktree(projectRoot, worktreeName);
 
@@ -109,7 +111,7 @@ describe('worktree utilities', () => {
     });
 
     it('should throw an error if git worktree add fails', async () => {
-      vi.mocked(fs.promises.stat).mockRejectedValue({ code: 'ENOENT' } as any);
+      vi.mocked(fs.stat).mockRejectedValue({ code: 'ENOENT' });
       vi.mocked(execa).mockRejectedValue(new Error('git failed'));
 
       await expect(createWorktree(projectRoot, worktreeName)).rejects.toThrow(

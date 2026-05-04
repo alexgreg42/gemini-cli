@@ -128,12 +128,19 @@ export async function createWorktree(
   }
 
   try {
-    const stats = await fs.promises.stat(worktreePath);
-    if (stats.isDirectory() && await isGeminiWorktree(worktreePath)) {
+    const stats = await fs.stat(worktreePath);
+    if (stats.isDirectory() && isGeminiWorktree(worktreePath, projectRoot)) {
       return worktreePath;
     }
-  } catch (err) {
-    if (err.code !== 'ENOENT') throw err;
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'code' in err &&
+      err.code !== 'ENOENT'
+    ) {
+      throw err;
+    }
   }
 
   const branchName = `worktree-${name}`;
