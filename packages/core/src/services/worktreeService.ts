@@ -120,6 +120,15 @@ export async function createWorktree(
   name: string,
 ): Promise<string> {
   const worktreePath = getWorktreePath(projectRoot, name);
+
+  try {
+    await fs.access(worktreePath);
+    // Worktree path already exists, reuse it
+    return worktreePath;
+  } catch {
+    // Does not exist, proceed to create
+  }
+
   const branchName = `worktree-${name}`;
 
   await execa('git', ['worktree', 'add', worktreePath, '-b', branchName], {

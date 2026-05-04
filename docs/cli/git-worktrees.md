@@ -80,8 +80,23 @@ manually remove the worktree if you no longer need it.
 
 ## Resuming work in a Git worktree
 
-To resume a session in a worktree, navigate to the worktree directory and start
-Gemini CLI with the `--resume` flag and the session ID:
+To resume a session in an existing worktree, you can simply run Gemini with the
+same `--worktree` (`-w`) name:
+
+```bash
+gemini --worktree feature-search
+```
+
+Alternatively, you can navigate to the worktree directory and start Gemini
+directly:
+
+```bash
+cd .gemini/worktrees/feature-search
+gemini
+```
+
+To resume a specific previous chat session within that worktree, use the
+`--resume` flag and the session ID:
 
 ```bash
 cd .gemini/worktrees/feature-search
