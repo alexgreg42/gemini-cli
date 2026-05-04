@@ -100,7 +100,7 @@ describe('worktree utilities', () => {
     });
 
     it('should return existing path and not call git if it already exists', async () => {
-      vi.mocked(fs.access).mockResolvedValue(undefined);
+      vi.mocked(fs.promises.stat).mockResolvedValue({ isDirectory: () => true } as any);
 
       const resultPath = await createWorktree(projectRoot, worktreeName);
 
