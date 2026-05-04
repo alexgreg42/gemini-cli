@@ -104,8 +104,16 @@ describe('Issue 25428 Regression', () => {
     const settings = loadSettings('/mock/workspace-' + Math.random());
 
     expect(settings.user.settings.general?.plan?.enabled).toBe(true);
-    expect(settings.user.settings.experimental?.plan).toBeUndefined();
-    expect(settings.user.settings.experimental?.keepMe).toBe('important');
+    expect(
+      (settings.user.settings.experimental as Record<string, unknown>)?.[
+        'plan'
+      ],
+    ).toBeUndefined();
+    expect(
+      (settings.user.settings.experimental as Record<string, unknown>)?.[
+        'keepMe'
+      ],
+    ).toBe('important');
 
     expect(updateSettingsFilePreservingFormat).toHaveBeenCalled();
     const lastCall = vi

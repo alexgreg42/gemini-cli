@@ -3542,7 +3542,7 @@ export class Config implements McpContext, AgentLoopContext {
         if (s.model) this.setModel(s.model);
         if (s.compressionThreshold !== undefined) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          (this as unknown as Record<string, unknown>).compressionThreshold =
+          (this as unknown as Record<string, unknown>)['compressionThreshold'] =
             s.compressionThreshold;
         }
         if (s.ideMode !== undefined) this.ideMode = s.ideMode;
@@ -3551,17 +3551,18 @@ export class Config implements McpContext, AgentLoopContext {
         }
         if (s.topicUpdateNarration !== undefined) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          (this as unknown as Record<string, unknown>).topicUpdateNarration =
+          (this as unknown as Record<string, unknown>)['topicUpdateNarration'] =
             s.topicUpdateNarration;
         }
         if (s.experimentalAutoMemory !== undefined) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          (this as unknown as Record<string, unknown>).experimentalAutoMemory =
-            s.experimentalAutoMemory;
+          (this as unknown as Record<string, unknown>)[
+            'experimentalAutoMemory'
+          ] = s.experimentalAutoMemory;
         }
         if (s.experimentalMemoryV2 !== undefined) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          (this as unknown as Record<string, unknown>).experimentalMemoryV2 =
+          (this as unknown as Record<string, unknown>)['experimentalMemoryV2'] =
             s.experimentalMemoryV2;
         }
       }
@@ -3573,7 +3574,7 @@ export class Config implements McpContext, AgentLoopContext {
       }
       if (refreshed.adminSkillsEnabled !== undefined) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        (this as unknown as Record<string, unknown>).adminSkillsEnabled =
+        (this as unknown as Record<string, unknown>)['adminSkillsEnabled'] =
           refreshed.adminSkillsEnabled;
       }
     }
