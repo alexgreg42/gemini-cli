@@ -738,6 +738,7 @@ export interface ConfigParameters {
     disabledSkills?: string[];
     adminSkillsEnabled?: boolean;
     agents?: AgentSettings;
+    settings?: Partial<ConfigParameters>;
   }>;
   enableConseca?: boolean;
   billing?: {
@@ -943,6 +944,7 @@ export class Config implements McpContext, AgentLoopContext {
         disabledSkills?: string[];
         adminSkillsEnabled?: boolean;
         agents?: AgentSettings;
+        settings?: Partial<ConfigParameters>;
       }>)
     | undefined;
 
@@ -3524,6 +3526,55 @@ export class Config implements McpContext, AgentLoopContext {
       const refreshed = await this.onReload();
       if (refreshed.agents) {
         this.agents = refreshed.agents;
+      }
+    }
+  }
+
+  /**
+   * Reloads core configuration settings.
+   */
+  async reloadConfig(): Promise<void> {
+    if (this.onReload) {
+      const refreshed = await this.onReload();
+      if (refreshed.settings) {
+        // Hydrate key fields that affect core behavior
+        const s = refreshed.settings;
+        if (s.model) this.setModel(s.model);
+        if (s.compressionThreshold !== undefined) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          (this as unknown as Record<string, unknown>).compressionThreshold =
+            s.compressionThreshold;
+        }
+        if (s.ideMode !== undefined) this.ideMode = s.ideMode;
+        if (s.contextManagement) {
+          Object.assign(this.contextManagement, s.contextManagement);
+        }
+        if (s.topicUpdateNarration !== undefined) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          (this as unknown as Record<string, unknown>).topicUpdateNarration =
+            s.topicUpdateNarration;
+        }
+        if (s.experimentalAutoMemory !== undefined) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          (this as unknown as Record<string, unknown>).experimentalAutoMemory =
+            s.experimentalAutoMemory;
+        }
+        if (s.experimentalMemoryV2 !== undefined) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          (this as unknown as Record<string, unknown>).experimentalMemoryV2 =
+            s.experimentalMemoryV2;
+        }
+      }
+      if (refreshed.agents) {
+        this.agents = refreshed.agents;
+      }
+      if (refreshed.disabledSkills) {
+        this.disabledSkills = refreshed.disabledSkills;
+      }
+      if (refreshed.adminSkillsEnabled !== undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        (this as unknown as Record<string, unknown>).adminSkillsEnabled =
+          refreshed.adminSkillsEnabled;
       }
     }
   }

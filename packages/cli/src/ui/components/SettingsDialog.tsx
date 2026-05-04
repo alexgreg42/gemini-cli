@@ -118,14 +118,18 @@ export function SettingsDialog({
   );
   const { fzfInstance, searchMap } = useMemo(() => {
     const keys = getDialogSettingKeys();
-    const map = new Map<string, string>();
+    const map = new Map<string, string[]>();
     const searchItems: string[] = [];
 
     keys.forEach((key) => {
       const def = getSettingDefinition(key);
       if (def?.label) {
-        searchItems.push(def.label);
-        map.set(def.label.toLowerCase(), key);
+        const labelLower = def.label.toLowerCase();
+        if (!map.has(labelLower)) {
+          searchItems.push(def.label);
+          map.set(labelLower, []);
+        }
+        map.get(labelLower)!.push(key);
       }
     });
 
@@ -152,8 +156,10 @@ export function SettingsDialog({
 
       const matchedKeys = new Set<string>();
       results.forEach((res: FzfResult) => {
-        const key = searchMap.get(res.item.toLowerCase());
-        if (key) matchedKeys.add(key);
+        const keysForLabel = searchMap.get(res.item.toLowerCase());
+        if (keysForLabel) {
+          keysForLabel.forEach((key) => matchedKeys.add(key));
+        }
       });
       setFilteredKeys(Array.from(matchedKeys));
     };

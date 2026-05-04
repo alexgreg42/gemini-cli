@@ -544,6 +544,12 @@ export async function main() {
     });
     loadConfigHandle?.end();
 
+    coreEvents.on(CoreEvent.SettingsChanged, () => {
+      config?.reloadConfig().catch((e) => {
+        debugLogger.error('Failed to reload config:', e);
+      });
+    });
+
     // Initialize storage immediately after loading config to ensure that
     // storage-related operations (like listing or resuming sessions) have
     // access to the project identifier.

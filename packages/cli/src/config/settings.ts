@@ -22,7 +22,6 @@ import {
   type AdminControlsSettings,
   createCache,
 } from '@google/gemini-cli-core';
-import stripJsonComments from 'strip-json-comments';
 import { DefaultLight } from '../ui/themes/builtin/light/default-light.js';
 import { DefaultDark } from '../ui/themes/builtin/dark/default-dark.js';
 import { isWorkspaceTrusted } from './trustedFolders.js';
@@ -48,7 +47,10 @@ export {
 
 import { resolveEnvVarsInObject } from '../utils/envVarResolver.js';
 import { customDeepMerge } from '../utils/deepMerge.js';
-import { updateSettingsFilePreservingFormat } from '../utils/commentJson.js';
+import {
+  updateSettingsFilePreservingFormat,
+  parse as parseCommentJson,
+} from '../utils/commentJson.js';
 import {
   validateSettings,
   formatValidationError,
@@ -207,6 +209,46 @@ export interface SettingsFile {
   path: string;
   rawJson?: string;
   readOnly?: boolean;
+}
+
+function getNestedProperty(
+  obj: Record<string, unknown>,
+  path: string,
+): unknown {
+  const keys = path.split('.');
+  let current: unknown = obj;
+  for (const key of keys) {
+    if (
+      typeof current !== 'object' ||
+      current === null ||
+      Array.isArray(current)
+    ) {
+      return undefined;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    const record = current as Record<string, unknown>;
+    current = record[key];
+  }
+  return current;
+}
+
+function deleteNestedProperty(obj: Record<string, unknown>, path: string) {
+  const keys = path.split('.');
+  const lastKey = keys.pop();
+  if (!lastKey) return;
+
+  let current: Record<string, unknown> = obj;
+  for (const key of keys) {
+    const next = current[key];
+    if (typeof next === 'object' && next !== null) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      current = next as Record<string, unknown>;
+    } else {
+      // Path doesn't exist
+      return;
+    }
+  }
+  delete current[lastKey];
 }
 
 function setNestedProperty(
@@ -471,6 +513,21 @@ export class LoadedSettings {
     coreEvents.emitSettingsChanged();
   }
 
+  deleteValue(scope: LoadableSettingScope, key: string): void {
+    const settingsFile = this.forScope(scope);
+
+    deleteNestedProperty(settingsFile.settings, key);
+
+    if (this.isPersistable(settingsFile)) {
+      deleteNestedProperty(settingsFile.originalSettings, key);
+      saveSettings(settingsFile);
+    }
+
+    this._merged = this.computeMergedSettings();
+    this._snapshot = this.computeSnapshot();
+    coreEvents.emitSettingsChanged();
+  }
+
   setRemoteAdminSettings(remoteSettings: AdminControlsSettings): void {
     const admin: Settings['admin'] = {};
     const { strictModeDisabled, mcpSetting, cliFeatureSetting } =
@@ -715,7 +772,7 @@ function _doLoadSettings(workspaceDir: string): LoadedSettings {
     try {
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf-8');
-        const rawSettings: unknown = JSON.parse(stripJsonComments(content));
+        const rawSettings: unknown = parseCommentJson(content);
 
         if (
           typeof rawSettings !== 'object' ||
@@ -914,15 +971,32 @@ export function migrateDeprecatedSettings(
    * Helper to migrate a boolean setting and track it if it's deprecated.
    */
   const migrateBoolean = (
-    settings: Record<string, unknown>,
+    scope: LoadableSettingScope,
+    categoryKey: string,
     oldKey: string,
     newKey: string,
     prefix: string,
     foundDeprecated?: string[],
   ): boolean => {
     let modified = false;
-    const oldValue = settings[oldKey];
-    const newValue = settings[newKey];
+    const settingsFile = loadedSettings.forScope(scope);
+    const property = getNestedProperty(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      settingsFile.settings as unknown as Record<string, unknown>,
+      categoryKey,
+    );
+    if (
+      typeof property !== 'object' ||
+      property === null ||
+      Array.isArray(property)
+    ) {
+      return false;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    const category = property as Record<string, unknown>;
+
+    const oldValue = category[oldKey];
+    const newValue = category[newKey];
 
     if (typeof oldValue === 'boolean') {
       if (foundDeprecated) {
@@ -931,14 +1005,14 @@ export function migrateDeprecatedSettings(
       if (typeof newValue === 'boolean') {
         // Both exist, trust the new one
         if (removeDeprecated) {
-          delete settings[oldKey];
+          loadedSettings.deleteValue(scope, `${categoryKey}.${oldKey}`);
           modified = true;
         }
       } else {
         // Only old exists, migrate to new (inverted)
-        settings[newKey] = !oldValue;
+        loadedSettings.setValue(scope, `${categoryKey}.${newKey}`, !oldValue);
         if (removeDeprecated) {
-          delete settings[oldKey];
+          loadedSettings.deleteValue(scope, `${categoryKey}.${oldKey}`);
         }
         modified = true;
       }
@@ -950,76 +1024,64 @@ export function migrateDeprecatedSettings(
     const settingsFile = loadedSettings.forScope(scope);
     const settings = settingsFile.settings;
     const foundDeprecated: string[] = [];
+    let modified = false;
 
     // Migrate general settings
-    const generalSettings = settings.general as
-      | Record<string, unknown>
-      | undefined;
-    if (generalSettings) {
-      const newGeneral = { ...generalSettings };
-      let modified = false;
+    modified =
+      migrateBoolean(
+        scope,
+        'general',
+        'disableAutoUpdate',
+        'enableAutoUpdate',
+        'general',
+        foundDeprecated,
+      ) || modified;
+    modified =
+      migrateBoolean(
+        scope,
+        'general',
+        'disableUpdateNag',
+        'enableAutoUpdateNotification',
+        'general',
+        foundDeprecated,
+      ) || modified;
 
-      modified =
-        migrateBoolean(
-          newGeneral,
-          'disableAutoUpdate',
-          'enableAutoUpdate',
-          'general',
-          foundDeprecated,
-        ) || modified;
-      modified =
-        migrateBoolean(
-          newGeneral,
-          'disableUpdateNag',
-          'enableAutoUpdateNotification',
-          'general',
-          foundDeprecated,
-        ) || modified;
-
-      if (modified) {
-        loadedSettings.setValue(scope, 'general', newGeneral);
-        if (!settingsFile.readOnly) {
-          anyModified = true;
-        }
-      }
+    if (modified && !settingsFile.readOnly) {
+      anyModified = true;
     }
 
     // Migrate ui settings
     const uiSettings = settings.ui as Record<string, unknown> | undefined;
     if (uiSettings) {
-      const newUi = { ...uiSettings };
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      const accessibilitySettings = newUi['accessibility'] as
+      const accessibilitySettings = uiSettings['accessibility'] as
         | Record<string, unknown>
         | undefined;
 
       if (accessibilitySettings) {
-        const newAccessibility = { ...accessibilitySettings };
         if (
           migrateBoolean(
-            newAccessibility,
+            scope,
+            'ui.accessibility',
             'disableLoadingPhrases',
             'enableLoadingPhrases',
             'ui.accessibility',
             foundDeprecated,
           )
         ) {
-          newUi['accessibility'] = newAccessibility;
-          loadedSettings.setValue(scope, 'ui', newUi);
           if (!settingsFile.readOnly) {
             anyModified = true;
           }
         }
 
         // Migrate enableLoadingPhrases: false → loadingPhrases: 'off'
-        const enableLP = newAccessibility['enableLoadingPhrases'];
+        const enableLP = accessibilitySettings['enableLoadingPhrases'];
         if (
           typeof enableLP === 'boolean' &&
-          newUi['loadingPhrases'] === undefined
+          uiSettings['loadingPhrases'] === undefined
         ) {
           if (!enableLP) {
-            newUi['loadingPhrases'] = 'off';
-            loadedSettings.setValue(scope, 'ui', newUi);
+            loadedSettings.setValue(scope, 'ui.loadingPhrases', 'off');
             if (!settingsFile.readOnly) {
               anyModified = true;
             }
@@ -1034,25 +1096,22 @@ export function migrateDeprecatedSettings(
       | Record<string, unknown>
       | undefined;
     if (contextSettings) {
-      const newContext = { ...contextSettings };
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      const fileFilteringSettings = newContext['fileFiltering'] as
+      const fileFilteringSettings = contextSettings['fileFiltering'] as
         | Record<string, unknown>
         | undefined;
 
       if (fileFilteringSettings) {
-        const newFileFiltering = { ...fileFilteringSettings };
         if (
           migrateBoolean(
-            newFileFiltering,
+            scope,
+            'context.fileFiltering',
             'disableFuzzySearch',
             'enableFuzzySearch',
             'context.fileFiltering',
             foundDeprecated,
           )
         ) {
-          newContext['fileFiltering'] = newFileFiltering;
-          loadedSettings.setValue(scope, 'context', newContext);
           if (!settingsFile.readOnly) {
             anyModified = true;
           }
@@ -1068,21 +1127,21 @@ export function migrateDeprecatedSettings(
 
         const generalSettings =
           (settings.general as Record<string, unknown> | undefined) || {};
-        const newGeneral = { ...generalSettings };
 
         // Only set defaultApprovalMode if it's not already set
-        if (newGeneral['defaultApprovalMode'] === undefined) {
-          newGeneral['defaultApprovalMode'] = toolsSettings['approvalMode'];
-          loadedSettings.setValue(scope, 'general', newGeneral);
+        if (generalSettings['defaultApprovalMode'] === undefined) {
+          loadedSettings.setValue(
+            scope,
+            'general.defaultApprovalMode',
+            toolsSettings['approvalMode'],
+          );
           if (!settingsFile.readOnly) {
             anyModified = true;
           }
         }
 
         if (removeDeprecated) {
-          const newTools = { ...toolsSettings };
-          delete newTools['approvalMode'];
-          loadedSettings.setValue(scope, 'tools', newTools);
+          loadedSettings.deleteValue(scope, 'tools.approvalMode');
           if (!settingsFile.readOnly) {
             anyModified = true;
           }
@@ -1187,13 +1246,11 @@ function migrateExperimentalSettings(
     | undefined;
 
   if (experimentalSettings) {
-    const agentsSettings = {
-      ...(settings.agents as Record<string, unknown> | undefined),
-    };
-    const agentsOverrides = {
+    const agentsSettings =
+      (settings.agents as Record<string, unknown> | undefined) || {};
+    const agentsOverrides =
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      ...((agentsSettings['overrides'] as Record<string, unknown>) || {}),
-    };
+      (agentsSettings['overrides'] as Record<string, unknown>) || {};
     let modified = false;
 
     const migrateExperimental = <T = Record<string, unknown>>(
@@ -1271,32 +1328,31 @@ function migrateExperimentalSettings(
 
     // Migrate experimental.plan -> general.plan.enabled
     migrateExperimental<boolean>('plan', (planValue) => {
-      const generalSettings =
-        (settings.general as Record<string, unknown> | undefined) || {};
-      const newGeneral = { ...generalSettings };
-      const planSettings =
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        (newGeneral['plan'] as Record<string, unknown> | undefined) || {};
-      const newPlan = { ...planSettings };
+      // Check if general.plan.enabled is explicitly set in THIS scope
+      const originalScopeSettings =
+        loadedSettings.forScope(scope).originalSettings;
+      const isPlanSetInRaw =
+        getNestedProperty(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          originalScopeSettings as unknown as Record<string, unknown>,
+          'general.plan.enabled',
+        ) !== undefined;
 
-      if (newPlan['enabled'] === undefined) {
-        newPlan['enabled'] = planValue;
-        newGeneral['plan'] = newPlan;
-        loadedSettings.setValue(scope, 'general', newGeneral);
-        modified = true;
+      if (!isPlanSetInRaw) {
+        loadedSettings.setValue(scope, 'general.plan.enabled', planValue);
       }
     });
 
     if (modified) {
-      agentsSettings['overrides'] = agentsOverrides;
-      loadedSettings.setValue(scope, 'agents', agentsSettings);
+      loadedSettings.setValue(scope, 'agents.overrides', agentsOverrides);
 
       if (removeDeprecated) {
-        const newExperimental = { ...experimentalSettings };
-        delete newExperimental['codebaseInvestigatorSettings'];
-        delete newExperimental['cliHelpAgentSettings'];
-        delete newExperimental['plan'];
-        loadedSettings.setValue(scope, 'experimental', newExperimental);
+        loadedSettings.deleteValue(
+          scope,
+          'experimental.codebaseInvestigatorSettings',
+        );
+        loadedSettings.deleteValue(scope, 'experimental.cliHelpAgentSettings');
+        loadedSettings.deleteValue(scope, 'experimental.plan');
       }
       return true;
     }

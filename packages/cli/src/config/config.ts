@@ -1124,9 +1124,22 @@ export async function loadCliConfig(
     onModelChange: (model: string) => saveModelChange(loadSettings(cwd), model),
     onReload: async () => {
       const refreshedSettings = loadSettings(cwd);
+      const merged = refreshedSettings.merged;
       return {
-        disabledSkills: refreshedSettings.merged.skills.disabled,
-        agents: refreshedSettings.merged.agents,
+        disabledSkills: merged.skills.disabled,
+        adminSkillsEnabled: merged.skills.enabled,
+        agents: merged.agents,
+        settings: {
+          model: merged.model.name,
+          compressionThreshold: merged.model.compressionThreshold,
+          ideMode: merged.ide.enabled,
+          contextManagement: {
+            enabled: merged.experimental.contextManagement,
+          },
+          topicUpdateNarration: merged.general.topicUpdateNarration,
+          experimentalAutoMemory: merged.experimental.autoMemory,
+          experimentalMemoryV2: merged.experimental.memoryV2,
+        },
       };
     },
     enableConseca: settings.security?.enableConseca,

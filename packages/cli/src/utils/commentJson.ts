@@ -5,7 +5,8 @@
  */
 
 import * as fs from 'node:fs';
-import { parse, stringify } from 'comment-json';
+import { parse as commentJsonParse, stringify } from 'comment-json';
+export { commentJsonParse as parse };
 import { coreEvents } from '@google/gemini-cli-core';
 
 /**
@@ -30,7 +31,7 @@ export function updateSettingsFilePreservingFormat(
   let parsed: Record<string, unknown>;
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    parsed = parse(originalContent) as Record<string, unknown>;
+    parsed = commentJsonParse(originalContent) as Record<string, unknown>;
   } catch (error) {
     coreEvents.emitFeedback(
       'error',
