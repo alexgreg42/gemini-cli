@@ -874,7 +874,7 @@ export class Config implements McpContext, AgentLoopContext {
   private readonly includeDirectoryTree: boolean = true;
   private readonly importFormat: 'tree' | 'flat';
   private readonly discoveryMaxDirs: number;
-  private readonly compressionThreshold: number | undefined;
+  private compressionThreshold: number | undefined;
   /** Public for testing only */
   readonly interactive: boolean;
   private readonly ptyInfo: string;
@@ -958,14 +958,14 @@ export class Config implements McpContext, AgentLoopContext {
   private readonly enableEventDrivenScheduler: boolean;
   private readonly skillsSupport: boolean;
   private disabledSkills: string[];
-  private readonly adminSkillsEnabled: boolean;
+  private adminSkillsEnabled: boolean;
   private readonly experimentalJitContext: boolean;
-  private readonly experimentalMemoryV2: boolean;
-  private readonly experimentalAutoMemory: boolean;
+  private experimentalMemoryV2: boolean;
+  private experimentalAutoMemory: boolean;
   private readonly experimentalGemma: boolean;
   private readonly experimentalContextManagementConfig?: string;
   private readonly memoryBoundaryMarkers: readonly string[];
-  private readonly topicUpdateNarration: boolean;
+  private topicUpdateNarration: boolean;
   private readonly disableLLMCorrection: boolean;
   private readonly planEnabled: boolean;
   private readonly voiceMode: boolean;
@@ -973,7 +973,7 @@ export class Config implements McpContext, AgentLoopContext {
   private readonly planModeRoutingEnabled: boolean;
   private readonly modelSteering: boolean;
   private memoryContextManager?: MemoryContextManager;
-  private readonly contextManagement: ContextManagementConfig;
+  private contextManagement: ContextManagementConfig;
   private terminalBackground: string | undefined = undefined;
   private remoteAdminSettings: AdminControlsSettings | undefined;
   private latestApiRequest: GenerateContentParameters | undefined;
@@ -3541,29 +3541,23 @@ export class Config implements McpContext, AgentLoopContext {
         const s = refreshed.settings;
         if (s.model) this.setModel(s.model);
         if (s.compressionThreshold !== undefined) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          (this as unknown as Record<string, unknown>)['compressionThreshold'] =
-            s.compressionThreshold;
+          this.compressionThreshold = s.compressionThreshold;
         }
         if (s.ideMode !== undefined) this.ideMode = s.ideMode;
         if (s.contextManagement) {
-          Object.assign(this.contextManagement, s.contextManagement);
+          this.contextManagement = {
+            ...this.contextManagement,
+            ...s.contextManagement,
+          };
         }
         if (s.topicUpdateNarration !== undefined) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          (this as unknown as Record<string, unknown>)['topicUpdateNarration'] =
-            s.topicUpdateNarration;
+          this.topicUpdateNarration = s.topicUpdateNarration;
         }
         if (s.experimentalAutoMemory !== undefined) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          (this as unknown as Record<string, unknown>)[
-            'experimentalAutoMemory'
-          ] = s.experimentalAutoMemory;
+          this.experimentalAutoMemory = s.experimentalAutoMemory;
         }
         if (s.experimentalMemoryV2 !== undefined) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          (this as unknown as Record<string, unknown>)['experimentalMemoryV2'] =
-            s.experimentalMemoryV2;
+          this.experimentalMemoryV2 = s.experimentalMemoryV2;
         }
       }
       if (refreshed.agents) {
@@ -3573,9 +3567,7 @@ export class Config implements McpContext, AgentLoopContext {
         this.disabledSkills = refreshed.disabledSkills;
       }
       if (refreshed.adminSkillsEnabled !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        (this as unknown as Record<string, unknown>)['adminSkillsEnabled'] =
-          refreshed.adminSkillsEnabled;
+        this.adminSkillsEnabled = refreshed.adminSkillsEnabled;
       }
     }
   }
