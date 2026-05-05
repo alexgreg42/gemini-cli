@@ -26,7 +26,7 @@ module.exports = async ({ github, context, core }) => {
     '🗓️ Public Roadmap',
   ];
 
-  const STALE_DAYS = 60;
+  const STALE_DAYS = 30;
   const CLOSE_DAYS = 14;
   const NO_RESPONSE_DAYS = 14;
 
