@@ -147,10 +147,7 @@ jobs:
       pull-requests: 'write'
     strategy:
       matrix:
-        node-version:
-          - '20.x'
-          - '22.x'
-          - '24.x'
+        node-version: ${{ fromJSON(github.event_name == 'pull_request' && '["20.x"]' || '["20.x", "22.x", "24.x"]') }}
         shard:
           - 'cli'
           - 'others'
@@ -164,6 +161,9 @@ jobs:
           node-version: '${{ matrix.node-version }}'
           cache: 'npm'
 
+      - name: 'Install dependencies for testing'
+        run: 'npm ci'
+
       - name: 'Build project'
         run: 'npm run build'
 
@@ -172,9 +172,6 @@ jobs:
           sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq bubblewrap
           # Ubuntu 24.04+ requires this to allow bwrap to function in CI
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
-
-      - name: 'Install dependencies for testing'
-        run: 'npm ci'
 
       - name: 'Run tests and generate reports'
         env:
@@ -242,10 +239,7 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        node-version:
-          - '20.x'
-          - '22.x'
-          - '24.x'
+        node-version: ${{ fromJSON(github.event_name == 'pull_request' && '["20.x"]' || '["20.x", "22.x", "24.x"]') }}
         shard:
           - 'cli'
           - 'others'
@@ -259,11 +253,11 @@ jobs:
           node-version: '${{ matrix.node-version }}'
           cache: 'npm'
 
-      - name: 'Build project'
-        run: 'npm run build'
-
       - name: 'Install dependencies for testing'
         run: 'npm ci'
+
+      - name: 'Build project'
+        run: 'npm run build'
 
       - name: 'Run tests and generate reports'
         env:

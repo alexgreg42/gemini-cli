@@ -18,6 +18,7 @@ module.exports = async ({ github, context, core }) => {
 
   const STALE_LABEL = 'stale';
   const NEED_INFO_LABEL = 'status/need-information';
+  const PR_NUDGE_LABEL = 'status/pr-nudge-sent';
   const EXEMPT_LABELS = [
     'pinned',
     'security',
@@ -29,46 +30,44 @@ module.exports = async ({ github, context, core }) => {
   const STALE_DAYS = 60;
   const CLOSE_DAYS = 14;
   const NO_RESPONSE_DAYS = 14;
+  const PR_NUDGE_DAYS = 7;
+  const PR_CLOSE_DAYS = 14;
 
   const now = new Date();
-  const staleThreshold = new Date(
-    now.getTime() - STALE_DAYS * 24 * 60 * 60 * 1000,
-  );
-  const closeThreshold = new Date(
-    now.getTime() - CLOSE_DAYS * 24 * 60 * 60 * 1000,
-  );
-  const noResponseThreshold = new Date(
-    now.getTime() - NO_RESPONSE_DAYS * 24 * 60 * 60 * 1000,
-  );
+  const staleThreshold = new Date(now.getTime() - STALE_DAYS * 24 * 60 * 60 * 1000);
+  const closeThreshold = new Date(now.getTime() - CLOSE_DAYS * 24 * 60 * 60 * 1000);
+  const noResponseThreshold = new Date(now.getTime() - NO_RESPONSE_DAYS * 24 * 60 * 60 * 1000);
+  const prNudgeThreshold = new Date(now.getTime() - PR_NUDGE_DAYS * 24 * 60 * 60 * 1000);
+  const prCloseThreshold = new Date(now.getTime() - PR_CLOSE_DAYS * 24 * 60 * 60 * 1000);
 
+  /**
+   * Helper to process items with pagination and rate-limit awareness
+   */
   async function processItems(query, callback) {
     core.info(`Searching: ${query}`);
-    try {
-      const response = await github.rest.search.issuesAndPullRequests({
-        q: query,
-        per_page: 100,
-        sort: 'updated',
-        order: 'asc',
-      });
-      const items = response.data.items;
-      core.info(`Found ${items.length} items (batch limited).`);
-      for (const item of items) {
-        try {
-          await callback(item);
-        } catch (err) {
-          core.error(`Error processing #${item.number}: ${err.message}`);
-        }
+    const items = await github.paginate(github.rest.search.issuesAndPullRequests, {
+      q: query,
+      per_page: 100,
+      sort: 'updated',
+      order: 'asc',
+    });
+
+    core.info(`Found ${items.length} items.`);
+    for (const item of items) {
+      try {
+        await callback(item);
+      } catch (err) {
+        core.error(`Error processing #${item.number}: ${err.message}`);
+        // Continue to next item
       }
-    } catch (err) {
-      core.error(`Search failed: ${err.message}`);
     }
   }
 
   // 1. Handle No-Response (status/need-information)
-  // Removal: Check issues updated in the last 48h that have the label
+  // Removal: Check issues updated in the last 48h that have the label and >1 comment
   const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
   await processItems(
-    `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}" updated:>${twoDaysAgo.toISOString()}`,
+    `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}" updated:>${twoDaysAgo.toISOString()} comments:>1`,
     async (item) => {
       const { data: comments } = await github.rest.issues.listComments({
         owner,
@@ -79,39 +78,30 @@ module.exports = async ({ github, context, core }) => {
         per_page: 5,
       });
 
-      // Check if the last comment is from a non-maintainer
       const lastComment = comments[0];
       if (
         lastComment &&
-        !['OWNER', 'MEMBER', 'COLLABORATOR'].includes(
-          lastComment.author_association,
-        ) &&
+        !['OWNER', 'MEMBER', 'COLLABORATOR'].includes(lastComment.author_association) &&
         lastComment.user?.type !== 'Bot'
       ) {
-        core.info(
-          `Removing ${NEED_INFO_LABEL} from #${item.number} due to contributor response.`,
-        );
+        core.info(`Removing ${NEED_INFO_LABEL} from #${item.number} due to contributor response.`);
         if (!dryRun) {
-          await github.rest.issues
-            .removeLabel({
-              owner,
-              repo,
-              issue_number: item.number,
-              name: NEED_INFO_LABEL,
-            })
-            .catch(() => {});
+          await github.rest.issues.removeLabel({
+            owner,
+            repo,
+            issue_number: item.number,
+            name: NEED_INFO_LABEL,
+          }).catch(() => {});
         }
       }
-    },
+    }
   );
 
   // Closure: Check issues with the label that haven't been updated in 14 days
   await processItems(
     `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}" updated:<${noResponseThreshold.toISOString()}`,
     async (item) => {
-      core.info(
-        `Closing #${item.number} due to no response for ${NO_RESPONSE_DAYS} days.`,
-      );
+      core.info(`Closing #${item.number} due to no response for ${NO_RESPONSE_DAYS} days.`);
       if (!dryRun) {
         await github.rest.issues.createComment({
           owner,
@@ -126,7 +116,7 @@ module.exports = async ({ github, context, core }) => {
           state: 'closed',
         });
       }
-    },
+    }
   );
 
   // 2. Handle Stale Mark (60 days inactivity, no stale label)
@@ -149,7 +139,7 @@ module.exports = async ({ github, context, core }) => {
           body: `This item has been automatically marked as stale due to ${STALE_DAYS} days of inactivity. It will be closed in ${CLOSE_DAYS} days if no further activity occurs. Thank you!`,
         });
       }
-    },
+    }
   );
 
   // 3. Handle Stale Close (14 days with stale label)
@@ -171,28 +161,15 @@ module.exports = async ({ github, context, core }) => {
           state: 'closed',
         });
       }
-    },
+    }
   );
 
   // 4. Handle PR Contribution Policy (Nudge at 7d, Close at 14d)
-  const PR_NUDGE_DAYS = 7;
-  const PR_CLOSE_DAYS = 14;
-  const nudgeThreshold = new Date(
-    now.getTime() - PR_NUDGE_DAYS * 24 * 60 * 60 * 1000,
-  );
-  const prCloseThreshold = new Date(
-    now.getTime() - PR_CLOSE_DAYS * 24 * 60 * 60 * 1000,
-  );
-
-  // Nudge
+  // Nudge: Older than 7d and no nudge label
   await processItems(
-    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" -label:"status/pr-nudge-sent" created:${prCloseThreshold.toISOString()}..${nudgeThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" -label:"${PR_NUDGE_LABEL}" created:<${prNudgeThreshold.toISOString()}`,
     async (pr) => {
-      if (
-        ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) ||
-        pr.user?.type === 'Bot'
-      )
-        return;
+      if (['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) || pr.user?.type === 'Bot') return;
 
       core.info(`Nudging PR #${pr.number} for contribution policy.`);
       if (!dryRun) {
@@ -200,7 +177,7 @@ module.exports = async ({ github, context, core }) => {
           owner,
           repo,
           issue_number: pr.number,
-          labels: ['status/pr-nudge-sent'],
+          labels: [PR_NUDGE_LABEL],
         });
         await github.rest.issues.createComment({
           owner,
@@ -209,22 +186,16 @@ module.exports = async ({ github, context, core }) => {
           body: "Hi there! Thank you for your interest in contributing to Gemini CLI. \n\nTo ensure we maintain high code quality and focus on our prioritized roadmap, we only guarantee review and consideration of pull requests for issues that are explicitly labeled as 'help wanted'. \n\nThis PR will be closed in 7 days if it remains without that designation. We encourage you to find and contribute to existing 'help wanted' issues in our backlog! Thank you for your understanding.",
         });
       }
-    },
+    }
   );
 
-  // Close
+  // Close: Has nudge label AND older than 14d AND untouched for 7d (grace period)
   await processItems(
-    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" created:<${prCloseThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:pr label:"${PR_NUDGE_LABEL}" -label:"help wanted" -label:"🔒 maintainer only" created:<${prCloseThreshold.toISOString()} updated:<${prNudgeThreshold.toISOString()}`,
     async (pr) => {
-      if (
-        ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) ||
-        pr.user?.type === 'Bot'
-      )
-        return;
+      if (['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) || pr.user?.type === 'Bot') return;
 
-      core.info(
-        `Closing PR #${pr.number} per contribution policy (no 'help wanted').`,
-      );
+      core.info(`Closing PR #${pr.number} per contribution policy (no 'help wanted' and grace period elapsed).`);
       if (!dryRun) {
         await github.rest.issues.createComment({
           owner,
@@ -239,6 +210,6 @@ module.exports = async ({ github, context, core }) => {
           state: 'closed',
         });
       }
-    },
+    }
   );
 };
