@@ -809,11 +809,11 @@ export function getCommandRoots(command: string): string[] {
 }
 
 export function stripShellWrapper(command: string): string {
-  const pattern =
+  const cFlagPattern =
     /^\s*(?:(?:(?:\S+\/)?(?:sh|bash|zsh))\s+-c|cmd\.exe\s+\/c|powershell(?:\.exe)?\s+(?:-NoProfile\s+)?-Command|pwsh(?:\.exe)?\s+(?:-NoProfile\s+)?-Command)\s+/i;
-  const match = command.match(pattern);
-  if (match) {
-    let newCommand = command.substring(match[0].length).trim();
+  const cFlagMatch = command.match(cFlagPattern);
+  if (cFlagMatch) {
+    let newCommand = command.substring(cFlagMatch[0].length).trim();
     if (
       (newCommand.startsWith('"') && newCommand.endsWith('"')) ||
       (newCommand.startsWith("'") && newCommand.endsWith("'"))
@@ -822,6 +822,14 @@ export function stripShellWrapper(command: string): string {
     }
     return newCommand;
   }
+
+  const scriptPattern =
+    /^\s*(?:(?:\S+\/)?(?:sh|bash|zsh))\s+([a-zA-Z0-9_\-./]+\.sh)\s*$/i;
+  const scriptMatch = command.match(scriptPattern);
+  if (scriptMatch) {
+    return scriptMatch[1];
+  }
+
   return command.trim();
 }
 
