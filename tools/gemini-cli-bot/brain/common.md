@@ -103,6 +103,10 @@ safe:
     preserve any existing exemptions (e.g., `-label:security`, `-label:pinned`,
     `-label:"help wanted"`). Never drop existing protections or safety checks
     unless you have proven they are the explicit root cause of the issue.
+3.  **Empirical Log Verification**: Never diagnose a CI, workflow, or test
+    failure based purely on static code inspection. You MUST use the `gh` CLI
+    (e.g., `gh run view --log-failed`) to fetch and read the actual error logs
+    before confirming a hypothesis or proposing a fix.
 
 ## Pull Request Preparation (MANDATORY)
 
