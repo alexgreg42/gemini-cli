@@ -20,28 +20,43 @@ interface IssueNode {
  */
 function run() {
   try {
-    // Fetch 1000 open issues, sorted by least recently updated.
-    const query = `
-    query($owner: String!, $repo: String!) {
-      repository(owner: $owner, name: $repo) {
-        issues(first: 1000, states: OPEN, orderBy: {field: UPDATED_AT, direction: ASC}) {
-          nodes {
-            number
-            updatedAt
-            comments {
-              totalCount
+    const issues: IssueNode[] = [];
+    let hasNextPage = true;
+    let endCursor: string | null = null;
+    const MAX_ISSUES = 1000;
+
+    // Fetch up to 1000 open issues, sorted by least recently updated, using pagination.
+    while (hasNextPage && issues.length < MAX_ISSUES) {
+      const query = `
+      query($owner: String!, $repo: String!, $after: String) {
+        repository(owner: $owner, name: $repo) {
+          issues(first: 100, states: OPEN, orderBy: {field: UPDATED_AT, direction: ASC}, after: $after) {
+            nodes {
+              number
+              updatedAt
+              comments {
+                totalCount
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
             }
           }
         }
       }
+      `;
+      const variables = endCursor ? `-F after=${endCursor}` : '';
+      const output = execSync(
+        `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} ${variables} -f query='${query}'`,
+        { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
+      ).trim();
+
+      const data = JSON.parse(output).data.repository.issues;
+      issues.push(...data.nodes);
+      hasNextPage = data.pageInfo.hasNextPage;
+      endCursor = data.pageInfo.endCursor;
     }
-    `;
-    const output = execSync(
-      `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${query}'`,
-      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
-    ).trim();
-    const data = JSON.parse(output).data.repository;
-    const issues: IssueNode[] = data.issues.nodes;
 
     if (issues.length === 0) {
       process.stdout.write('bottleneck_zombie_issues_count,0\n');
