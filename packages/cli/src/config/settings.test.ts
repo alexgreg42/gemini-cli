@@ -175,6 +175,9 @@ const { commentJsonParseMock } = await vi.hoisted(async () => {
 vi.mock('../utils/commentJson.js', () => ({
   updateSettingsFilePreservingFormat: vi.fn(),
   parse: commentJsonParseMock,
+  stringify: vi.fn((obj, replacer, space) =>
+    JSON.stringify(obj, replacer, space),
+  ),
 }));
 
 vi.mock('strip-json-comments', () => ({

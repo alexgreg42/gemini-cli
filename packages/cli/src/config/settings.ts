@@ -851,14 +851,10 @@ function _doLoadSettings(workspaceDir: string): LoadedSettings {
     workspaceResult = load(workspaceSettingsPath);
   }
 
-  const systemOriginalSettings = structuredClone(systemResult.rawSettings);
-  const systemDefaultsOriginalSettings = structuredClone(
-    systemDefaultsResult.rawSettings,
-  );
-  const userOriginalSettings = structuredClone(userResult.rawSettings);
-  const workspaceOriginalSettings = structuredClone(
-    workspaceResult.rawSettings,
-  );
+  const systemOriginalSettings = systemResult.rawSettings;
+  const systemDefaultsOriginalSettings = systemDefaultsResult.rawSettings;
+  const userOriginalSettings = userResult.rawSettings;
+  const workspaceOriginalSettings = workspaceResult.rawSettings;
 
   // Environment variables for runtime use are already resolved and validated in load()
   systemSettings = systemResult.settings;

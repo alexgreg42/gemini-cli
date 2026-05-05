@@ -146,13 +146,28 @@ describe('Settings Validation Warning', () => {
     }).toThrow();
   });
 
-  it('should throw a fatal error when settings file contains invalid JSON', () => {
+  it('should NOT throw for trailing commas (now supported via comment-json)', () => {
     (fs.existsSync as Mock).mockImplementation(
       (p: string) => p === USER_SETTINGS_PATH,
     );
 
     (fs.readFileSync as Mock).mockImplementation((p: string) => {
-      if (p === USER_SETTINGS_PATH) return '{ "invalid": "json"'; // Unclosed brace is invalid
+      if (p === USER_SETTINGS_PATH) return '{ "valid": "json", }'; // Trailing comma is allowed in JSONC
+      return '{}';
+    });
+
+    expect(() => {
+      loadSettings(MOCK_WORKSPACE_DIR);
+    }).not.toThrow();
+  });
+
+  it('should throw a fatal error when settings file is unparseable', () => {
+    (fs.existsSync as Mock).mockImplementation(
+      (p: string) => p === USER_SETTINGS_PATH,
+    );
+
+    (fs.readFileSync as Mock).mockImplementation((p: string) => {
+      if (p === USER_SETTINGS_PATH) return '{ "invalid": "json"'; // Unclosed brace is truly invalid
       return '{}';
     });
 
