@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { AnsiOutput } from 'src/utils/terminalSerializer.js';
+import type { AnsiOutput } from '../utils/terminalSerializer.js';
 import type { Kind } from '../tools/tools.js';
 
 export type WithMeta = { _meta?: Record<string, unknown> };

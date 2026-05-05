@@ -411,7 +411,11 @@ export class Turn {
     const name = fnCall.name || 'undefined_tool_name';
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const args = (fnCall.args as Record<string, unknown>) || {};
-    const callId = fnCall.id ?? `${name}_${Date.now()}_${this.callCounter++}`;
+    const callId =
+      fnCall.id ??
+      (this.chat.context.config.isContextManagementEnabled()
+        ? `synth_${this.prompt_id}_${Date.now()}_${this.callCounter++}`
+        : `${name}_${Date.now()}_${this.callCounter++}`);
 
     const tool = this.chat.loopContext.toolRegistry.getTool(name);
     let display;
