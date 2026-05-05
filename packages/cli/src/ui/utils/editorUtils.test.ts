@@ -46,7 +46,7 @@ describe('editorUtils', () => {
     vi.unstubAllEnvs();
   });
 
-  it('should throw EditorNotConfiguredError if no editor is configured and no env vars set', async () => {
+  it('should throw EditorNotConfiguredError if no editor is configured', async () => {
     await expect(openFileInEditor('test.txt', null, undefined)).rejects.toThrow(
       EditorNotConfiguredError,
     );
@@ -86,40 +86,13 @@ describe('editorUtils', () => {
     );
   });
 
-  it('should use VISUAL env var if set', async () => {
-    vi.stubEnv('VISUAL', 'nano');
-    vi.mocked(spawnSync).mockReturnValue({
-      status: 0,
-    } as SpawnSyncReturns<Buffer>);
-    await openFileInEditor('test.txt', null, undefined);
-    expect(spawnSync).toHaveBeenCalledWith(
-      'nano',
-      expect.arrayContaining(['test.txt']),
-      expect.anything(),
-    );
-  });
-
-  it('should use EDITOR env var if set', async () => {
-    vi.stubEnv('EDITOR', 'nano');
-    vi.mocked(spawnSync).mockReturnValue({
-      status: 0,
-    } as SpawnSyncReturns<Buffer>);
-    await openFileInEditor('test.txt', null, undefined);
-    expect(spawnSync).toHaveBeenCalledWith(
-      'nano',
-      expect.arrayContaining(['test.txt']),
-      expect.anything(),
-    );
-  });
-
   it('should handle editor exit with non-zero status', async () => {
-    vi.stubEnv('EDITOR', 'vim');
     vi.mocked(spawnSync).mockReturnValue({
       status: 1,
     } as SpawnSyncReturns<Buffer>);
-    await expect(openFileInEditor('test.txt', null, undefined)).rejects.toThrow(
-      'External editor exited with status 1',
-    );
+    await expect(
+      openFileInEditor('test.txt', null, undefined, 'vim'),
+    ).rejects.toThrow('External editor exited with status 1');
     expect(coreEvents.emitFeedback).toHaveBeenCalledWith(
       'error',
       expect.any(String),

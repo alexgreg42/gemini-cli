@@ -60,7 +60,7 @@ describe('useTextBuffer external editor', () => {
     vi.clearAllMocks();
   });
 
-  it('should emit RequestEditorSelection when openFileInEditor throws EditorNotConfiguredError', async () => {
+  it('should emit feedback when openFileInEditor throws EditorNotConfiguredError', async () => {
     vi.mocked(openFileInEditor).mockRejectedValue(
       new EditorNotConfiguredError(),
     );
@@ -76,7 +76,11 @@ describe('useTextBuffer external editor', () => {
       await result.current.openInExternalEditor();
     });
 
-    expect(coreEvents.emit).toHaveBeenCalledWith(
+    expect(coreEvents.emitFeedback).toHaveBeenCalledWith(
+      'warning',
+      'No external editor configured. Please set your preferred editor in settings.',
+    );
+    expect(coreEvents.emit).not.toHaveBeenCalledWith(
       CoreEvent.RequestEditorSelection,
     );
   });

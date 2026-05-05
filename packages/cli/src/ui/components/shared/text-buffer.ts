@@ -12,7 +12,6 @@ import { useState, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { LRUCache } from 'mnemonist';
 import {
   coreEvents,
-  CoreEvent,
   debugLogger,
   unescapePath,
   type EditorType,
@@ -3347,7 +3346,10 @@ export function useTextBuffer({
       dispatch({ type: 'set_text', payload: newText, pushToUndo: false });
     } catch (err) {
       if (err instanceof EditorNotConfiguredError) {
-        coreEvents.emit(CoreEvent.RequestEditorSelection);
+        coreEvents.emitFeedback(
+          'warning',
+          'No external editor configured. Please set your preferred editor in settings.',
+        );
         return;
       }
       coreEvents.emitFeedback(

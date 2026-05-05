@@ -48,23 +48,6 @@ export async function openFileInEditor(
   }
 
   if (!command) {
-    command = process.env['VISUAL']?.trim() || process.env['EDITOR']?.trim();
-    if (command) {
-      const lowerCommand = command.toLowerCase();
-      const isGui = ['code', 'cursor', 'subl', 'zed', 'atom'].some((gui) =>
-        lowerCommand.includes(gui),
-      );
-      if (
-        isGui &&
-        !lowerCommand.includes('--wait') &&
-        !lowerCommand.includes('-w')
-      ) {
-        args.unshift(lowerCommand.includes('subl') ? '-w' : '--wait');
-      }
-    }
-  }
-
-  if (!command) {
     throw new EditorNotConfiguredError();
   }
 
