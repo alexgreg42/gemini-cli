@@ -41,24 +41,43 @@ module.exports = async ({ github, context, core }) => {
     now.getTime() - NO_RESPONSE_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  async function processItems(query, callback) {
-    core.info(`Searching: ${query}`);
+  let totalProcessed = 0;
+  const GLOBAL_LIMIT = 300;
+
+  async function processItems(query, callback, queryLimit = 50) {
+    if (totalProcessed >= GLOBAL_LIMIT) {
+      core.info(
+        `Reached global limit of ${GLOBAL_LIMIT}. Skipping query: ${query}`,
+      );
+      return;
+    }
+    core.info(`Searching: ${query} (limit: ${queryLimit})`);
+    let count = 0;
     try {
-      const response = await github.rest.search.issuesAndPullRequests({
-        q: query,
-        per_page: 100,
-        sort: 'updated',
-        order: 'asc',
-      });
-      const items = response.data.items;
-      core.info(`Found ${items.length} items (batch limited).`);
-      for (const item of items) {
-        try {
-          await callback(item);
-        } catch (err) {
-          core.error(`Error processing #${item.number}: ${err.message}`);
+      const iterator = github.paginate.iterator(
+        github.rest.search.issuesAndPullRequests,
+        {
+          q: query,
+          per_page: Math.min(queryLimit, 100),
+          sort: 'updated',
+          order: 'asc',
+        },
+      );
+
+      for await (const { data: items } of iterator) {
+        for (const item of items) {
+          if (count >= queryLimit || totalProcessed >= GLOBAL_LIMIT) break;
+          try {
+            await callback(item);
+            count++;
+            totalProcessed++;
+          } catch (err) {
+            core.error(`Error processing #${item.number}: ${err.message}`);
+          }
         }
+        if (count >= queryLimit || totalProcessed >= GLOBAL_LIMIT) break;
       }
+      core.info(`Processed ${count} items for this query.`);
     } catch (err) {
       core.error(`Search failed: ${err.message}`);
     }
@@ -70,6 +89,9 @@ module.exports = async ({ github, context, core }) => {
   await processItems(
     `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}" updated:>${twoDaysAgo.toISOString()}`,
     async (item) => {
+      // Optimization: Skip if no comments (search API returns comments count)
+      if (item.comments === 0) return;
+
       const { data: comments } = await github.rest.issues.listComments({
         owner,
         repo,
@@ -103,6 +125,7 @@ module.exports = async ({ github, context, core }) => {
         }
       }
     },
+    50,
   );
 
   // Closure: Check issues with the label that haven't been updated in 14 days
@@ -127,6 +150,7 @@ module.exports = async ({ github, context, core }) => {
         });
       }
     },
+    50,
   );
 
   // 2. Handle Stale Mark (60 days inactivity, no stale label)
@@ -150,6 +174,7 @@ module.exports = async ({ github, context, core }) => {
         });
       }
     },
+    50,
   );
 
   // 3. Handle Stale Close (14 days with stale label)
@@ -172,21 +197,22 @@ module.exports = async ({ github, context, core }) => {
         });
       }
     },
+    50,
   );
 
-  // 4. Handle PR Contribution Policy (Nudge at 7d, Close at 14d)
+  // 4. Handle PR Contribution Policy (Nudge at 7d, Close at 7d after nudge)
   const PR_NUDGE_DAYS = 7;
-  const PR_CLOSE_DAYS = 14;
+  const PR_CLOSE_GRACE_DAYS = 7;
   const nudgeThreshold = new Date(
     now.getTime() - PR_NUDGE_DAYS * 24 * 60 * 60 * 1000,
   );
-  const prCloseThreshold = new Date(
-    now.getTime() - PR_CLOSE_DAYS * 24 * 60 * 60 * 1000,
+  const closeGraceThreshold = new Date(
+    now.getTime() - PR_CLOSE_GRACE_DAYS * 24 * 60 * 60 * 1000,
   );
 
-  // Nudge
+  // Nudge: Open PRs, no "help wanted", no nudge label, created > 7 days ago
   await processItems(
-    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" -label:"status/pr-nudge-sent" created:${prCloseThreshold.toISOString()}..${nudgeThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" -label:"status/pr-nudge-sent" created:<${nudgeThreshold.toISOString()}`,
     async (pr) => {
       if (
         ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) ||
@@ -210,11 +236,13 @@ module.exports = async ({ github, context, core }) => {
         });
       }
     },
+    50,
   );
 
-  // Close
+  // Close: Open PRs, has nudge label, no "help wanted", not updated in 7 days
+  // This guarantees a minimum 7-day grace period since the nudge (or any other activity)
   await processItems(
-    `repo:${owner}/${repo} is:open is:pr -label:"help wanted" -label:"🔒 maintainer only" created:<${prCloseThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open is:pr label:"status/pr-nudge-sent" -label:"help wanted" updated:<${closeGraceThreshold.toISOString()}`,
     async (pr) => {
       if (
         ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(pr.author_association) ||
@@ -230,7 +258,7 @@ module.exports = async ({ github, context, core }) => {
           owner,
           repo,
           issue_number: pr.number,
-          body: "This pull request is being closed as it has been open for 14 days without a 'help wanted' designation. We encourage you to find and contribute to existing 'help wanted' issues in our backlog! Thank you for your understanding.",
+          body: "This pull request is being closed as it has been open for at least 14 days total, and at least 7 days have passed since our initial notification regarding the 'help wanted' requirement. We encourage you to find and contribute to existing 'help wanted' issues in our backlog! Thank you for your understanding.",
         });
         await github.rest.pulls.update({
           owner,
@@ -240,5 +268,6 @@ module.exports = async ({ github, context, core }) => {
         });
       }
     },
+    50,
   );
 };
