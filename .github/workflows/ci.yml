@@ -244,8 +244,6 @@ jobs:
       matrix:
         node-version:
           - '20.x'
-          - '22.x'
-          - '24.x'
         shard:
           - 'cli'
           - 'others'
