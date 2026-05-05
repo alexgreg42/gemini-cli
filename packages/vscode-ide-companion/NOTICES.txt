@@ -56,11 +56,11 @@ SOFTWARE.
 
 ============================================================
 ajv@6.14.0
-(https://github.com/ajv-validator/ajv.git)
+(No repository found)
 
 The MIT License (MIT)
 
-Copyright (c) 2015-2017 Evgeny Poberezkin
+Copyright (c) 2015-2021 Evgeny Poberezkin
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -492,7 +492,7 @@ eventsource-parser@3.0.3
 
 MIT License
 
-Copyright (c) 2025 Espen Hovlandsdal <espen@hovlandsdal.com>
+Copyright (c) 2026 Espen Hovlandsdal <espen@hovlandsdal.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
