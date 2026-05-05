@@ -4,7 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type Mock,
+} from 'vitest';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import {
@@ -166,7 +174,9 @@ vi.mock('@google/gemini-cli-core', async () => {
       (_feature) =>
         `YOLO mode is disabled by your administrator. To enable it, please request an update to the settings at: https://goo.gle/manage-gemini-cli`,
     ),
-    Config: vi.fn().mockImplementation((params) => new actualServer.Config(params)),
+    Config: vi
+      .fn()
+      .mockImplementation((params) => new actualServer.Config(params)),
     isHeadlessMode: vi.fn((opts) => {
       if (process.env['VITEST'] === 'true') {
         return (
@@ -4052,7 +4062,7 @@ describe('loadCliConfig acpMode and clientName', () => {
     await loadCliConfig(initialSettings, 'test-session', argv);
 
     // Check if onReload was passed to core
-     
+
     const onReload = (ServerConfig.Config as unknown as Mock).mock.calls[0][0]
       .onReload;
     expect(onReload).toBeDefined();
