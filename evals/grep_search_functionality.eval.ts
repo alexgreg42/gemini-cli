@@ -194,7 +194,7 @@ describe('grep_search_functionality', () => {
       await rig.waitForToolCall('grep_search');
       assertModelHasOutput(result);
       checkModelOutputContent(result, {
-        expectedContent: [/\.hidden_dir\/system\.md/],
+        expectedContent: [/\\.hidden_dir[\\\\/]system\\.md/],
         testName: `${TEST_PREFIX}hidden directory search`,
       });
     },
