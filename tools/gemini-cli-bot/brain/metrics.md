@@ -117,11 +117,13 @@ rules:
   stabilization period are: (1) direct human feedback on a PR requesting a
   different number, or (2) your metrics show the new rule caused an immediate,
   severe regression (e.g., a massive spike in incorrectly closed issues).
-- **Rotate Focus Areas**: Review the Task Ledger and Decision Log. If you
-  recently submitted a PR to optimize a specific area (e.g., stale issue
-  closure), deliberately shift your investigation to a completely different
-  domain or bottleneck (e.g., CI failures, review latency, labeling automation).
-  Do not pigeonhole on a single metric or domain.
+- **Strict Domain Rotation**: Review the Task Ledger and Decision Log. If a
+  specific domain, workflow file, or script (e.g.,
+  `gemini-lifecycle-manager.cjs`, "stale issue closure") appears anywhere in the
+  last 5 tasks, you are STRICTLY FORBIDDEN from proposing another PR for that
+  same domain or script. You MUST pick a completely different area of the
+  repository to investigate (e.g., CI failures, review routing, labeling
+  automation). Do not pigeonhole on a single metric or domain.
 
 ### 7. Record Findings & Propose Actions
 
@@ -130,6 +132,7 @@ rules:
   or workflow changes (e.g., in `.github/workflows/` or
   `tools/gemini-cli-bot/reflexes/scripts/`) that resolve the identified root
   cause.
-- **No Metrics Changes**: You are STRICTLY FORBIDDEN from modifying the
-  measurement scripts in `tools/gemini-cli-bot/metrics/scripts/`. Your role is
-  to fix the underlying repository issues, not to change how they are measured.
+- **NEVER MODIFY METRICS SCRIPTS**: You are STRICTLY FORBIDDEN from modifying,
+  adding, or removing measurement scripts in
+  `tools/gemini-cli-bot/metrics/scripts/`. Your role is to fix the underlying
+  repository issues, not to change how they are measured or invent new metrics.
