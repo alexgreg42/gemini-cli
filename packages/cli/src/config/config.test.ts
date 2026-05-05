@@ -43,6 +43,7 @@ import { ExtensionManager } from './extension-manager.js';
 import { RESUME_LATEST } from '../utils/sessionUtils.js';
 
 vi.mock('./settings.js', async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
   const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
@@ -174,9 +175,13 @@ vi.mock('@google/gemini-cli-core', async () => {
       (_feature) =>
         `YOLO mode is disabled by your administrator. To enable it, please request an update to the settings at: https://goo.gle/manage-gemini-cli`,
     ),
-    Config: vi
-      .fn()
-      .mockImplementation((params) => new actualServer.Config(params)),
+    Config: class Config extends actualServer.Config {
+      static mock = { calls: [] as ServerConfig.ConfigParameters[][] };
+      constructor(params: ServerConfig.ConfigParameters) {
+        super(params);
+        (this.constructor as typeof Config).mock.calls.push([params]);
+      }
+    },
     isHeadlessMode: vi.fn((opts) => {
       if (process.env['VITEST'] === 'true') {
         return (
