@@ -43,7 +43,7 @@ import { ExtensionManager } from './extension-manager.js';
 import { RESUME_LATEST } from '../utils/sessionUtils.js';
 
 vi.mock('./settings.js', async (importOriginal) => {
-  const actual = (await importOriginal());
+  const actual = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actual,
     loadSettings: vi.fn(),
