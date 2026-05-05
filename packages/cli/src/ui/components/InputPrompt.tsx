@@ -43,10 +43,7 @@ import chalk from 'chalk';
 import stringWidth from 'string-width';
 import { useShellHistory } from '../hooks/useShellHistory.js';
 import { useReverseSearchCompletion } from '../hooks/useReverseSearchCompletion.js';
-import {
-  useCommandCompletion,
-  CompletionMode,
-} from '../hooks/useCommandCompletion.js';
+import { useCommandCompletion } from '../hooks/useCommandCompletion.js';
 import { useKeypress, type Key } from '../hooks/useKeypress.js';
 import { Command } from '../key/keyMatchers.js';
 import { formatCommand } from '../key/keybindingUtils.js';
@@ -1759,14 +1756,13 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         scrollOffset={activeCompletion.visibleStartIndex}
         userInput={buffer.text}
         mode={
-          completion.completionMode === CompletionMode.AT ||
-          completion.completionMode === CompletionMode.SHELL
+          suggestionsPosition === 'above'
             ? 'reverse'
             : buffer.text.startsWith('/') &&
                 !reverseSearchActive &&
                 !commandSearchActive
               ? 'slash'
-              : 'reverse'
+              : 'normal'
         }
         expandedIndex={expandedSuggestionIndex}
       />

@@ -25,7 +25,7 @@ describe('SuggestionsDisplay', () => {
         width={80}
         scrollOffset={0}
         userInput=""
-        mode="reverse"
+        mode="normal"
       />,
     );
     expect(lastFrame()).toMatchSnapshot();
@@ -40,7 +40,7 @@ describe('SuggestionsDisplay', () => {
         width={80}
         scrollOffset={0}
         userInput=""
-        mode="reverse"
+        mode="normal"
       />,
     );
     expect(lastFrame({ allowEmpty: true })).toBe('');
@@ -55,7 +55,7 @@ describe('SuggestionsDisplay', () => {
         width={80}
         scrollOffset={0}
         userInput=""
-        mode="reverse"
+        mode="normal"
       />,
     );
     expect(lastFrame()).toMatchSnapshot();
@@ -72,7 +72,7 @@ describe('SuggestionsDisplay', () => {
         width={80}
         scrollOffset={0}
         userInput=""
-        mode="reverse"
+        mode="normal"
       />,
     );
     expect(lastFrame()).toMatchSnapshot();
@@ -92,6 +92,21 @@ describe('SuggestionsDisplay', () => {
         isLoading={false}
         width={80}
         scrollOffset={5}
+        userInput=""
+        mode="normal"
+      />,
+    );
+    expect(lastFrame()).toMatchSnapshot();
+  });
+
+  it('renders reverse mode correctly', async () => {
+    const { lastFrame } = await render(
+      <SuggestionsDisplay
+        suggestions={mockSuggestions}
+        activeIndex={0}
+        isLoading={false}
+        width={80}
+        scrollOffset={0}
         userInput=""
         mode="reverse"
       />,
@@ -116,7 +131,7 @@ describe('SuggestionsDisplay', () => {
         width={80}
         scrollOffset={0}
         userInput=""
-        mode="reverse"
+        mode="normal"
       />,
     );
     expect(lastFrame()).toMatchSnapshot();

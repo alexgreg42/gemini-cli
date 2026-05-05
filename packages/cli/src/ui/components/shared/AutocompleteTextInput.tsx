@@ -13,7 +13,6 @@ import { useConfig } from '../../contexts/ConfigContext.js';
 import { useKeypress, type Key } from '../../hooks/useKeypress.js';
 import { useKeyMatchers } from '../../hooks/useKeyMatchers.js';
 import { Command } from '../../key/keyMatchers.js';
-import type { CommandContext } from '../../commands/types.js';
 
 export interface AutocompleteTextInputProps extends TextInputProps {
   suggestionsPosition?: 'above' | 'below';
@@ -38,8 +37,6 @@ export function AutocompleteTextInput(
     buffer: props.buffer,
     cwd: process.cwd(),
     slashCommands: [],
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    commandContext: {} as unknown as CommandContext,
     shellModeActive: false,
     config,
     active: props.focus ?? true,
@@ -81,7 +78,7 @@ export function AutocompleteTextInput(
         width={availableWidth}
         scrollOffset={completion.visibleStartIndex}
         userInput={props.buffer.text}
-        mode="reverse"
+        mode={suggestionsPosition === 'above' ? 'reverse' : undefined}
       />
     </Box>
   ) : null;

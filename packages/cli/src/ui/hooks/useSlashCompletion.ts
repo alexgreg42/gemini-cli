@@ -145,7 +145,7 @@ interface PerfectMatchResult {
 function useCommandSuggestions(
   query: string | null,
   parserResult: CommandParserResult,
-  commandContext: CommandContext,
+  commandContext: CommandContext | undefined,
   getFzfForCommands: (
     commands: readonly SlashCommand[],
   ) => FzfCommandCacheEntry | null,
@@ -177,6 +177,13 @@ function useCommandSuggestions(
         if (!leafCommand?.completion) {
           debugLogger.warn(
             'Attempted argument completion without completion function',
+          );
+          return;
+        }
+
+        if (!commandContext) {
+          debugLogger.warn(
+            'CommandContext is required for argument completion',
           );
           return;
         }
@@ -473,7 +480,7 @@ export interface UseSlashCompletionProps {
   enabled: boolean;
   query: string | null;
   slashCommands: readonly SlashCommand[];
-  commandContext: CommandContext;
+  commandContext?: CommandContext;
   setSuggestions: (suggestions: Suggestion[]) => void;
   setIsLoadingSuggestions: (isLoading: boolean) => void;
   setIsPerfectMatch: (isMatch: boolean) => void;

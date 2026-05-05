@@ -67,7 +67,7 @@ export interface UseCommandCompletionOptions {
   buffer: TextBuffer;
   cwd: string;
   slashCommands: readonly SlashCommand[];
-  commandContext: CommandContext;
+  commandContext?: CommandContext;
   reverseSearchActive?: boolean;
   shellModeActive: boolean;
   config?: Config;

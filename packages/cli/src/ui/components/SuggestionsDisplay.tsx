@@ -28,7 +28,7 @@ interface SuggestionsDisplayProps {
   width: number;
   scrollOffset: number;
   userInput: string;
-  mode: 'reverse' | 'slash';
+  mode?: 'reverse' | 'slash' | 'normal';
   expandedIndex?: number;
 }
 
@@ -42,7 +42,7 @@ export function SuggestionsDisplay({
   width,
   scrollOffset,
   userInput,
-  mode,
+  mode = 'normal',
   expandedIndex,
 }: SuggestionsDisplayProps) {
   if (isLoading) {
@@ -80,8 +80,17 @@ export function SuggestionsDisplay({
     mode === 'slash' ? Math.min(maxLabelLength, Math.floor(width * 0.5)) : 0;
 
   return (
-    <Box flexDirection="column" paddingX={1} width={width}>
-      {scrollOffset > 0 && <Text color={theme.text.primary}>▲</Text>}
+    <Box
+      flexDirection={mode === 'reverse' ? 'column-reverse' : 'column'}
+      paddingX={1}
+      width={width}
+    >
+      {scrollOffset > 0 && mode !== 'reverse' && (
+        <Text color={theme.text.primary}>▲</Text>
+      )}
+      {endIndex < suggestions.length && mode === 'reverse' && (
+        <Text color="gray">▼</Text>
+      )}
 
       {visibleSuggestions.map((suggestion, index) => {
         const originalIndex = startIndex + index;
@@ -153,7 +162,12 @@ export function SuggestionsDisplay({
           </Box>
         );
       })}
-      {endIndex < suggestions.length && <Text color="gray">▼</Text>}
+      {endIndex < suggestions.length && mode !== 'reverse' && (
+        <Text color="gray">▼</Text>
+      )}
+      {scrollOffset > 0 && mode === 'reverse' && (
+        <Text color={theme.text.primary}>▲</Text>
+      )}
       {suggestions.length > MAX_SUGGESTIONS_TO_SHOW && (
         <Text color="gray">
           ({activeIndex + 1}/{suggestions.length})

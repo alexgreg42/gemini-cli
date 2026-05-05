@@ -32,6 +32,13 @@ exports[`SuggestionsDisplay > renders loading state 1`] = `
 "
 `;
 
+exports[`SuggestionsDisplay > renders reverse mode correctly 1`] = `
+" command3   Description 3
+ command2   Description 2
+ command1   Description 1                                                      
+"
+`;
+
 exports[`SuggestionsDisplay > renders suggestions list 1`] = `
 " command1   Description 1                                                      
  command2   Description 2
