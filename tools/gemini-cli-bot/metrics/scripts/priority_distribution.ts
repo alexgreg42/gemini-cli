@@ -18,12 +18,12 @@ interface IssueNode {
  */
 function run() {
   try {
-    // Fetch last 100 open issues and their labels.
+    // Fetch last 1000 open issues and their labels.
     // Using 'last' to get more recent context, but distribution is better from a larger sample.
     const query = `
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
-        issues(last: 100, states: OPEN) {
+        issues(last: 1000, states: OPEN) {
           nodes {
             labels(first: 20) {
               nodes {
@@ -78,7 +78,6 @@ function run() {
     process.stdout.write(`priority_p2_count,${distribution.p2}\n`);
     process.stdout.write(`priority_p3_count,${distribution.p3}\n`);
     process.stdout.write(`priority_none_count,${distribution.other}\n`);
-
   } catch (error) {
     process.stderr.write(
       error instanceof Error ? error.message : String(error),

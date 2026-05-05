@@ -13,22 +13,40 @@ and logical checklist.
 
 ### Technical Robustness
 
-1. **Time-Based Logic:** Do grace periods correctly calculate elapsed time
+1. **Local Validation (MANDATORY):** Did the Brain agent run and pass the
+   following checks?
+   - `npm run lint`: Verify there are no lint errors.
+   - `npm run build` or `npm run bundle`: Verify the build passes.
+   - `npm test`: Verify relevant tests pass. You MUST reject any change that has
+     not been locally validated or fails these checks.
+2. **Time-Based Logic:** Do grace periods correctly calculate elapsed time
    (e.g., measuring from the timeline event when a label was added) rather than
    just checking for the existence of a label?
-2. **Dynamic Data:** Are lists of maintainers or teams dynamically fetched
+3. **Dynamic Data:** Are lists of maintainers or teams dynamically fetched
    rather than hardcoded?
-3. **Error Handling & Fault Tolerance:** Are operations wrapped in `try/catch`
+4. **Error Handling & Fault Tolerance:** Are operations wrapped in `try/catch`
    blocks so a single failure on one item doesn't crash an entire batch process?
-4. **Data Mutations:** Are data manipulations (like parsing CSVs or logs) robust
+5. **Data Mutations:** Are data manipulations (like parsing CSVs or logs) robust
    and precise, avoiding brittle global string replacements?
-5. **Scale & Rate Limits:** Will this code time out, hit API rate limits, or
+6. **Scale & Rate Limits:** Will this code time out, hit API rate limits, or
    consume excessive memory if run against a repository with 5,000 open issues?
    You MUST reject any script that makes sequential API calls inside an
    unbounded loop (N+1 queries) or uses excessively broad search queries (like
    `is:open` without date or state filters).
-6. **Metrics Format:** Do metric scripts output strict comma-separated values
+7. **Metrics Format:** Do metric scripts output strict comma-separated values
    (`metric_name,value`) and not JSON or text?
+
+### 3. Verification (MANDATORY)
+
+Before approving, you MUST:
+
+1. **Verify Validation Output**: Read the logs from the Brain's execution phase.
+   Ensure that `npm run lint`, `npm run build`, and `npm test` were executed and
+   returned success. If the Brain skipped these or they failed, you MUST REJECT
+   the change.
+2. **Review CI History**: Check the CI status of the branch. If the Brain is
+   fixing a previously failing PR, ensure the fix is technically sound and
+   addresses the root cause of the CI failure.
 
 ### Logical & Workflow Integrity
 

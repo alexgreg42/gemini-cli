@@ -20,11 +20,11 @@ interface IssueNode {
  */
 function run() {
   try {
-    // Fetch 100 open issues, sorted by least recently updated.
+    // Fetch 1000 open issues, sorted by least recently updated.
     const query = `
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
-        issues(first: 100, states: OPEN, orderBy: {field: UPDATED_AT, direction: ASC}) {
+        issues(first: 1000, states: OPEN, orderBy: {field: UPDATED_AT, direction: ASC}) {
           nodes {
             number
             updatedAt
@@ -89,7 +89,6 @@ function run() {
     });
 
     process.stdout.write(`bottleneck_hot_issues_count,${veryHot.length}\n`);
-
   } catch (error) {
     process.stderr.write(
       error instanceof Error ? error.message : String(error),
