@@ -100,7 +100,7 @@ import { type LoadedSettings } from '../config/settings.js';
 import { createMockSettings } from '../test-utils/settings.js';
 import type { InitializationResult } from '../core/initializer.js';
 import { useQuotaAndFallback } from './hooks/useQuotaAndFallback.js';
-import { StreamingState } from './types.js';
+import { StreamingState, MessageType } from './types.js';
 import { UIStateContext, type UIState } from './contexts/UIStateContext.js';
 import {
   UIActionsContext,
@@ -3573,6 +3573,50 @@ describe('AppContainer State Management', () => {
 
       expect(capturedUIState).toBeTruthy();
       expect(capturedUIState.allowPlanMode).toBe(false);
+      unmount();
+    });
+  });
+
+  describe('Compression Queuing', () => {
+    it('queues messages during compression instead of handling as steering hints', async () => {
+      const { checkPermissions } = await import(
+        './hooks/atCommandProcessor.js'
+      );
+      vi.mocked(checkPermissions).mockResolvedValue([]);
+
+      vi.spyOn(mockConfig, 'isModelSteeringEnabled').mockReturnValue(true);
+
+      const actual = await vi.importActual('./hooks/useMessageQueue.js');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { useMessageQueue: realUseMessageQueue } = actual as any;
+      mockedUseMessageQueue.mockImplementation(realUseMessageQueue);
+
+      // Start compression by mocking pendingHistoryItems to include a pending compression
+      mockedUseGeminiStream.mockImplementation(() => ({
+        ...DEFAULT_GEMINI_STREAM_MOCK,
+        pendingHistoryItems: [
+          {
+            type: MessageType.COMPRESSION,
+            compression: {
+              isPending: true,
+              originalTokenCount: null,
+              newTokenCount: null,
+              compressionStatus: null,
+            },
+          },
+        ],
+      }));
+
+      const { unmount } = await act(async () => renderAppContainer());
+
+      // Submit a message
+      await act(async () =>
+        capturedUIActions.handleFinalSubmit('follow up message'),
+      );
+
+      // Verify it was queued, not submitted as steering hint
+      expect(capturedUIState.messageQueue).toContain('follow up message');
+
       unmount();
     });
   });
