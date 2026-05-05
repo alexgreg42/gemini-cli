@@ -94,7 +94,32 @@ Before proposing an intervention, accurately identify the blocker:
 - **Analyze Effectiveness**: Determine if current policies are achieving their
   goals.
 
-### 6. Record Findings & Propose Actions
+### 6. Stability & Broad Exploration (Anti-Pigeonholing)
+
+To prevent thrashing and user confusion, you MUST adhere to these stability
+rules:
+
+- **Avoid Repeated Tweaks**: Do not continuously modify the same metric
+  threshold, deadline, or rule (e.g., changing a stale issue deadline from 14
+  days to 7 days, then to 10 days in consecutive runs). Once a threshold or rule
+  is set, let it stabilize for at least several weeks. Rapid changes lead to
+  inaccurate messaging (e.g., "n days remaining") on existing issues and PRs.
+- **Record Baselines in Memory**: When you propose a change to a threshold,
+  deadline, or metric rule, you MUST explicitly record this decision in the
+  Decision Log of `tools/gemini-cli-bot/lessons-learned.md`. Treat these
+  recorded numbers as stable baselines for at least several weeks. You MUST NOT
+  spontaneously revisit or tweak these specific numbers during this
+  stabilization period. The ONLY exceptions allowing you to bypass this
+  stabilization period are: (1) direct human feedback on a PR requesting a
+  different number, or (2) your metrics show the new rule caused an immediate,
+  severe regression (e.g., a massive spike in incorrectly closed issues).
+- **Rotate Focus Areas**: Review the Task Ledger and Decision Log. If you
+  recently submitted a PR to optimize a specific area (e.g., stale issue
+  closure), deliberately shift your investigation to a completely different
+  domain or bottleneck (e.g., CI failures, review latency, labeling automation).
+  Do not pigeonhole on a single metric or domain.
+
+### 7. Record Findings & Propose Actions
 
 - Use the Memory & State format provided in the common rules.
 - **Action Priority**: Your ONLY goal is to propose actionable policy, reflex,
