@@ -26,7 +26,7 @@ module.exports = async ({ github, context, core }) => {
     '🗓️ Public Roadmap',
   ];
 
-  const STALE_DAYS = 60;
+  const STALE_DAYS = 30;
   const CLOSE_DAYS = 14;
   const NO_RESPONSE_DAYS = 14;
 
@@ -64,30 +64,66 @@ module.exports = async ({ github, context, core }) => {
     }
   }
 
-  // 1. Handle No-Response (status/need-information)
-  // Removal: Check issues updated in the last 48h that have the label
-  const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
-  await processItems(
-    `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}" updated:>${twoDaysAgo.toISOString()}`,
-    async (item) => {
+  /**
+   * Helper to get the timestamp when a specific label was added to an item.
+   */
+  async function getLabelAddedDate(issueNumber, labelName) {
+    try {
+      const events = await github.paginate(
+        github.rest.issues.listEventsForTimeline,
+        {
+          owner,
+          repo,
+          issue_number: issueNumber,
+          per_page: 100,
+        },
+      );
+      const labelEvent = events
+        .filter((e) => e.event === 'labeled' && e.label?.name === labelName)
+        .pop(); // Get the most recent application of the label
+      return labelEvent ? new Date(labelEvent.created_at) : null;
+    } catch (err) {
+      core.warning(
+        `Failed to fetch timeline for #${issueNumber}: ${err.message}`,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Helper to check if there is a non-maintainer comment after a certain date.
+   */
+  async function hasContributorResponse(issueNumber, sinceDate) {
+    try {
       const { data: comments } = await github.rest.issues.listComments({
         owner,
         repo,
-        issue_number: item.number,
-        sort: 'created',
-        direction: 'desc',
-        per_page: 5,
+        issue_number: issueNumber,
+        since: sinceDate.toISOString(),
       });
+      return comments.some(
+        (c) =>
+          !['OWNER', 'MEMBER', 'COLLABORATOR'].includes(
+            c.author_association,
+          ) && c.user?.type !== 'Bot',
+      );
+    } catch (err) {
+      core.warning(
+        `Failed to fetch comments for #${issueNumber}: ${err.message}`,
+      );
+      return false;
+    }
+  }
 
-      // Check if the last comment is from a non-maintainer
-      const lastComment = comments[0];
-      if (
-        lastComment &&
-        !['OWNER', 'MEMBER', 'COLLABORATOR'].includes(
-          lastComment.author_association,
-        ) &&
-        lastComment.user?.type !== 'Bot'
-      ) {
+  // 1. Handle No-Response (status/need-information)
+  // Removal: Check issues with the label
+  await processItems(
+    `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}"`,
+    async (item) => {
+      const labelAddedAt = await getLabelAddedDate(item.number, NEED_INFO_LABEL);
+      if (!labelAddedAt) return;
+
+      if (await hasContributorResponse(item.number, labelAddedAt)) {
         core.info(
           `Removing ${NEED_INFO_LABEL} from #${item.number} due to contributor response.`,
         );
@@ -101,35 +137,30 @@ module.exports = async ({ github, context, core }) => {
             })
             .catch(() => {});
         }
+      } else if (labelAddedAt < noResponseThreshold) {
+        // Closure: Check if grace period passed
+        core.info(
+          `Closing #${item.number} due to no response for ${NO_RESPONSE_DAYS} days.`,
+        );
+        if (!dryRun) {
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: item.number,
+            body: `This item was marked as needing more information and has not received a response in ${NO_RESPONSE_DAYS} days. Closing it for now. If you still face this problem, feel free to reopen with more details. Thank you!`,
+          });
+          await github.rest.issues.update({
+            owner,
+            repo,
+            issue_number: item.number,
+            state: 'closed',
+          });
+        }
       }
     },
   );
 
-  // Closure: Check issues with the label that haven't been updated in 14 days
-  await processItems(
-    `repo:${owner}/${repo} is:open label:"${NEED_INFO_LABEL}" updated:<${noResponseThreshold.toISOString()}`,
-    async (item) => {
-      core.info(
-        `Closing #${item.number} due to no response for ${NO_RESPONSE_DAYS} days.`,
-      );
-      if (!dryRun) {
-        await github.rest.issues.createComment({
-          owner,
-          repo,
-          issue_number: item.number,
-          body: `This item was marked as needing more information and has not received a response in ${NO_RESPONSE_DAYS} days. Closing it for now. If you still face this problem, feel free to reopen with more details. Thank you!`,
-        });
-        await github.rest.issues.update({
-          owner,
-          repo,
-          issue_number: item.number,
-          state: 'closed',
-        });
-      }
-    },
-  );
-
-  // 2. Handle Stale Mark (60 days inactivity, no stale label)
+  // 2. Handle Stale Mark (30 days inactivity, no stale label)
   const exemptQuery = EXEMPT_LABELS.map((l) => `-label:"${l}"`).join(' ');
   await processItems(
     `repo:${owner}/${repo} is:open -label:"${STALE_LABEL}" ${exemptQuery} updated:<${staleThreshold.toISOString()}`,
@@ -154,22 +185,27 @@ module.exports = async ({ github, context, core }) => {
 
   // 3. Handle Stale Close (14 days with stale label)
   await processItems(
-    `repo:${owner}/${repo} is:open label:"${STALE_LABEL}" ${exemptQuery} updated:<${closeThreshold.toISOString()}`,
+    `repo:${owner}/${repo} is:open label:"${STALE_LABEL}" ${exemptQuery}`,
     async (item) => {
-      core.info(`Closing stale item #${item.number}.`);
-      if (!dryRun) {
-        await github.rest.issues.createComment({
-          owner,
-          repo,
-          issue_number: item.number,
-          body: `This item has been closed due to ${CLOSE_DAYS} additional days of inactivity after being marked as stale. If you believe this is still relevant, feel free to comment or reopen. Thank you!`,
-        });
-        await github.rest.issues.update({
-          owner,
-          repo,
-          issue_number: item.number,
-          state: 'closed',
-        });
+      const staleAddedAt = await getLabelAddedDate(item.number, STALE_LABEL);
+      if (!staleAddedAt) return;
+
+      if (staleAddedAt < closeThreshold) {
+        core.info(`Closing stale item #${item.number}.`);
+        if (!dryRun) {
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: item.number,
+            body: `This item has been closed due to ${CLOSE_DAYS} additional days of inactivity after being marked as stale. If you believe this is still relevant, feel free to comment or reopen. Thank you!`,
+          });
+          await github.rest.issues.update({
+            owner,
+            repo,
+            issue_number: item.number,
+            state: 'closed',
+          });
+        }
       }
     },
   );
