@@ -99,10 +99,12 @@ export class LegacyAgentProtocol implements AgentProtocol {
       this._scheduler = scheduler;
     }
 
-    this._config.messageBus.subscribe(
-      MessageBusType.TOOL_CALLS_UPDATE,
-      this._handleToolCallsUpdate.bind(this),
-    );
+    if (this._config.messageBus) {
+      this._config.messageBus.subscribe(
+        MessageBusType.TOOL_CALLS_UPDATE,
+        this._handleToolCallsUpdate.bind(this),
+      );
+    }
   }
 
   get events(): readonly AgentEvent[] {
