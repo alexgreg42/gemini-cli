@@ -12,6 +12,17 @@ on:
         required: false
         type: 'string'
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
+      - '.gitignore'
+      - '.editorconfig'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'ROADMAP.md'
+      - 'SECURITY.md'
 
 jobs:
   save_repo_name:

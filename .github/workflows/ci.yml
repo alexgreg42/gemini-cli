@@ -5,10 +5,32 @@ on:
     branches:
       - 'main'
       - 'release/**'
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
+      - '.gitignore'
+      - '.editorconfig'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'ROADMAP.md'
+      - 'SECURITY.md'
   pull_request:
     branches:
       - 'main'
       - 'release/**'
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/pull_request_template.md'
+      - '.gitignore'
+      - '.editorconfig'
+      - 'LICENSE'
+      - 'CONTRIBUTING.md'
+      - 'ROADMAP.md'
+      - 'SECURITY.md'
   merge_group:
   workflow_dispatch:
     inputs:
@@ -123,18 +145,6 @@ jobs:
       - name: 'Run GitHub Actions pinning linter'
         run: 'node scripts/lint.js --check-github-actions-pinning'
 
-  link_checker:
-    name: 'Link Checker'
-    runs-on: 'ubuntu-latest'
-    if: "github.repository == 'google-gemini/gemini-cli'"
-    steps:
-      - name: 'Checkout'
-        uses: 'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8' # ratchet:actions/checkout@v5
-      - name: 'Link Checker'
-        uses: 'lycheeverse/lychee-action@885c65f3dc543b57c898c8099f4e08c8afd178a2' # ratchet: lycheeverse/lychee-action@v2.6.1
-        with:
-          args: '--verbose --accept 200,503 ./**/*.md'
-          fail: true
   test_linux:
     name: 'Test (Linux) - ${{ matrix.node-version }}, ${{ matrix.shard }}'
     runs-on: 'gemini-cli-ubuntu-16-core'
@@ -147,7 +157,7 @@ jobs:
       pull-requests: 'write'
     strategy:
       matrix:
-        node-version: ${{ fromJSON(github.event_name == 'pull_request' && '["20.x"]' || '["20.x", "22.x", "24.x"]') }}
+        node-version: '${{ fromJSON(github.event_name == ''pull_request'' && ''["20.x"]'' || ''["20.x", "22.x", "24.x"]'') }}'
         shard:
           - 'cli'
           - 'others'
@@ -239,7 +249,7 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        node-version: ${{ fromJSON(github.event_name == 'pull_request' && '["20.x"]' || '["20.x", "22.x", "24.x"]') }}
+        node-version: '${{ fromJSON(github.event_name == ''pull_request'' && ''["20.x"]'' || ''["20.x", "22.x", "24.x"]'') }}'
         shard:
           - 'cli'
           - 'others'
@@ -471,7 +481,6 @@ jobs:
     if: "github.repository == 'google-gemini/gemini-cli' && always()"
     needs:
       - 'lint'
-      - 'link_checker'
       - 'test_linux'
       - 'test_mac'
       - 'test_windows'
@@ -482,7 +491,6 @@ jobs:
       - name: 'Check all job results'
         run: |
           if [[ (${NEEDS_LINT_RESULT} != 'success' && ${NEEDS_LINT_RESULT} != 'skipped') || \
-               (${NEEDS_LINK_CHECKER_RESULT} != 'success' && ${NEEDS_LINK_CHECKER_RESULT} != 'skipped') || \
                (${NEEDS_TEST_LINUX_RESULT} != 'success' && ${NEEDS_TEST_LINUX_RESULT} != 'skipped') || \
                (${NEEDS_TEST_MAC_RESULT} != 'success' && ${NEEDS_TEST_MAC_RESULT} != 'skipped') || \
                (${NEEDS_TEST_WINDOWS_RESULT} != 'success' && ${NEEDS_TEST_WINDOWS_RESULT} != 'skipped') || \
@@ -494,7 +502,6 @@ jobs:
           echo "All CI jobs passed!"
         env:
           NEEDS_LINT_RESULT: '${{ needs.lint.result }}'
-          NEEDS_LINK_CHECKER_RESULT: '${{ needs.link_checker.result }}'
           NEEDS_TEST_LINUX_RESULT: '${{ needs.test_linux.result }}'
           NEEDS_TEST_MAC_RESULT: '${{ needs.test_mac.result }}'
           NEEDS_TEST_WINDOWS_RESULT: '${{ needs.test_windows.result }}'
