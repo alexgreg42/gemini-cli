@@ -152,7 +152,7 @@ describe('Settings Validation Warning', () => {
     );
 
     (fs.readFileSync as Mock).mockImplementation((p: string) => {
-      if (p === USER_SETTINGS_PATH) return '{ "invalid": "json", }'; // Trailing comma is invalid in standard JSON
+      if (p === USER_SETTINGS_PATH) return '{ "invalid": "json"'; // Unclosed brace is invalid
       return '{}';
     });
 

@@ -80,9 +80,14 @@ vi.mock('@google/gemini-cli-core', async (importOriginal) => {
   };
 });
 
-vi.mock('../utils/commentJson.js', () => ({
-  updateSettingsFilePreservingFormat: vi.fn(),
-}));
+vi.mock('../utils/commentJson.js', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../utils/commentJson.js')>();
+  return {
+    ...actual,
+    updateSettingsFilePreservingFormat: vi.fn(),
+  };
+});
 
 vi.mock('strip-json-comments', () => ({
   default: vi.fn((content) => content),
