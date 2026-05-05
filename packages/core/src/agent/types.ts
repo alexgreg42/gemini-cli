@@ -227,11 +227,21 @@ export interface ToolDisplay {
   format?: ToolDisplayFormat;
 }
 
+export type ToolEventStatus =
+  | 'pending'
+  | 'pending_input'
+  | 'executing'
+  | 'succeeded'
+  | 'errored'
+  | 'aborted';
+
 export interface ToolRequest {
   /** A unique identifier for this tool request to be correlated by the response. */
   requestId: string;
   /** The name of the tool being requested. */
   name: string;
+  /** The status of the tool execution. */
+  status: ToolEventStatus;
   /** The arguments for the tool. */
   /** Tool-controlled display information. */
   display?: ToolDisplay;
@@ -255,6 +265,8 @@ export interface ToolRequest {
  */
 export interface ToolUpdate {
   requestId: string;
+  /** The status of the tool execution. */
+  status: ToolEventStatus;
   /** Tool-controlled display information. */
   display?: ToolDisplay;
   content?: ContentPart[];
@@ -276,6 +288,8 @@ export interface ToolUpdate {
 export interface ToolResponse {
   requestId: string;
   name: string;
+  /** The status of the tool execution. */
+  status: ToolEventStatus;
   /** Tool-controlled display information. */
   display?: ToolDisplay;
   /** Multi-part content to be sent to the model. */
