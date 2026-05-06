@@ -85,6 +85,21 @@ python3 generic_processor.py \
   --prompt "Analyze these features and suggest which package they belong in. Output JSON: {\"package\": \"name\"}"
 ```
 
+### 6. Auto-Categorizing Issues with Gemini CLI
+
+If you have a list of uncategorized issues (e.g., lacking `type/bug` or
+`type/feature`), you can use the Gemini CLI itself directly in your terminal to
+classify and label them.
+
+**Example command:**
+
+```bash
+gemini "Read data/uncategorized.json. For each issue, determine if it is a bug or a feature request. Then, use the gh CLI tool to add either the 'type/bug' or 'type/feature' label to the issue on GitHub."
+```
+
+_Note: Make sure your `gemini-cli` has permission to execute shell commands if
+you want it to apply the labels automatically via `gh`._
+
 ## 🧠 Effort Level Criteria
 
 Ratings are based on technical complexity and reproduction difficulty:
