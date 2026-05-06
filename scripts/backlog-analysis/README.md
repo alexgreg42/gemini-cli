@@ -36,7 +36,22 @@ python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q
 
 ## 🚀 Workflows
 
-### 1. Initial Triage (Static)
+### 1. Auto-Categorizing Issues with Gemini CLI
+
+If you have a list of uncategorized issues fetched from GitHub, your first step
+should be to classify them. You can use the Gemini CLI directly in your terminal
+to label them.
+
+**Example command:**
+
+```bash
+gemini "Read data/uncategorized.json. For each issue, determine if it is a bug or a feature request. Then, use the gh CLI tool to add either the 'type/bug' or 'type/feature' label to the issue on GitHub, AND update the JSON object in the file to include a 'type' field with the chosen value."
+```
+
+_Note: Make sure your `gemini-cli` has permission to execute shell commands if
+you want it to apply the labels automatically via `gh`._
+
+### 2. Initial Triage (Static)
 
 Use this for a quick, first-pass estimation.
 
@@ -44,7 +59,7 @@ Use this for a quick, first-pass estimation.
 python3 analyze_bugs.py --api-key "YOUR_KEY"
 ```
 
-### 2. Deep Agentic Analysis
+### 3. Deep Agentic Analysis
 
 Uses Gemini as an agent with access to the codebase.
 
@@ -52,7 +67,7 @@ Uses Gemini as an agent with access to the codebase.
 python3 bug_analyzer_final.py --api-key "YOUR_KEY"
 ```
 
-### 3. Iterative Analysis
+### 4. Iterative Analysis
 
 Runs the single-turn analyzer in a loop until all issues have a valid analysis.
 
@@ -60,7 +75,7 @@ Runs the single-turn analyzer in a loop until all issues have a valid analysis.
 GEMINI_API_KEY="YOUR_KEY" ./loop_analyzer.sh
 ```
 
-### 4. Validation & Export
+### 5. Validation & Export
 
 Run validation from the utils folder to ensure consistency, then generate a
 readable report.
@@ -70,7 +85,7 @@ python3 utils/validate_effort.py
 python3 generate_bugs_csv.py
 ```
 
-### 5. Generic Issue Processing
+### 6. Generic Issue Processing
 
 For any other backlog task (e.g., categorizing features, updating labels, or
 custom analysis), use the `generic_processor.py`. This script allows you to
@@ -84,21 +99,6 @@ python3 generic_processor.py \
   --project ../../packages \
   --prompt "Analyze these features and suggest which package they belong in. Output JSON: {\"package\": \"name\"}"
 ```
-
-### 6. Auto-Categorizing Issues with Gemini CLI
-
-If you have a list of uncategorized issues (e.g., lacking `type/bug` or
-`type/feature`), you can use the Gemini CLI itself directly in your terminal to
-classify and label them.
-
-**Example command:**
-
-```bash
-gemini "Read data/uncategorized.json. For each issue, determine if it is a bug or a feature request. Then, use the gh CLI tool to add either the 'type/bug' or 'type/feature' label to the issue on GitHub."
-```
-
-_Note: Make sure your `gemini-cli` has permission to execute shell commands if
-you want it to apply the labels automatically via `gh`._
 
 ## 🧠 Effort Level Criteria
 
