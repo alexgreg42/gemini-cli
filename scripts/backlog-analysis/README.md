@@ -14,66 +14,59 @@ and determining implementation effort levels for the Gemini CLI project.
 - `run_pipeline.sh`: A shell script that orchestrates the entire effort analysis
   pipeline end-to-end.
 
-## 📥 Prerequisites: Data Generation
+## 🚀 The Ideal Workflow
 
-Before running the analyzers, you must fetch the issue data from GitHub. The
-scripts expect the data in JSON format.
+### Step 1: Categorize via GitHub CLI & Export to JSON
 
-The easiest way to generate this is to simply copy the URL from your browser
-when looking at a filtered list of issues on GitHub, and pass it to our fetcher
-script.
+If you have a raw list of uncategorized issues, the first step is to apply the
+correct types (`bug` or `feature`) directly on GitHub, and then fetch the data
+into a local JSON file for analysis.
 
-_(Note: You must have the [GitHub CLI (`gh`)](https://cli.github.com/) installed
-and authenticated)._
+**A) Auto-Categorize on GitHub:** Use the Gemini CLI directly in your terminal
+to classify and label the issues on GitHub.
 
 ```bash
-# Fetch any filtered list of issues directly from a GitHub URL
+gemini "I have a list of issues (e.g. 123, 124). For each issue, determine if it is a bug or a feature request. Use the gh CLI tool to act on the GitHub issue: (a) Add the 'type/bug' or 'type/feature' label, and (b) Edit the issue body or title to explicitly denote the type."
+```
+
+**B) Export to JSON:** Once the issues are correctly labeled on GitHub, fetch
+them into a local JSON file. You can simply copy a GitHub search URL from your
+browser:
+
+```bash
+# Fetch bugs
 python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q=type%3ABug+is%3Aopen" --output data/bugs.json
 
-# Fetch features to a different file
+# Fetch features
 python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q=type%3AFeature+is%3Aopen" --output data/issues.json
 ```
 
-## 🚀 Workflows
+### Step 2: Analyze Effort Level
 
-### 1. Auto-Categorizing Issues with Gemini CLI
-
-If you have a list of uncategorized issues fetched from GitHub, your first step
-should be to classify them. You can use the Gemini CLI directly in your terminal
-to classify them in the local file and modify them on GitHub.
-
-**Example command:**
-
-```bash
-gemini "Read data/uncategorized.json. For each issue, determine if it is a bug or a feature request. 1. Update the JSON object in the file to include a 'type' field set to 'bug' or 'feature'. 2. Use the gh CLI tool to act on the GitHub issue: (a) Add the 'type/bug' or 'type/feature' label, and (b) Edit the issue body or title to explicitly denote the type."
-```
-
-_Note: Make sure your `gemini-cli` has permission to execute shell commands if
-you want it to apply the labels automatically via `gh`._
-
-### 2. Full Effort Analysis Pipeline
-
-Instead of running individual steps manually, you can run the entire analysis
-pipeline (Initial Triage -> Deep Agentic Analysis -> Iterative Recovery ->
-Validation -> CSV Export) with a single command.
+Run the full effort analysis pipeline. This will run a fast static pass, a deep
+agentic codebase search, iterative recovery for complex cases, and heuristic
+validation.
 
 ```bash
 GEMINI_API_KEY="YOUR_KEY" ./run_pipeline.sh data/bugs.json ../../packages
 ```
 
-### 3. Generic Issue Processing
+### Step 3: Review and Update JSON
 
-For any other backlog task (e.g., categorizing features, updating labels, or
-custom analysis), use the `generic_processor.py`. This script allows you to
-provide a custom system prompt and a project root for codebase context.
+The pipeline automatically updates your JSON file in place with the technical
+`analysis`, `effort_level`, and `reasoning`, and exports a `.csv` file.
+
+If you need to perform additional bulk updates or custom processing on the
+resulting JSON (like grouping by package or identifying related PRs), use the
+Generic Processor:
 
 ```bash
 python3 generic_processor.py \
   --api-key "YOUR_KEY" \
-  --input data/features.json \
-  --output data/features_analyzed.json \
+  --input data/bugs.json \
+  --output data/bugs_updated.json \
   --project ../../packages \
-  --prompt "Analyze these features and suggest which package they belong in. Output JSON: {\"package\": \"name\"}"
+  --prompt "Analyze these issues and add a 'target_package' field to each JSON object based on the codebase analysis."
 ```
 
 ## 🧠 Effort Level Criteria
