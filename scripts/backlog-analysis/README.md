@@ -7,7 +7,6 @@ and determining implementation effort levels for the Gemini CLI project.
 
 - `data/`: Contains the issue data in JSON and CSV formats.
   - `bugs.json`: The primary source of truth for bug analysis.
-  - `issues.json`: General issue backlog.
 - `*.py`: Analysis and utility scripts.
 - `loop_analyzer.sh`: A shell script for running iterative analysis until all
   issues are processed.
