@@ -22,11 +22,13 @@ If you have a raw list of uncategorized issues, the first step is to apply the
 correct types (`bug` or `feature`) directly on GitHub, and then fetch the data
 into a local JSON file for analysis.
 
-**A) Auto-Categorize on GitHub:** Use the Gemini CLI directly in your terminal
-to classify and label the issues on GitHub.
+**A) Auto-Categorize on GitHub:** We provide a dedicated Python script that will
+automatically fetch uncategorized issues matching your search query, classify
+them using the Gemini API, and apply the correct labels and title prefixes
+(`[Bug]` or `[Feature]`) directly on GitHub.
 
 ```bash
-gemini "I have a list of issues (e.g. 123, 124). For each issue, determine if it is a bug or a feature request. Use the gh CLI tool to act on the GitHub issue: (a) Add the 'type/bug' or 'type/feature' label, and (b) Edit the issue body or title to explicitly denote the type."
+python3 categorize_issues.py --api-key "YOUR_KEY" --search "repo:google-gemini/gemini-cli -label:type/bug -label:type/feature is:open" --limit 50
 ```
 
 **B) Export to JSON:** Once the issues are correctly labeled on GitHub, fetch
