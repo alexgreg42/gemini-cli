@@ -8,11 +8,11 @@ and determining implementation effort levels for the Gemini CLI project.
 - `data/`: Contains the issue data in JSON and CSV formats.
   - `bugs.json`: The primary source of truth for bug analysis.
 - `utils/`: Auxiliary scripts for manual overrides, debugging, and post-analysis
-  validation (e.g., `validate_effort.py`, `inject_manual_fixes.py`).
-- `*.py`: Core analysis and export scripts (e.g., `bug_analyzer_final.py`,
-  `generate_bugs_csv.py`).
-- `run_pipeline.sh`: A shell script that orchestrates the entire effort analysis
-  pipeline end-to-end.
+  validation (e.g., `inject_manual_fixes.py`).
+- `analyze_pipeline.py`: A unified Python script that orchestrates the entire
+  effort analysis pipeline end-to-end, combining agentic analysis, single-turn
+  fallbacks, heuristic validation, and CSV export.
+- `generic_processor.py`: A highly configurable agent for custom backlog tasks.
 
 ## 🚀 The Ideal Workflow
 
@@ -45,12 +45,13 @@ python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q
 
 ### Step 2: Analyze Effort Level
 
-Run the full effort analysis pipeline. This will run a fast static pass, a deep
-agentic codebase search, iterative recovery for complex cases, and heuristic
-validation.
+Run the unified effort analysis pipeline. This single Python script efficiently
+runs a deep agentic codebase search, gracefully falls back to context-based
+single-turn analysis for complex cases, runs heuristic validation to prevent
+underestimations, and immediately exports the results to a CSV.
 
 ```bash
-GEMINI_API_KEY="YOUR_KEY" ./run_pipeline.sh data/bugs.json ../../packages
+python3 analyze_pipeline.py --api-key "YOUR_KEY" --input data/bugs.json --project ../../packages
 ```
 
 ### Step 3: Review and Update JSON
