@@ -1,0 +1,3924 @@
+[
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25573,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:42Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25571,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:19:22Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25494,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:19:23Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACFP0ywQ",
+        "name": "area/platform",
+        "description": "Issues related to Build infra, Release mgmt, Testing, Eval infra, Capacity, Quota mgmt",
+        "color": "d67138"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25496,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:19:22Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25493,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:19:23Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25490,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:19:23Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDw36jA",
+        "name": "area/security",
+        "description": "Issues related to security",
+        "color": "aaaaaa"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25491,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:19:23Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25492,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:19:23Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25478,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:43Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25439,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:43Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25380,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:44Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25184,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T19:24:02Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACRS_uiQ",
+        "name": "status/needs-info",
+        "description": "",
+        "color": "fbca04"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 25012,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:27:10Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24812,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:46Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24690,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:47Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24687,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:47Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24663,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:47Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24658,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:48Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24553,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:27:14Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24427,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:38:10Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24407,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:50Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24395,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:38:58Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24280,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:27:44Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24199,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:27:46Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOf5HLg",
+        "name": "area/documentation",
+        "description": "Gemini CLI documentation tasks and issues",
+        "color": "43d549"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24169,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:27:48Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24071,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:51Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVYTgAQ",
+        "name": "type/bug",
+        "description": "",
+        "color": "be1b31"
+      }
+    ],
+    "number": 24033,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:52Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 24030,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:52Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23874,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:29:02Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23861,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:29:02Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACRS_uiQ",
+        "name": "status/needs-info",
+        "description": "",
+        "color": "fbca04"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVYTgAQ",
+        "name": "type/bug",
+        "description": "",
+        "color": "be1b31"
+      }
+    ],
+    "number": 23800,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:54Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23796,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:54Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVYTgAQ",
+        "name": "type/bug",
+        "description": "",
+        "color": "be1b31"
+      }
+    ],
+    "number": 23786,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T19:01:17Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVYTgAQ",
+        "name": "type/bug",
+        "description": "",
+        "color": "be1b31"
+      }
+    ],
+    "number": 23745,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:55Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23730,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:29:40Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23675,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:29:43Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23663,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:38:22Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23617,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:29:42Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23561,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:29:39Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23501,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:29:42Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23489,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:56Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23456,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:30:26Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23425,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:57Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVYTgAQ",
+        "name": "type/bug",
+        "description": "",
+        "color": "be1b31"
+      }
+    ],
+    "number": 23422,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:58Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23402,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:30:29Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23392,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:30:24Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23373,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:58Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVYTgAQ",
+        "name": "type/bug",
+        "description": "",
+        "color": "be1b31"
+      }
+    ],
+    "number": 23371,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:36:58Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23350,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:32:09Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 23165,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:32:05Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22980,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:32:07Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22958,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:31:36Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22884,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:31:32Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22743,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:37:02Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22729,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:32:08Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22666,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:32:38Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22651,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:32:38Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22644,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:37:02Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22627,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:37:03Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22563,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:32:39Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22510,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:37:04Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22370,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:37:04Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22288,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:34:43Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22249,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:37:05Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22184,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:35:56Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22130,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:35:44Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22083,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:36:08Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 22019,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:36:56Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21999,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:03:24Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      }
+    ],
+    "number": 21987,
+    "state": "OPEN",
+    "updatedAt": "2026-04-02T12:07:51Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21981,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:03:12Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 21974,
+    "state": "OPEN",
+    "updatedAt": "2026-04-10T03:40:03Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21899,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:11:02Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21869,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:52:14Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDw2USQ",
+        "name": "area/agent",
+        "description": "Issues related to Core Agent, Tools, Memory, Sub-Agents, Hooks, Agent Quality",
+        "color": "0beb25"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21823,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:16:09Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21773,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:24:31Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      }
+    ],
+    "number": 21675,
+    "state": "OPEN",
+    "updatedAt": "2026-03-20T23:38:19Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 21649,
+    "state": "OPEN",
+    "updatedAt": "2026-04-08T21:23:40Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 21615,
+    "state": "OPEN",
+    "updatedAt": "2026-04-08T18:36:51Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21602,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:01:05Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDw2USQ",
+        "name": "area/agent",
+        "description": "Issues related to Core Agent, Tools, Memory, Sub-Agents, Hooks, Agent Quality",
+        "color": "0beb25"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOf5HLg",
+        "name": "area/documentation",
+        "description": "Gemini CLI documentation tasks and issues",
+        "color": "43d549"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21505,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:03:36Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21493,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:00:40Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 21484,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T06:15:31Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21424,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:10:25Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      }
+    ],
+    "number": 21410,
+    "state": "OPEN",
+    "updatedAt": "2026-04-09T17:43:42Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 21400,
+    "state": "OPEN",
+    "updatedAt": "2026-04-09T17:47:34Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21373,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:00:28Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21368,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:01:18Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21285,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:16:34Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21145,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:02:35Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 21144,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:02:23Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 20858,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:04:01Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 20838,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:03:42Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 20782,
+    "state": "OPEN",
+    "updatedAt": "2026-04-17T19:02:29Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 20698,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:59:40Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      }
+    ],
+    "number": 20672,
+    "state": "OPEN",
+    "updatedAt": "2026-04-19T17:35:29Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 20480,
+    "state": "OPEN",
+    "updatedAt": "2026-04-09T18:28:21Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 20476,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:04:25Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACRS_uiQ",
+        "name": "status/needs-info",
+        "description": "",
+        "color": "fbca04"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 20227,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:07:59Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 20118,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:49:20Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 19835,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:57:50Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      }
+    ],
+    "number": 19757,
+    "state": "OPEN",
+    "updatedAt": "2026-04-20T14:30:07Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 19672,
+    "state": "OPEN",
+    "updatedAt": "2026-04-07T20:40:16Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 19661,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:57:48Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 19619,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:57:45Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 19602,
+    "state": "OPEN",
+    "updatedAt": "2026-04-07T20:07:58Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 19583,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:14:43Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 19249,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:59:52Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 19067,
+    "state": "OPEN",
+    "updatedAt": "2026-02-16T18:50:12Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 19018,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:58:47Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 18990,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:53:39Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDw36jA",
+        "name": "area/security",
+        "description": "Issues related to security",
+        "color": "aaaaaa"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 18871,
+    "state": "OPEN",
+    "updatedAt": "2026-04-09T16:59:07Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 18761,
+    "state": "OPEN",
+    "updatedAt": "2026-04-09T15:09:45Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 18692,
+    "state": "OPEN",
+    "updatedAt": "2026-04-17T16:21:29Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 18654,
+    "state": "OPEN",
+    "updatedAt": "2026-04-10T04:25:08Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 18612,
+    "state": "OPEN",
+    "updatedAt": "2026-04-10T06:32:33Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 18487,
+    "state": "OPEN",
+    "updatedAt": "2026-04-08T22:13:30Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 18388,
+    "state": "OPEN",
+    "updatedAt": "2026-04-09T21:25:59Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOtm3RA",
+        "name": "status/possible-duplicate",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 18385,
+    "state": "OPEN",
+    "updatedAt": "2026-04-07T17:14:10Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 18345,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:24:29Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      }
+    ],
+    "number": 18266,
+    "state": "OPEN",
+    "updatedAt": "2026-02-04T23:40:20Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 18086,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:47:50Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACObcmKw",
+        "name": "Stale",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 18034,
+    "state": "OPEN",
+    "updatedAt": "2026-04-09T17:23:27Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 17851,
+    "state": "OPEN",
+    "updatedAt": "2026-02-07T07:45:34Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 17637,
+    "state": "OPEN",
+    "updatedAt": "2026-04-07T20:44:42Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 17421,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:02:47Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 17389,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:45:52Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwWCEQ",
+        "name": "priority/p3",
+        "description": "Backlog - a good idea but not currently a priority.",
+        "color": "bfe99a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOf5HLg",
+        "name": "area/documentation",
+        "description": "Gemini CLI documentation tasks and issues",
+        "color": "43d549"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 17381,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:04:37Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 17361,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:45:39Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV5UA",
+        "name": "priority/p1",
+        "description": "Important and should be addressed in the near term.",
+        "color": "d93f0b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACLBJBxQ",
+        "name": "area/enterprise",
+        "description": "Issues related to Telemetry, Policy, Quota / Licensing",
+        "color": "6d4bbe"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUPFXWQ",
+        "name": "kind/enhancement",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 17034,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:41:12Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 16718,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:57:52Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 16716,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:53:02Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 16606,
+    "state": "OPEN",
+    "updatedAt": "2026-01-14T16:33:57Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 16509,
+    "state": "OPEN",
+    "updatedAt": "2026-01-13T17:15:48Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACIE8N8g",
+        "name": "area/non-interactive",
+        "description": "Issues related to GitHub Actions, SDK, 3P Integrations, Shell Scripting, Command line automation",
+        "color": "f79359"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 16419,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:41:13Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUO7J6A",
+        "name": "status/bot-triaged",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUPFXWQ",
+        "name": "kind/enhancement",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 16357,
+    "state": "OPEN",
+    "updatedAt": "2026-01-19T13:47:23Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      }
+    ],
+    "number": 16341,
+    "state": "OPEN",
+    "updatedAt": "2026-04-07T20:48:30Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACRghlmA",
+        "name": "aiq/agent",
+        "description": "Issues related to improving performance of our AI developer products and measurement",
+        "color": "d927b5"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      }
+    ],
+    "number": 16272,
+    "state": "OPEN",
+    "updatedAt": "2026-01-09T20:57:03Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUP7HIw",
+        "name": "help wanted",
+        "description": "We will accept PRs from all issues marked as \"help wanted\". Thanks for your support!",
+        "color": "5319e7"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 15618,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:19:14Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      }
+    ],
+    "number": 15493,
+    "state": "OPEN",
+    "updatedAt": "2026-04-07T04:50:12Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 14643,
+    "state": "OPEN",
+    "updatedAt": "2026-03-08T10:34:28Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDkHm6g",
+        "name": "status/need-triage",
+        "description": "Issues that need to be triaged by the triage automation.",
+        "color": "2e0b6a"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV5UA",
+        "name": "priority/p1",
+        "description": "Important and should be addressed in the near term.",
+        "color": "d93f0b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACOYl-hA",
+        "name": "area/extensions",
+        "description": "Issues related to Gemini CLI extensions capability",
+        "color": "214cdb"
+      }
+    ],
+    "number": 13860,
+    "state": "OPEN",
+    "updatedAt": "2026-03-31T14:51:49Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 13400,
+    "state": "OPEN",
+    "updatedAt": "2026-01-22T03:40:20Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACSI3y_Q",
+        "name": "🔒 maintainer only",
+        "description": "⛔ Do not contribute. Internal roadmap item.",
+        "color": "3e4b5b"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUPFXWQ",
+        "name": "kind/enhancement",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 8474,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:07:53Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 2493,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:10:13Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 2465,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:24:30Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUO7J6A",
+        "name": "status/bot-triaged",
+        "description": "",
+        "color": "ededed"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACUPFXWQ",
+        "name": "kind/enhancement",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 2094,
+    "state": "OPEN",
+    "updatedAt": "2026-03-30T16:12:40Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 2065,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T17:52:01Z"
+  },
+  {
+    "assignees": [],
+    "labels": [
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwV-ig",
+        "name": "priority/p2",
+        "description": "Important but can be addressed in a future release.",
+        "color": "006b75"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACDwx2gg",
+        "name": "area/core",
+        "description": "Issues related to User Interface, OS Support, Core Functionality",
+        "color": "2981d6"
+      },
+      {
+        "id": "LA_kwDOObWEYM8AAAACVcQr6A",
+        "name": "type/feature",
+        "description": "",
+        "color": "ededed"
+      }
+    ],
+    "number": 1871,
+    "state": "OPEN",
+    "updatedAt": "2026-04-21T18:10:01Z"
+  }
+]
