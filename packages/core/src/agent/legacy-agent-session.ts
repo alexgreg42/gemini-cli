@@ -515,6 +515,11 @@ export class LegacyAgentProtocol implements AgentProtocol {
 
     for (const tc of msg.toolCalls) {
       const callId = tc.request.callId;
+
+      if (!this._translationState.pendingToolNames.has(callId)) {
+        continue;
+      }
+
       let status: ToolEventStatus = 'pending';
       if (tc.status === 'validating' || tc.status === 'scheduled') {
         status = 'pending';
