@@ -11,75 +11,110 @@ async function getWorkflowMinutes(): Promise<Record<string, number>> {
     .toISOString()
     .split('T')[0];
 
-  const output = execFileSync(
-    'gh',
-    [
-      'run',
-      'list',
-      '--limit',
-      '1000',
-      '--created',
-      `>=${sevenDaysAgoDate}`,
-      '--json',
-      'databaseId,workflowName',
-    ],
-    { encoding: 'utf-8' },
-  );
-
-  const runs = JSON.parse(output);
   const workflowMinutes: Record<string, number> = {};
-  const token = execFileSync('gh', ['auth', 'token'], {
-    encoding: 'utf-8',
-  }).trim();
-  const repoInfo = JSON.parse(
-    execFileSync('gh', ['repo', 'view', '--json', 'nameWithOwner'], {
+  let token: string;
+  let repoName: string;
+
+  try {
+    token = execFileSync('gh', ['auth', 'token'], {
       encoding: 'utf-8',
-    }),
-  );
-  const repoName = repoInfo.nameWithOwner;
-
-  const chunkSize = 20;
-  for (let i = 0; i < runs.length; i += chunkSize) {
-    const chunk = runs.slice(i, i + chunkSize);
-    await Promise.all(
-      chunk.map(async (r: { databaseId: number; workflowName?: string }) => {
-        try {
-          const res = await fetch(
-            `https://api.github.com/repos/${repoName}/actions/runs/${r.databaseId}/jobs`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: 'application/vnd.github.v3+json',
-              },
-            },
-          );
-
-          if (!res.ok) return;
-
-          const { jobs } = await res.json();
-          let runBillableMinutes = 0;
-
-          for (const job of jobs || []) {
-            if (!job.started_at || !job.completed_at) continue;
-            const start = new Date(job.started_at).getTime();
-            const end = new Date(job.completed_at).getTime();
-            const durationMs = end - start;
-
-            if (durationMs > 0) {
-              runBillableMinutes += Math.ceil(durationMs / (1000 * 60));
-            }
-          }
-
-          if (runBillableMinutes > 0) {
-            const name = r.workflowName || 'Unknown';
-            workflowMinutes[name] =
-              (workflowMinutes[name] || 0) + runBillableMinutes;
-          }
-        } catch {
-          // Ignore failures for individual runs
-        }
+    }).trim();
+    const repoInfo = JSON.parse(
+      execFileSync('gh', ['repo', 'view', '--json', 'nameWithOwner'], {
+        encoding: 'utf-8',
       }),
     );
+    repoName = repoInfo.nameWithOwner;
+  } catch (err) {
+    throw new Error(`Failed to initialize repository info: ${err}`);
+  }
+
+  let page = 1;
+  const perPage = 100;
+  let hasMore = true;
+  const maxRuns = 5000;
+  let totalRunsProcessed = 0;
+
+  while (hasMore && totalRunsProcessed < maxRuns) {
+    let output: string;
+    try {
+      output = execFileSync(
+        'gh',
+        [
+          'api',
+          `repos/${repoName}/actions/runs?created=>=${sevenDaysAgoDate}&per_page=${perPage}&page=${page}`,
+        ],
+        { encoding: 'utf-8' },
+      );
+    } catch (err) {
+      process.stderr.write(`Failed to fetch page ${page}: ${err}\n`);
+      break;
+    }
+
+    let workflow_runs: any[];
+    try {
+      const parsed = JSON.parse(output);
+      workflow_runs = parsed.workflow_runs;
+    } catch (err) {
+      process.stderr.write(`Failed to parse runs JSON: ${err}\n`);
+      break;
+    }
+
+    if (!workflow_runs || workflow_runs.length === 0) {
+      hasMore = false;
+      break;
+    }
+
+    const chunkSize = 20;
+    for (let i = 0; i < workflow_runs.length; i += chunkSize) {
+      const chunk = workflow_runs.slice(i, i + chunkSize);
+      await Promise.all(
+        chunk.map(async (r: { id: number; name?: string }) => {
+          try {
+            const res = await fetch(
+              `https://api.github.com/repos/${repoName}/actions/runs/${r.id}/jobs`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  Accept: 'application/vnd.github.v3+json',
+                },
+              },
+            );
+
+            if (!res.ok) return;
+
+            const { jobs } = (await res.json()) as { jobs: any[] };
+            let runBillableMinutes = 0;
+
+            for (const job of jobs || []) {
+              if (!job.started_at || !job.completed_at) continue;
+              const start = new Date(job.started_at).getTime();
+              const end = new Date(job.completed_at).getTime();
+              const durationMs = end - start;
+
+              if (durationMs > 0) {
+                runBillableMinutes += Math.ceil(durationMs / (1000 * 60));
+              }
+            }
+
+            if (runBillableMinutes > 0) {
+              const name = r.name || 'Unknown';
+              workflowMinutes[name] =
+                (workflowMinutes[name] || 0) + runBillableMinutes;
+            }
+          } catch {
+            // Ignore failures for individual runs
+          }
+        }),
+      );
+    }
+
+    totalRunsProcessed += workflow_runs.length;
+    if (workflow_runs.length < perPage) {
+      hasMore = false;
+    } else {
+      page++;
+    }
   }
 
   return workflowMinutes;
@@ -94,24 +129,12 @@ async function run() {
       totalMinutes += minutes;
     }
 
-    const now = new Date().toISOString();
-    console.log(
-      JSON.stringify({
-        metric: 'actions_spend_minutes',
-        value: totalMinutes,
-        timestamp: now,
-        details: workflowMinutes,
-      }),
-    );
+    process.stdout.write(`actions_spend_minutes,${totalMinutes}\n`);
 
     for (const [name, minutes] of Object.entries(workflowMinutes)) {
       const safeName = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-      console.log(
-        JSON.stringify({
-          metric: `actions_spend_minutes_workflow:${safeName}`,
-          value: minutes,
-          timestamp: now,
-        }),
+      process.stdout.write(
+        `actions_spend_minutes_workflow:${safeName},${minutes}\n`,
       );
     }
   } catch (error) {
