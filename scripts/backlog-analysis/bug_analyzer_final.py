@@ -2,27 +2,21 @@ import json
 import urllib.request
 import urllib.error
 import os
+import argparse
 import concurrent.futures
 import subprocess
 import sys
 import threading
 
-API_KEY = "REDACTED_API_KEY"
 MODEL = "gemini-3-flash-preview"
-URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
-
-BUGS_FILE = 'data/bugs.json'
 file_lock = threading.Lock()
 
-with open(BUGS_FILE, 'r') as f:
-    bugs = json.load(f)
-
-tools = [
+tools_decl = [
     {
         "functionDeclarations": [
             {
                 "name": "search_codebase",
-                "description": "Search the gemini-cli packages directory for a string using grep. Returns matching lines and file paths.",
+                "description": "Search the project directory for a string using grep. Returns matching lines and file paths.",
                 "parameters": {
                     "type": "OBJECT",
                     "properties": {
@@ -46,17 +40,17 @@ tools = [
     }
 ]
 
-def call_gemini(messages):
+def call_gemini(messages, url):
     data = {
         "contents": messages,
-        "tools": tools,
+        "tools": tools_decl,
         "generationConfig": {"temperature": 0.1}
     }
-    req = urllib.request.Request(URL, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
+    req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
     with urllib.request.urlopen(req) as response:
         return json.loads(response.read().decode('utf-8'))
 
-def execute_tool(call):
+def execute_tool(call, project_path):
     name = call['name']
     args = call.get('args', {})
     
@@ -64,7 +58,7 @@ def execute_tool(call):
         pattern = args.get('pattern', '')
         pattern = pattern.replace('"', '\\"')
         try:
-            cmd = f'grep -rn "{pattern}" ../../packages | grep -vE "node_modules|dist|build|\\.test\\." | head -n 20'
+            cmd = f'grep -rn "{pattern}" "{project_path}" | grep -vE "node_modules|dist|build|\\.test\\." | head -n 20'
             res = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT)
             return res if res else "No matches found."
         except subprocess.CalledProcessError as e:
@@ -72,12 +66,12 @@ def execute_tool(call):
     elif name == 'read_file':
         filepath = args.get('filepath', '')
         if not filepath.startswith('/'):
-            filepath = os.path.join('../../packages', filepath)
+            filepath = os.path.join(project_path, filepath)
         
         try:
             if not os.path.exists(filepath):
                 basename = os.path.basename(filepath)
-                find_cmd = f'find ../../packages -name "{basename}" | head -n 1'
+                find_cmd = f'find "{project_path}" -name "{basename}" | head -n 1'
                 found_path = subprocess.check_output(find_cmd, shell=True, text=True).strip()
                 if found_path: filepath = found_path
                 else: return f"File {filepath} not found."
@@ -89,8 +83,8 @@ def execute_tool(call):
             return str(e)
     return "Unknown tool"
 
-def analyze_issue(issue):
-    system_instruction = """You are a senior software engineer analyzing bug reports for the gemini-cli codebase. 
+def analyze_issue(issue, url, project_path):
+    system_instruction = """You are a senior software engineer analyzing bug reports. 
 You MUST use the provided tools to investigate the codebase and pinpoint exactly which files and logic are responsible for the bug. 
 DO NOT GUESS.
 
@@ -114,9 +108,9 @@ Output format (ONLY valid JSON, NO markdown):
     prompt = f"{system_instruction}\n\nBug Title: {issue.get('title')}\nBug Body: {issue.get('body', '')[:1200]}"
     messages = [{"role": "user", "parts": [{"text": prompt}]}]
     
-    for turn in range(30): # Significantly higher turn limit
+    for turn in range(30):
         try:
-            res = call_gemini(messages)
+            res = call_gemini(messages, url)
             candidate = res['candidates'][0]['content']
             parts = candidate.get('parts', [])
             
@@ -129,7 +123,7 @@ Output format (ONLY valid JSON, NO markdown):
                 tool_responses = []
                 for fcall in function_calls:
                     call_data = fcall['functionCall']
-                    result = execute_tool(call_data)
+                    result = execute_tool(call_data, project_path)
                     tool_responses.append({
                         "functionResponse": {
                             "name": call_data['name'],
@@ -146,14 +140,14 @@ Output format (ONLY valid JSON, NO markdown):
             
     return {"analysis": "Failed to analyze autonomously", "effort_level": "medium", "reasoning": "Agent loop exceeded 30 turns or errored."}
 
-def process_issue(issue):
-    # Re-analyze if empty, failed, or just a placeholder
+def process_issue_task(args_tuple):
+    issue, url, project_path, input_file, bugs = args_tuple
     current_analysis = issue.get('analysis', '')
     if current_analysis and current_analysis != "Failed to analyze autonomously" and len(current_analysis) > 50:
         return issue
         
-    print(f"Analyzing Bug #{issue['number']}...", flush=True)
-    result = analyze_issue(issue)
+    print(f"Analyzing Bug #{issue.get('number', 'unknown')}...", flush=True)
+    result = analyze_issue(issue, url, project_path)
     
     issue['analysis'] = result.get('analysis', 'Failed to analyze')
     issue['effort_level'] = result.get('effort_level', 'medium')
@@ -163,18 +157,32 @@ def process_issue(issue):
     else:
         issue.pop('recommended_implementation', None)
         
-    print(f"Completed Bug #{issue['number']} -> {issue['effort_level']}", flush=True)
+    print(f"Completed Bug #{issue.get('number', 'unknown')} -> {issue.get('effort_level', 'unknown')}", flush=True)
     
     with file_lock:
-        with open(BUGS_FILE, 'w') as f:
+        with open(input_file, 'w') as f:
             json.dump(bugs, f, indent=2)
     return issue
 
 def main():
+    parser = argparse.ArgumentParser(description="Deep agentic bug analyzer.")
+    parser.add_argument("--api-key", required=True, help="Gemini API Key")
+    parser.add_argument("--input", default="data/bugs.json", help="Input JSON file containing bugs")
+    parser.add_argument("--project", default="../../packages", help="Project root to analyze")
+    args = parser.parse_args()
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={args.api_key}"
+
+    with open(args.input, 'r') as f:
+        bugs = json.load(f)
+
     print(f"Starting FINAL RE-ANALYSIS for {len(bugs)} bugs (Turn Limit: 30)...", flush=True)
+    
+    tasks = [(b, url, args.project, args.input, bugs) for b in bugs]
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        list(executor.map(process_issue, bugs))
-    print("Agentic analysis complete. `bugs.json` is updated.", flush=True)
+        list(executor.map(process_issue_task, tasks))
+        
+    print("Agentic analysis complete. JSON is updated.", flush=True)
 
 if __name__ == '__main__':
     main()

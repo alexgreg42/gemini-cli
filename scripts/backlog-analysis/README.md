@@ -21,7 +21,7 @@ and determining implementation effort levels for the Gemini CLI project.
 Use this for a quick, first-pass estimation.
 
 ```bash
-python3 analyze_bugs.py
+python3 analyze_bugs.py --api-key "YOUR_KEY"
 ```
 
 ### 2. Deep Agentic Analysis
@@ -29,7 +29,7 @@ python3 analyze_bugs.py
 Uses Gemini as an agent with access to the codebase.
 
 ```bash
-python3 bug_analyzer_final.py
+python3 bug_analyzer_final.py --api-key "YOUR_KEY"
 ```
 
 ### 3. Iterative Analysis
@@ -37,7 +37,7 @@ python3 bug_analyzer_final.py
 Runs the single-turn analyzer in a loop until all issues have a valid analysis.
 
 ```bash
-./loop_analyzer.sh
+GEMINI_API_KEY="YOUR_KEY" ./loop_analyzer.sh
 ```
 
 ### 4. Validation & Export

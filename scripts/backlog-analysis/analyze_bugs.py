@@ -2,17 +2,11 @@ import json
 import urllib.request
 import urllib.error
 import os
+import argparse
 import concurrent.futures
 from pathlib import Path
 
-API_KEY = "REDACTED_API_KEY"
 MODEL = "gemini-3-flash-preview"
-URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
-
-BUGS_FILE = 'data/bugs.json'
-
-with open(BUGS_FILE, 'r') as f:
-    bugs = json.load(f)
 
 # Collect basic directory structure to provide as context
 def get_tree(path, max_depth=3):
@@ -28,16 +22,14 @@ def get_tree(path, max_depth=3):
         indent = '  ' * len(depth)
         tree.append(f"{indent}{Path(root).name}/")
         for f in files:
-            if f.endswith(('.ts', '.tsx', '.js', '.json', '.toml', '.md')):
+            if f.endswith(('.ts', '.tsx', '.js', '.json', '.toml', '.md', '.py', '.sh')):
                 tree.append(f"{indent}  {f}")
     return "\n".join(tree)
 
-tree_context = get_tree('../../packages')
-
-def analyze_bug(bug):
+def analyze_bug(bug, url, tree_context):
     prompt = f"""
-You are analyzing bugs for the google-gemini/gemini-cli codebase.
-Here is the directory structure of the 'packages' directory:
+You are analyzing bugs for the current codebase.
+Here is the directory structure of the project:
 {tree_context[:4000]}
 
 Analyze the following GitHub bug report to determine the implementation effort.
@@ -57,7 +49,7 @@ Reply with ONLY a valid JSON object matching exactly this schema, without Markdo
         }
     }
     
-    req = urllib.request.Request(URL, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
+    req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
     try:
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode('utf-8'))
@@ -74,12 +66,13 @@ Reply with ONLY a valid JSON object matching exactly this schema, without Markdo
             parsed = json.loads(text.strip())
             return parsed
     except Exception as e:
-        print(f"Error processing bug {bug['number']}: {e}")
+        print(f"Error processing bug {bug.get('number', 'unknown')}: {e}")
         return {"analysis": "Failed to analyze", "effort_level": "medium", "reasoning": "Error calling Gemini API"}
 
-def process_bug(bug):
-    print(f"Analyzing Bug #{bug['number']}...")
-    result = analyze_bug(bug)
+def process_bug_task(args):
+    bug, url, tree_context = args
+    print(f"Analyzing Bug #{bug.get('number', 'unknown')}...")
+    result = analyze_bug(bug, url, tree_context)
     bug['analysis'] = result.get('analysis', '')
     bug['effort_level'] = result.get('effort_level', 'medium')
     bug['reasoning'] = result.get('reasoning', '')
@@ -88,16 +81,31 @@ def process_bug(bug):
     return bug
 
 def main():
-    print(f"Starting analysis of {len(bugs)} bugs...")
+    parser = argparse.ArgumentParser(description="Static initial triage analyzer for bugs.")
+    parser.add_argument("--api-key", required=True, help="Gemini API Key")
+    parser.add_argument("--input", default="data/bugs.json", help="Input JSON file containing bugs")
+    parser.add_argument("--project", default="../../packages", help="Project root to analyze")
+    args = parser.parse_args()
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={args.api_key}"
+
+    with open(args.input, 'r') as f:
+        bugs = json.load(f)
+
+    tree_context = get_tree(args.project)
+
+    print(f"Starting static analysis of {len(bugs)} bugs...")
     
     # Process in batches to save incrementally
     batch_size = 10
     for i in range(0, len(bugs), batch_size):
         batch = bugs[i:i+batch_size]
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            executor.map(process_bug, batch)
+        tasks = [(bug, url, tree_context) for bug in batch]
         
-        with open(BUGS_FILE, 'w') as f:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            list(executor.map(process_bug_task, tasks))
+        
+        with open(args.input, 'w') as f:
             json.dump(bugs, f, indent=2)
         print(f"Saved batch {i//batch_size + 1}")
         

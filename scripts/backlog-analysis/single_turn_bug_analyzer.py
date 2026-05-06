@@ -3,27 +3,24 @@ import urllib.request
 import os
 import subprocess
 import re
+import argparse
 import concurrent.futures
+import threading
 
-API_KEY = "REDACTED_API_KEY"
 MODEL = "gemini-3-flash-preview"
-URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
-BUGS_FILE = 'data/bugs.json'
-
-with open(BUGS_FILE, 'r') as f:
-    bugs = json.load(f)
+file_lock = threading.Lock()
 
 def extract_keywords(text):
     words = re.findall(r'\b[A-Z][a-zA-Z0-9]+\b|\b\w+\.tsx?\b|\b\w+Service\b|\b\w+Command\b', text)
     words = list(set([w for w in words if len(w) > 4]))
     return words[:8]
 
-def search_codebase(keywords):
+def search_codebase(keywords, project_path):
     context = ""
     for kw in keywords:
         try:
             kw_clean = kw.replace('"', '\\"')
-            cmd = f'grep -rn "{kw_clean}" ../../packages | grep -vE "node_modules|dist|build|\\.test\\." | head -n 8'
+            cmd = f'grep -rn "{kw_clean}" "{project_path}" | grep -vE "node_modules|dist|build|\\.test\\." | head -n 8'
             out = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT)
             if out:
                 context += f"\n--- Matches for {kw_clean} ---\n{out}\n"
@@ -31,7 +28,9 @@ def search_codebase(keywords):
             pass
     return context
 
-def process_issue(issue):
+def process_issue_task(args_tuple):
+    issue, url, project_path, input_file, bugs = args_tuple
+    
     if issue.get('analysis') and issue['analysis'] != "Failed to analyze autonomously" and len(issue['analysis']) > 30:
         return issue
 
@@ -39,9 +38,9 @@ def process_issue(issue):
     body = issue.get('body', '')[:1500]
     
     keywords = extract_keywords(title + " " + body)
-    code_context = search_codebase(keywords)
+    code_context = search_codebase(keywords, project_path)
 
-    prompt = f"""You are a senior software engineer analyzing bug reports for the gemini-cli codebase. 
+    prompt = f"""You are a senior software engineer analyzing bug reports. 
 Based on the bug description and the provided codebase search context, pinpoint exactly which files and logic are responsible for the bug. 
 DO NOT GUESS. If the context isn't enough, provide your best technical hypothesis.
 
@@ -69,7 +68,7 @@ Output ONLY valid JSON (no markdown block):
     }
     
     try:
-        req = urllib.request.Request(URL, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
+        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
         with urllib.request.urlopen(req, timeout=60) as response:
             res = json.loads(response.read().decode('utf-8'))
             txt = res['candidates'][0]['content']['parts'][0]['text']
@@ -79,27 +78,38 @@ Output ONLY valid JSON (no markdown block):
             issue['analysis'] = parsed.get('analysis', 'Failed to analyze')
             issue['effort_level'] = parsed.get('effort_level', 'medium')
             issue['reasoning'] = parsed.get('reasoning', 'Could not determine')
-            print(f"Completed {issue['number']} -> {issue['effort_level']}", flush=True)
+            print(f"Completed {issue.get('number', 'unknown')} -> {issue['effort_level']}", flush=True)
     except Exception as e:
-        print(f"Failed {issue['number']}: {e}", flush=True)
+        print(f"Failed {issue.get('number', 'unknown')}: {e}", flush=True)
         
+    with file_lock:
+        with open(input_file, 'w') as f:
+            json.dump(bugs, f, indent=2)
+            
     return issue
 
 def main():
+    parser = argparse.ArgumentParser(description="Single turn code search bug analyzer.")
+    parser.add_argument("--api-key", required=True, help="Gemini API Key")
+    parser.add_argument("--input", default="data/bugs.json", help="Input JSON file containing bugs")
+    parser.add_argument("--project", default="../../packages", help="Project root to analyze")
+    args = parser.parse_args()
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={args.api_key}"
+
+    with open(args.input, 'r') as f:
+        bugs = json.load(f)
+
     to_analyze = [b for b in bugs if b.get('analysis') == "Failed to analyze autonomously" or not b.get('analysis') or len(b.get('analysis', '')) < 30]
-    
-    # Only process 5 at a time
     to_analyze = to_analyze[:5]
+    
     print(f"Starting single-turn analysis for {len(to_analyze)} bugs...", flush=True)
     
+    tasks = [(b, url, args.project, args.input, bugs) for b in to_analyze]
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        list(executor.map(process_issue, to_analyze))
-    
-    # Final save
-    with open(BUGS_FILE, 'w') as f:
-        json.dump(bugs, f, indent=2)
+        list(executor.map(process_issue_task, tasks))
         
-    print("Done processing 5 bugs.", flush=True)
+    print("Done processing batch.", flush=True)
 
 if __name__ == '__main__':
     main()
