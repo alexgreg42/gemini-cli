@@ -17,22 +17,6 @@ from pathlib import Path
 MODEL = "gemini-3-flash-preview"
 file_lock = threading.Lock()
 
-# --- VALIDATION HEURISTICS ---
-LARGE_KEYWORDS = [
-    'windows', 'win32', 'wsl', 'wsl2', 'pty', 'pseudo-terminal', 'child_process', 'spawn', 'sigint', 'sigterm',
-    'memory leak', 'performance', 'boot time', 'infinite loop', 'hangs', 'freezes', 'crashes', 'race condition',
-    'intermittent', 'sometimes', 'flickering', 'a2a', 'mcp protocol', 'scheduler', 'event loop', 'websocket',
-    'stream', 'throughput', 'concurrency', 'deadlock', 'file descriptor', 'architecture', 'refactor'
-]
-
-MEDIUM_KEYWORDS = [
-    'react', 'hook', 'useeffect', 'usestate', 'usememo', 'ink', 'tui', 'ui state', 'parser', 'markdown',
-    'regex', 'regular expression', 'ansi', 'escape sequence', 'toml', 'schema', 'validation', 'zod',
-    'promise', 'async', 'await', 'unhandled', 'rejection', 'config', 'settings', 'env', 'environment',
-    'path resolution', 'symlink', 'git', 'telemetry', 'logging', 'format', 'display', 'rendering',
-    'clipboard', 'copy', 'paste', 'bracketed', 'interactive', 'dialog', 'modal', 'focus'
-]
-
 tools_decl = [
     {
         "functionDeclarations": [
@@ -223,74 +207,60 @@ Output ONLY valid JSON (no markdown block):
     except Exception as e:
         return {"analysis": "Failed to analyze autonomously", "effort_level": "medium", "reasoning": str(e)}
 
-# --- VALIDATION ---
-def find_files_in_text(text):
-    matches = re.findall(r'([\w\.\/\-]+\.(?:ts|tsx|js|json|md))', text)
-    return set([m for m in matches if not m.startswith('http')])
+def dynamic_validate_effort(issue, url):
+    title = issue.get('title', '')
+    body = issue.get('body', '')[:1000]
+    analysis = issue.get('analysis', '')
+    current_effort = issue.get('effort_level', 'small')
+    reasoning = issue.get('reasoning', '')
 
-def resolve_file(filename, project_path):
-    if os.path.exists(os.path.join(project_path, filename)):
-        return os.path.join(project_path, filename)
-    basename = os.path.basename(filename)
-    for root, dirs, files in os.walk(project_path):
-        if '.git' in root or 'node_modules' in root: continue
-        if basename in files: return os.path.join(root, basename)
-    return None
+    prompt = f"""You are a principal software engineer performing quality assurance on a junior engineer's effort estimation for an issue.
 
-def validate_effort(issue, project_path):
-    title = issue.get('title', '').lower()
-    body = issue.get('body', '').lower()
-    analysis = issue.get('analysis', '').lower()
-    reasoning = issue.get('reasoning', '').lower()
-    
-    combined_text = f"{title} {body} {analysis} {reasoning}"
-    
-    potential_files = find_files_in_text(combined_text)
-    actual_files = []
-    total_lines = 0
-    
-    for f in potential_files:
-        resolved = resolve_file(f, project_path)
-        if resolved and resolved not in [a[0] for a in actual_files]:
-            try:
-                with open(resolved, 'r', encoding='utf-8') as file_obj:
-                    lines = sum(1 for line in file_obj)
-                    actual_files.append((resolved, lines))
-                    total_lines += lines
-            except Exception: pass
-                
-    num_files = len(actual_files)
-    
-    keyword_effort = "small"
-    for kw in LARGE_KEYWORDS:
-        if re.search(r'\b' + re.escape(kw) + r'\b', combined_text):
-            keyword_effort = "large"
-            break
-            
-    if keyword_effort != "large":
-        for kw in MEDIUM_KEYWORDS:
-            if re.search(r'\b' + re.escape(kw) + r'\b', combined_text):
-                keyword_effort = "medium"
-                break
+Your job is to read the junior's analysis and dynamically determine if the effort level ('small', 'medium', or 'large') needs to be upgraded due to hidden complexities.
+Do NOT use simple keyword matching. Look for semantic meaning and architectural impact.
 
-    effort = "small"
-    validation_msg = ""
-    if num_files == 0:
-        effort = keyword_effort if keyword_effort in ['medium', 'large'] else 'medium'
-        validation_msg = f"No specific files identified in codebase. Keyword heuristic: {keyword_effort}."
-    else:
-        file_details = ", ".join([f"{os.path.basename(f[0])} ({f[1]} lines)" for f in actual_files])
-        if num_files > 3 or total_lines > 1500 or keyword_effort == "large":
-            effort = "large"
-            validation_msg = f"Codebase validation: {num_files} files ({file_details}), {total_lines} total lines. Keyword hint: {keyword_effort}."
-        elif num_files >= 2 or total_lines > 500 or keyword_effort == "medium":
-            effort = "medium"
-            validation_msg = f"Codebase validation: {num_files} files ({file_details}), {total_lines} total lines. Keyword hint: {keyword_effort}."
-        else:
-            effort = "small"
-            validation_msg = f"Codebase validation: {num_files} files ({file_details}), {total_lines} total lines. Appears highly localized."
+RULES FOR UPGRADING TO 'LARGE' (>3 days):
+- Involves OS-level integrations (Windows/WSL support, process spawning, PTY, POSIX signals).
+- Involves complex multi-threading, race conditions, memory leaks, or performance bottlenecks.
+- Involves core architectural refactoring, custom protocols (like MCP or A2A), or network streams.
+- The bug is described as intermittent, flickering, or hard to reproduce.
 
-    return effort, validation_msg
+RULES FOR UPGRADING TO 'MEDIUM' (2-3 days):
+- Involves complex UI state management (React hooks, Ink TUI lifecycle).
+- Involves asynchronous control flow (Promises, async/await chaining) where failure states are complex.
+- Requires modifying parsers, schemas, or complex regex.
+
+Original Issue:
+Title: {title}
+Body: {body}
+
+Junior's Analysis: {analysis}
+Junior's Current Effort: {current_effort}
+Junior's Reasoning: {reasoning}
+
+Evaluate if the effort level needs to be raised. If the junior's estimate is accurate based on the rules, keep it. If it underestimates the complexity, upgrade it to medium or large.
+
+Output ONLY valid JSON (no markdown):
+{{
+  "effort_level": "small|medium|large",
+  "validation_msg": "Brief explanation of why you kept or upgraded the effort level based on architectural complexity."
+}}
+"""
+    data = {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.1}
+    }
+    
+    try:
+        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
+        with urllib.request.urlopen(req, timeout=60) as response:
+            res = json.loads(response.read().decode('utf-8'))
+            txt = res['candidates'][0]['content']['parts'][0]['text']
+            txt = txt.replace('```json', '').replace('```', '').strip()
+            parsed = json.loads(txt)
+            return parsed.get('effort_level', current_effort), parsed.get('validation_msg', 'AI validation successful.')
+    except Exception as e:
+        return current_effort, f"Dynamic validation failed: {str(e)}"
 
 
 def process_pipeline_task(args_tuple):
@@ -318,13 +288,15 @@ def process_pipeline_task(args_tuple):
 
     # Validation
     old_effort = issue.get('effort_level')
-    new_effort, validation_reason = validate_effort(issue, project_path)
+    print(f"[{issue.get('number', 'unknown')}] Starting dynamic AI validation (Current estimate: {old_effort})...")
+    new_effort, validation_reason = dynamic_validate_effort(issue, url)
     issue['effort_level'] = new_effort
     
     existing_reasoning = issue.get('reasoning', '')
     existing_reasoning = existing_reasoning.split(' | Codebase validation:')[0]
     existing_reasoning = existing_reasoning.split(' | No specific files identified')[0]
-    issue['reasoning'] = f"{existing_reasoning} | {validation_reason}".strip(' |')
+    existing_reasoning = existing_reasoning.split(' | AI Validation:')[0]
+    issue['reasoning'] = f"{existing_reasoning} | AI Validation: {validation_reason}".strip(' |')
     
     if needs_analysis or old_effort != new_effort:
         with file_lock:
