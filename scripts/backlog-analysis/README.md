@@ -10,8 +10,9 @@ and determining implementation effort levels for the Gemini CLI project.
 - `utils/`: Auxiliary scripts for manual overrides, debugging, and post-analysis
   validation (e.g., `inject_manual_fixes.py`).
 - `analyze_pipeline.py`: A unified Python script that orchestrates the entire
-  effort analysis pipeline end-to-end, combining agentic analysis, single-turn
-  fallbacks, heuristic validation, and CSV export.
+  effort analysis pipeline end-to-end, combining codebase context fetching,
+  strict architectural evaluation, and CSV export into a highly efficient single
+  pass.
 - `generic_processor.py`: A highly configurable agent for custom backlog tasks.
 
 ## 🚀 The Ideal Workflow
@@ -46,10 +47,11 @@ python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q
 ### Step 2: Analyze Effort Level
 
 Run the unified effort analysis pipeline. This single Python script efficiently
-runs a fast, context-aware single-turn analysis for each issue (pre-fetching
-codebase context via grep), dynamically validates the effort level against
-architectural rules using an AI reviewer persona, and immediately exports the
-results to a CSV.
+pre-fetches codebase context via `grep`, then sends a single, comprehensive
+prompt to Gemini. This prompt acts as a "Principal Software Engineer," strictly
+evaluating the issue against complex architectural rules (e.g., OS-level
+integrations, UI state management) to accurately determine the effort level in
+just one API call per issue.
 
 ```bash
 python3 analyze_pipeline.py --api-key "YOUR_KEY" --input data/bugs.json --project ../../packages

@@ -1,6 +1,6 @@
 """
 Purpose: A unified pipeline that performs end-to-end effort analysis on a dataset of GitHub issues.
-It relies exclusively on an efficient single-turn analysis that pre-fetches codebase context using grep, followed by dynamic AI validation, and CSV export.
+It relies exclusively on an efficient single-turn analysis that pre-fetches codebase context using grep, followed by CSV export.
 """
 import argparse
 import json
@@ -42,14 +42,26 @@ def analyze_issue_single_turn(issue, url, project_path):
     keywords = extract_keywords(title + " " + body)
     code_context = search_codebase_static(keywords, project_path)
 
-    prompt = f"""You are a senior software engineer analyzing issues. 
+    prompt = f"""You are a principal software engineer analyzing an issue to determine its root cause and effort estimation.
 Based on the description and codebase search context, pinpoint exactly which files and logic are responsible. 
 DO NOT GUESS. If the context isn't enough, provide your best technical hypothesis.
 
-Rating Effort Level:
-- small (1 day): Localized fix (1-2 files), clear cause.
-- medium (2-3 days): Touches multiple components or hard to trace.
-- large (>3 days): Architectural issues, Windows/WSL-specific, core protocols.
+Carefully evaluate the architectural complexity to determine the effort level:
+
+RULES FOR 'LARGE' EFFORT (>3 days):
+- Involves OS-level integrations (Windows/WSL support, process spawning, PTY, POSIX signals).
+- Involves complex multi-threading, race conditions, memory leaks, or performance bottlenecks.
+- Involves core architectural refactoring, custom protocols (like MCP or A2A), or network streams.
+- The bug is described as intermittent, flickering, or hard to reproduce.
+
+RULES FOR 'MEDIUM' EFFORT (2-3 days):
+- Involves complex UI state management (React hooks, Ink TUI lifecycle).
+- Involves asynchronous control flow (Promises, async/await chaining) where failure states are complex.
+- Requires modifying parsers, schemas, or complex regex.
+- Touches multiple components or is generally hard to trace.
+
+RULES FOR 'SMALL' EFFORT (1 day):
+- Localized fix/change (1-2 files), clear logic, easily reproducible.
 
 Issue Title: {title}
 Issue Body: {body}
@@ -61,7 +73,7 @@ Output ONLY valid JSON (no markdown block):
 {{
   "analysis": "technical analysis of root cause and fix",
   "effort_level": "small|medium|large",
-  "reasoning": "justification with specific files/lines found"
+  "reasoning": "detailed justification mapping the effort level to the architectural rules and specific files/lines found"
 }}
 """
     data = {
@@ -79,68 +91,13 @@ Output ONLY valid JSON (no markdown block):
     except Exception as e:
         return {"analysis": "Failed to analyze autonomously", "effort_level": "medium", "reasoning": str(e)}
 
-def dynamic_validate_effort(issue, url):
-    title = issue.get('title', '')
-    body = issue.get('body', '')[:1000]
-    analysis = issue.get('analysis', '')
-    current_effort = issue.get('effort_level', 'small')
-    reasoning = issue.get('reasoning', '')
-
-    prompt = f"""You are a principal software engineer performing quality assurance on a junior engineer's effort estimation for an issue.
-
-Your job is to read the junior's analysis and dynamically determine if the effort level ('small', 'medium', or 'large') needs to be upgraded due to hidden complexities.
-Do NOT use simple keyword matching. Look for semantic meaning and architectural impact.
-
-RULES FOR UPGRADING TO 'LARGE' (>3 days):
-- Involves OS-level integrations (Windows/WSL support, process spawning, PTY, POSIX signals).
-- Involves complex multi-threading, race conditions, memory leaks, or performance bottlenecks.
-- Involves core architectural refactoring, custom protocols (like MCP or A2A), or network streams.
-- The bug is described as intermittent, flickering, or hard to reproduce.
-
-RULES FOR UPGRADING TO 'MEDIUM' (2-3 days):
-- Involves complex UI state management (React hooks, Ink TUI lifecycle).
-- Involves asynchronous control flow (Promises, async/await chaining) where failure states are complex.
-- Requires modifying parsers, schemas, or complex regex.
-
-Original Issue:
-Title: {title}
-Body: {body}
-
-Junior's Analysis: {analysis}
-Junior's Current Effort: {current_effort}
-Junior's Reasoning: {reasoning}
-
-Evaluate if the effort level needs to be raised. If the junior's estimate is accurate based on the rules, keep it. If it underestimates the complexity, upgrade it to medium or large.
-
-Output ONLY valid JSON (no markdown):
-{{
-  "effort_level": "small|medium|large",
-  "validation_msg": "Brief explanation of why you kept or upgraded the effort level based on architectural complexity."
-}}
-"""
-    data = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.1}
-    }
-    
-    try:
-        req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
-        with urllib.request.urlopen(req, timeout=60) as response:
-            res = json.loads(response.read().decode('utf-8'))
-            txt = res['candidates'][0]['content']['parts'][0]['text']
-            txt = txt.replace('```json', '').replace('```', '').strip()
-            parsed = json.loads(txt)
-            return parsed.get('effort_level', current_effort), parsed.get('validation_msg', 'AI validation successful.')
-    except Exception as e:
-        return current_effort, f"Dynamic validation failed: {str(e)}"
-
 def process_pipeline_task(args_tuple):
     issue, url, project_path, input_file, all_issues = args_tuple
     
     needs_analysis = not issue.get('analysis') or issue.get('analysis') == "Failed to analyze autonomously" or len(issue.get('analysis', '')) < 30
     
     if needs_analysis:
-        print(f"[{issue.get('number', 'unknown')}] Starting Single-Turn Context Analysis...")
+        print(f"[{issue.get('number', 'unknown')}] Starting Contextual Analysis...")
         result = analyze_issue_single_turn(issue, url, project_path)
 
         issue['analysis'] = result.get('analysis', 'Failed to analyze')
@@ -153,24 +110,7 @@ def process_pipeline_task(args_tuple):
             with open(input_file, 'w') as f:
                 json.dump(all_issues, f, indent=2)
 
-    # Validation
-    old_effort = issue.get('effort_level')
-    print(f"[{issue.get('number', 'unknown')}] Starting dynamic AI validation (Current estimate: {old_effort})...")
-    new_effort, validation_reason = dynamic_validate_effort(issue, url)
-    issue['effort_level'] = new_effort
-    
-    existing_reasoning = issue.get('reasoning', '')
-    existing_reasoning = existing_reasoning.split(' | Codebase validation:')[0]
-    existing_reasoning = existing_reasoning.split(' | No specific files identified')[0]
-    existing_reasoning = existing_reasoning.split(' | AI Validation:')[0]
-    issue['reasoning'] = f"{existing_reasoning} | AI Validation: {validation_reason}".strip(' |')
-    
-    if needs_analysis or old_effort != new_effort:
-        with file_lock:
-            with open(input_file, 'w') as f:
-                json.dump(all_issues, f, indent=2)
-                
-    print(f"[{issue.get('number', 'unknown')}] Completed -> {issue.get('effort_level')}")
+        print(f"[{issue.get('number', 'unknown')}] Completed -> {issue.get('effort_level')}")
     return issue
 
 def export_csv(issues, output_csv):
