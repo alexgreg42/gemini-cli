@@ -40,12 +40,12 @@ python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q
 
 If you have a list of uncategorized issues fetched from GitHub, your first step
 should be to classify them. You can use the Gemini CLI directly in your terminal
-to label them on GitHub.
+to classify them in the local file and label them on GitHub.
 
 **Example command:**
 
 ```bash
-gemini "Read data/uncategorized.json. For each issue, determine if it is a bug or a feature request. Then, use the gh CLI tool to add either the 'type/bug' or 'type/feature' label directly to the issue on GitHub."
+gemini "Read data/uncategorized.json. For each issue, determine if it is a bug or a feature request. 1. Update the JSON object in the file to include a 'type' field set to 'bug' or 'feature'. 2. Use the gh CLI tool to add either the 'type/bug' or 'type/feature' label directly to the issue on GitHub."
 ```
 
 _Note: Make sure your `gemini-cli` has permission to execute shell commands if
