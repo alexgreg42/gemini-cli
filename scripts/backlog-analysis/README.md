@@ -46,6 +46,21 @@ python3 validate_effort.py
 python3 generate_bugs_csv.py
 ```
 
+### 5. Generic Issue Processing
+
+For any other backlog task (e.g., categorizing features, updating labels, or
+custom analysis), use the `generic_processor.py`. This script allows you to
+provide a custom system prompt and a project root for codebase context.
+
+```bash
+python3 generic_processor.py \
+  --api-key "YOUR_KEY" \
+  --input data/features.json \
+  --output data/features_analyzed.json \
+  --project ../../packages \
+  --prompt "Analyze these features and suggest which package they belong in. Output JSON: {\"package\": \"name\"}"
+```
+
 ## 🧠 Effort Level Criteria
 
 Ratings are based on technical complexity and reproduction difficulty:
