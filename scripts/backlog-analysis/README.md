@@ -14,6 +14,40 @@ and determining implementation effort levels for the Gemini CLI project.
 - `loop_analyzer.sh`: A shell script for running iterative analysis until all
   issues are processed.
 
+## 📥 Prerequisites: Data Generation
+
+Before running the analyzers, you must fetch the issue data from GitHub. The
+scripts expect the data in JSON format, which can be easily generated using the
+[GitHub CLI (`gh`)](https://cli.github.com/).
+
+### Generating `bugs.json`
+
+To extract all open bugs with the necessary fields (`number`, `title`, `body`,
+and `url`):
+
+```bash
+gh issue list \
+  --repo google-gemini/gemini-cli \
+  --label "type/bug" \
+  --state open \
+  --limit 1000 \
+  --json number,title,body,url > data/bugs.json
+```
+
+### Generating `issues.json` (Features/General)
+
+To extract general issues or features, simply change the label. You may also
+want additional fields like `labels` or `assignees`:
+
+```bash
+gh issue list \
+  --repo google-gemini/gemini-cli \
+  --label "type/feature" \
+  --state open \
+  --limit 1000 \
+  --json number,title,body,url,labels,assignees,state > data/issues.json
+```
+
 ## 🚀 Workflows
 
 ### 1. Initial Triage (Static)
