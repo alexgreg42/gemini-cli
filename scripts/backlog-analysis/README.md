@@ -17,35 +17,21 @@ and determining implementation effort levels for the Gemini CLI project.
 ## 📥 Prerequisites: Data Generation
 
 Before running the analyzers, you must fetch the issue data from GitHub. The
-scripts expect the data in JSON format, which can be easily generated using the
-[GitHub CLI (`gh`)](https://cli.github.com/).
+scripts expect the data in JSON format.
 
-### Generating `bugs.json`
+The easiest way to generate this is to simply copy the URL from your browser
+when looking at a filtered list of issues on GitHub, and pass it to our fetcher
+script.
 
-To extract all open bugs with the necessary fields (`number`, `title`, `body`,
-and `url`):
-
-```bash
-gh issue list \
-  --repo google-gemini/gemini-cli \
-  --label "type/bug" \
-  --state open \
-  --limit 1000 \
-  --json number,title,body,url > data/bugs.json
-```
-
-### Generating `issues.json` (Features/General)
-
-To extract general issues or features, simply change the label. You may also
-want additional fields like `labels` or `assignees`:
+_(Note: You must have the [GitHub CLI (`gh`)](https://cli.github.com/) installed
+and authenticated)._
 
 ```bash
-gh issue list \
-  --repo google-gemini/gemini-cli \
-  --label "type/feature" \
-  --state open \
-  --limit 1000 \
-  --json number,title,body,url,labels,assignees,state > data/issues.json
+# Fetch any filtered list of issues directly from a GitHub URL
+python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q=type%3ABug+is%3Aopen" --output data/bugs.json
+
+# Fetch features to a different file
+python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q=type%3AFeature+is%3Aopen" --output data/issues.json
 ```
 
 ## 🚀 Workflows
