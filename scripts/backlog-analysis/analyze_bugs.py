@@ -1,3 +1,7 @@
+"""
+Purpose: Performs fast, static initial triage of issues.
+It sends the issue text along with a static representation of the directory tree to Gemini in a single turn. Useful for quick first-pass estimations without the overhead of deep codebase search.
+"""
 import json
 import urllib.request
 import urllib.error

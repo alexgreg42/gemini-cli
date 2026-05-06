@@ -1,3 +1,7 @@
+"""
+Purpose: Updates the primary JSON data file with manually provided analysis.
+Used to explicitly override or inject specific 'analysis', 'effort_level', and 'reasoning' values for known issues where AI analysis is insufficient.
+"""
 import json
 
 BUGS_FILE = '../data/bugs.json'

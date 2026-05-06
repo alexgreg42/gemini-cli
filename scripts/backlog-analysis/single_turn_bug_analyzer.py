@@ -1,3 +1,7 @@
+"""
+Purpose: Performs a single-turn analysis on backlog issues.
+It pre-fetches context by grepping the codebase for keywords found in the issue description, then sends a single prompt to Gemini to determine the root cause and effort level. Faster than agentic analysis but more grounded than static analysis.
+"""
 import json
 import urllib.request
 import os

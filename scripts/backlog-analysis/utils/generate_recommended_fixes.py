@@ -1,3 +1,7 @@
+"""
+Purpose: A focused script to generate or extract 'recommended_implementation' details for issues categorized as 'small' effort.
+Helps create actionable code snippets for easy wins.
+"""
 import json
 import urllib.request
 import os

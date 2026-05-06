@@ -1,3 +1,7 @@
+"""
+Purpose: A highly configurable, generic agentic processor for any backlog task.
+Unlike the specific bug analyzers, this script accepts custom system prompts, input datasets, and output locations via command-line arguments, making it reusable for features, label updates, or custom queries.
+"""
 import json
 import urllib.request
 import os

@@ -1,3 +1,7 @@
+"""
+Purpose: Exports analyzed JSON issue data into a human-readable CSV format.
+This is typically the final step in the workflow, making the output suitable for sharing, spreadsheet import, or manual review.
+"""
 import json
 import csv
 from datetime import datetime

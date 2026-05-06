@@ -1,3 +1,7 @@
+"""
+Purpose: A utility to execute the agentic analysis loop on a single, specific issue by its ID.
+Extremely useful for observing the tool-calling behavior, debugging prompts, or fixing edge cases without running the entire batch.
+"""
 import json
 import urllib.request
 import urllib.error

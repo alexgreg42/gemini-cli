@@ -1,3 +1,7 @@
+"""
+Purpose: Performs deep, agentic analysis on backlog issues.
+It equips the Gemini model with tool-calling capabilities (grep and file reading), allowing it to autonomously navigate the codebase and investigate the root cause over multiple turns (up to 30) for high-accuracy effort estimation.
+"""
 import json
 import urllib.request
 import urllib.error

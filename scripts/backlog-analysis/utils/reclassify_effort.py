@@ -1,3 +1,7 @@
+"""
+Purpose: Re-evaluates and modifies the effort level of specific issues based on hardcoded lists or heuristics.
+Useful for bulk-updating effort levels (e.g., forcing certain complex bugs to 'large') after the initial AI pass.
+"""
 import json
 import re
 

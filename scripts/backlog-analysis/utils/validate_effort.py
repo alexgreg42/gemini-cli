@@ -1,3 +1,7 @@
+"""
+Purpose: Runs heuristic post-analysis validation on the AI's effort estimations.
+Checks for keywords (like 'Windows', 'WSL', 'PTY') in the issue body to ensure the AI didn't underestimate platform-specific or architecturally complex bugs as 'small'.
+"""
 import json
 import re
 import os

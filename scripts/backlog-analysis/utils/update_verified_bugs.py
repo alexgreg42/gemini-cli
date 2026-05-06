@@ -1,3 +1,7 @@
+"""
+Purpose: Marks specific issues in the JSON dataset as 'validated = true'.
+Used to track which AI analyses have been manually reviewed and approved by a human maintainer.
+"""
 import json
 
 BUGS_FILE = '../data/bugs.json'

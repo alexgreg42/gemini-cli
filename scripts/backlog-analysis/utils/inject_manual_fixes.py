@@ -1,3 +1,7 @@
+"""
+Purpose: Injects recommended implementation snippets into the JSON data for specific, well-understood issues.
+Allows maintainers to supplement AI analysis with exact code fixes.
+"""
 import json
 
 BUGS_FILE = '../data/bugs.json'
