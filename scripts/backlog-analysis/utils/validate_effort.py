@@ -2,12 +2,18 @@
 Purpose: Runs heuristic post-analysis validation on the AI's effort estimations.
 Checks for keywords (like 'Windows', 'WSL', 'PTY') in the issue body to ensure the AI didn't underestimate platform-specific or architecturally complex bugs as 'small'.
 """
+import argparse
 import json
 import re
 import os
 
-ISSUES_FILE = 'backlog-analysis/issues.json'
-REPO_ROOT = '/Users/cocosheng/gemini-cli'
+parser = argparse.ArgumentParser(description="Validate effort levels using heuristics.")
+parser.add_argument("--input", default="data/bugs.json", help="Input JSON file containing analyzed issues")
+parser.add_argument("--project", default="../../packages", help="Project root for codebase validation")
+args = parser.parse_args()
+
+ISSUES_FILE = args.input
+REPO_ROOT = args.project
 
 with open(ISSUES_FILE, 'r') as f:
     issues = json.load(f)
@@ -35,17 +41,13 @@ SMALL_KEYWORDS = [
 ]
 
 def find_files_in_text(text):
-    # match patterns like packages/cli/src/ui/components/Footer.tsx or Footer.tsx
-    # We will look for anything ending in .ts, .tsx, .js, .json
     matches = re.findall(r'([\w\.\/\-]+\.(?:ts|tsx|js|json|md))', text)
-    # filter out URLs or common false positives
     return set([m for m in matches if not m.startswith('http')])
 
 def resolve_file(filename):
     if os.path.exists(os.path.join(REPO_ROOT, filename)):
         return os.path.join(REPO_ROOT, filename)
     
-    # Try searching the repo for the basename
     basename = os.path.basename(filename)
     for root, dirs, files in os.walk(REPO_ROOT):
         if '.git' in root or 'node_modules' in root:
@@ -82,7 +84,6 @@ def analyze_issue(issue):
     effort = "small"
     validation_msg = ""
     
-    # Keyword analysis
     keyword_effort = "small"
     for kw in LARGE_KEYWORDS:
         if re.search(r'\b' + re.escape(kw) + r'\b', combined_text):
@@ -95,9 +96,7 @@ def analyze_issue(issue):
                 keyword_effort = "medium"
                 break
 
-    # Codebase heuristic
     if num_files == 0:
-        # If no files found, rely strictly on keywords, but default to medium to be safe
         effort = keyword_effort if keyword_effort in ['medium', 'large'] else 'medium'
         validation_msg = f"No specific files identified in codebase. Keyword heuristic: {keyword_effort}."
     else:
@@ -121,9 +120,7 @@ for issue in issues:
     
     issue['effort_level'] = new_effort
     
-    # Store the validation reason in the reasoning field
     existing_reasoning = issue.get('reasoning', '')
-    # Strip any previous validation messages
     existing_reasoning = existing_reasoning.split(' | Codebase validation:')[0]
     existing_reasoning = existing_reasoning.split(' | No specific files identified')[0]
     

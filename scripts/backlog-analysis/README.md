@@ -11,8 +11,8 @@ and determining implementation effort levels for the Gemini CLI project.
   validation (e.g., `validate_effort.py`, `inject_manual_fixes.py`).
 - `*.py`: Core analysis and export scripts (e.g., `bug_analyzer_final.py`,
   `generate_bugs_csv.py`).
-- `loop_analyzer.sh`: A shell script for running iterative analysis until all
-  issues are processed.
+- `run_pipeline.sh`: A shell script that orchestrates the entire effort analysis
+  pipeline end-to-end.
 
 ## 📥 Prerequisites: Data Generation
 
@@ -51,41 +51,17 @@ gemini "Read data/uncategorized.json. For each issue, determine if it is a bug o
 _Note: Make sure your `gemini-cli` has permission to execute shell commands if
 you want it to apply the labels automatically via `gh`._
 
-### 2. Initial Triage (Static)
+### 2. Full Effort Analysis Pipeline
 
-Use this for a quick, first-pass estimation.
-
-```bash
-python3 analyze_bugs.py --api-key "YOUR_KEY"
-```
-
-### 3. Deep Agentic Analysis
-
-Uses Gemini as an agent with access to the codebase.
+Instead of running individual steps manually, you can run the entire analysis
+pipeline (Initial Triage -> Deep Agentic Analysis -> Iterative Recovery ->
+Validation -> CSV Export) with a single command.
 
 ```bash
-python3 bug_analyzer_final.py --api-key "YOUR_KEY"
+GEMINI_API_KEY="YOUR_KEY" ./run_pipeline.sh data/bugs.json ../../packages
 ```
 
-### 4. Iterative Analysis
-
-Runs the single-turn analyzer in a loop until all issues have a valid analysis.
-
-```bash
-GEMINI_API_KEY="YOUR_KEY" ./loop_analyzer.sh
-```
-
-### 5. Validation & Export
-
-Run validation from the utils folder to ensure consistency, then generate a
-readable report.
-
-```bash
-python3 utils/validate_effort.py
-python3 generate_bugs_csv.py
-```
-
-### 6. Generic Issue Processing
+### 3. Generic Issue Processing
 
 For any other backlog task (e.g., categorizing features, updating labels, or
 custom analysis), use the `generic_processor.py`. This script allows you to

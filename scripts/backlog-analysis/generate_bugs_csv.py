@@ -2,24 +2,22 @@
 Purpose: Exports analyzed JSON issue data into a human-readable CSV format.
 This is typically the final step in the workflow, making the output suitable for sharing, spreadsheet import, or manual review.
 """
+import argparse
 import json
 import csv
 from datetime import datetime
 
-BUGS_FILE = 'data/bugs.json'
-METADATA_FILE = 'data/metadata_bugs.json'
-CSV_FILE = 'data/bugs.csv'
+parser = argparse.ArgumentParser(description="Export JSON issues to CSV.")
+parser.add_argument("--input", default="data/bugs.json", help="Input JSON file")
+parser.add_argument("--output", default="data/bugs.csv", help="Output CSV file")
+args = parser.parse_args()
 
-with open(BUGS_FILE, 'r') as f:
-    bugs = json.load(f)
+with open(args.input, 'r') as f:
+    issues = json.load(f)
 
-with open(METADATA_FILE, 'r') as f:
-    metadata_list = json.load(f)
+today = datetime.now().strftime("%Y-%m-%d")
 
-metadata_map = {m['number']: m for m in metadata_list}
-today = "2026-04-21"
-
-with open(CSV_FILE, 'w', newline='', encoding='utf-8') as f:
+with open(args.output, 'w', newline='', encoding='utf-8') as f:
     writer = csv.writer(f, delimiter='\t')
     writer.writerow([
         'Issue ID', 'Title', 'Status', 'Assignee', 'Labels', 
@@ -27,25 +25,31 @@ with open(CSV_FILE, 'w', newline='', encoding='utf-8') as f:
         'reasoning', 'recommended_implementation'
     ])
     
-    for bug in bugs:
-        num = bug.get('number')
-        meta = metadata_map.get(num, {})
+    for issue in issues:
+        num = issue.get('number')
         
-        assignee = ", ".join([a['login'] for a in meta.get('assignees', [])])
-        labels = ", ".join([l['name'] for l in meta.get('labels', [])])
+        assignee_list = issue.get('assignees', [])
+        if isinstance(assignee_list, dict) and 'nodes' in assignee_list:
+            assignee_list = assignee_list['nodes']
+        assignee = ", ".join([a.get('login', '') for a in assignee_list])
+        
+        labels_list = issue.get('labels', [])
+        if isinstance(labels_list, dict) and 'nodes' in labels_list:
+            labels_list = labels_list['nodes']
+        labels = ", ".join([l.get('name', '') for l in labels_list])
         
         writer.writerow([
             num,
-            bug.get('title', ''),
-            meta.get('state', 'open'),
+            issue.get('title', ''),
+            issue.get('state', 'OPEN'),
             assignee,
             labels,
             today,
-            bug.get('url', ''),
-            bug.get('analysis', ''),
-            bug.get('effort_level', ''),
-            bug.get('reasoning', ''),
-            bug.get('recommended_implementation', '')
+            issue.get('url', ''),
+            issue.get('analysis', ''),
+            issue.get('effort_level', ''),
+            issue.get('reasoning', ''),
+            issue.get('recommended_implementation', '')
         ])
 
-print(f"Successfully generated {CSV_FILE}")
+print(f"Successfully generated {args.output}")
