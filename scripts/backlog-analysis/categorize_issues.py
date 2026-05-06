@@ -12,8 +12,13 @@ import concurrent.futures
 
 MODEL = "gemini-3-flash-preview"
 
+ISSUE_TYPES = {
+    "bug": "IT_kwDOCaSVvs4BR7vP",
+    "feature": "IT_kwDOCaSVvs4BR7vQ"
+}
+
 def fetch_issues(search_query, limit):
-    cmd = ["gh", "issue", "list", "--search", search_query, "--limit", str(limit), "--json", "number,title,body,url"]
+    cmd = ["gh", "issue", "list", "--search", search_query, "--limit", str(limit), "--json", "id,number,title,body,url"]
     try:
         res = subprocess.run(cmd, capture_output=True, text=True, check=True)
         return json.loads(res.stdout)
@@ -64,21 +69,37 @@ def process_issue(issue, api_key):
 
     issue_type = result['type']
     label = f"type/{issue_type}"
-    print(f"Issue #{issue['number']} is a {issue_type}. Applying label '{label}' on GitHub...")
+    print(f"Issue #{issue['number']} is a {issue_type}. Applying label '{label}' and setting Issue Type on GitHub...")
     
-    cmd = ["gh", "issue", "edit", str(issue['number']), "--add-label", label]
-    
-    # Prepend the type to the title if it's not already there
-    title = issue.get('title', '')
-    if not title.lower().startswith(f"[{issue_type}]") and not title.lower().startswith(f"{issue_type}:"):
-        new_title = f"[{issue_type.capitalize()}] {title}"
-        cmd.extend(["--title", new_title])
-
+    # 1. Add label via gh issue edit
+    cmd_label = ["gh", "issue", "edit", str(issue['number']), "--add-label", label]
     try:
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print(f"Successfully labeled and updated title for #{issue['number']}.")
+        subprocess.run(cmd_label, capture_output=True, text=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error labeling #{issue['number']}: {e.stderr}", file=sys.stderr)
+
+    # 2. Set the native GitHub Issue Type using GraphQL
+    type_node_id = ISSUE_TYPES.get(issue_type)
+    issue_node_id = issue.get('id')
+    
+    if type_node_id and issue_node_id:
+        mutation = f"""
+        mutation {{
+          updateIssue(input: {{id: "{issue_node_id}", issueTypeId: "{type_node_id}"}}) {{
+            issue {{
+              id
+            }}
+          }}
+        }}
+        """
+        cmd_type = ["gh", "api", "graphql", "-f", f"query={mutation}"]
+        try:
+            subprocess.run(cmd_type, capture_output=True, text=True, check=True)
+            print(f"Successfully labeled and set native Issue Type for #{issue['number']}.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error setting Issue Type for #{issue['number']}: {e.stderr}", file=sys.stderr)
+    else:
+        print(f"Could not resolve node IDs to set native Issue Type for #{issue['number']}.")
 
 def main():
     parser = argparse.ArgumentParser(description="Auto-categorize GitHub issues (bug vs feature) from a GitHub URL and apply labels on GitHub.")
