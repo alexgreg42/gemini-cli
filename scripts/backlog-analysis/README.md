@@ -46,9 +46,10 @@ python3 fetch_from_url.py "https://github.com/google-gemini/gemini-cli/issues/?q
 ### Step 2: Analyze Effort Level
 
 Run the unified effort analysis pipeline. This single Python script efficiently
-runs a deep agentic codebase search, gracefully falls back to context-based
-single-turn analysis for complex cases, runs heuristic validation to prevent
-underestimations, and immediately exports the results to a CSV.
+runs a fast, context-aware single-turn analysis for each issue (pre-fetching
+codebase context via grep), dynamically validates the effort level against
+architectural rules using an AI reviewer persona, and immediately exports the
+results to a CSV.
 
 ```bash
 python3 analyze_pipeline.py --api-key "YOUR_KEY" --input data/bugs.json --project ../../packages

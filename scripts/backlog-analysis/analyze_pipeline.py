@@ -1,6 +1,6 @@
 """
 Purpose: A unified pipeline that performs end-to-end effort analysis on a dataset of GitHub issues.
-It combines agentic deep analysis, single-turn fallbacks, heuristic validation, and CSV export in a single, efficient execution, avoiding redundant file operations.
+It relies exclusively on an efficient single-turn analysis that pre-fetches codebase context using grep, followed by dynamic AI validation, and CSV export.
 """
 import argparse
 import json
@@ -16,134 +16,6 @@ from pathlib import Path
 
 MODEL = "gemini-3-flash-preview"
 file_lock = threading.Lock()
-
-tools_decl = [
-    {
-        "functionDeclarations": [
-            {
-                "name": "search_codebase",
-                "description": "Search the project directory for a string using grep. Returns matching lines and file paths.",
-                "parameters": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "pattern": {"type": "STRING", "description": "The text pattern to search for"}
-                    },
-                    "required": ["pattern"]
-                }
-            },
-            {
-                "name": "read_file",
-                "description": "Read a specific file to understand its context.",
-                "parameters": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "filepath": {"type": "STRING", "description": "The path to the file"}
-                    },
-                    "required": ["filepath"]
-                }
-            }
-        ]
-    }
-]
-
-def call_gemini(messages, url):
-    data = {
-        "contents": messages,
-        "tools": tools_decl,
-        "generationConfig": {"temperature": 0.1}
-    }
-    req = urllib.request.Request(url, data=json.dumps(data).encode('utf-8'), headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(req, timeout=120) as response:
-        return json.loads(response.read().decode('utf-8'))
-
-def execute_tool(call, project_path):
-    name = call['name']
-    args = call.get('args', {})
-    
-    if name == 'search_codebase':
-        pattern = args.get('pattern', '').replace('"', '\\"')
-        try:
-            cmd = f'grep -rn "{pattern}" "{project_path}" | grep -vE "node_modules|dist|build|\\.test\\." | head -n 20'
-            res = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT)
-            return res if res else "No matches found."
-        except subprocess.CalledProcessError as e:
-            return e.output if e.output else "No matches found."
-    elif name == 'read_file':
-        filepath = args.get('filepath', '')
-        if not filepath.startswith('/'):
-            filepath = os.path.join(project_path, filepath)
-        
-        try:
-            if not os.path.exists(filepath):
-                basename = os.path.basename(filepath)
-                find_cmd = f'find "{project_path}" -name "{basename}" | head -n 1'
-                found_path = subprocess.check_output(find_cmd, shell=True, text=True).strip()
-                if found_path: filepath = found_path
-                else: return f"File {filepath} not found."
-            
-            cmd = f'head -n 300 "{filepath}"'
-            res = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.STDOUT)
-            return res
-        except Exception as e:
-            return str(e)
-    return "Unknown tool"
-
-def analyze_issue_agentic(issue, url, project_path):
-    system_instruction = """You are a senior software engineer analyzing bug/feature reports. 
-You MUST use the provided tools to investigate the codebase and pinpoint exactly which files and logic are responsible. 
-DO NOT GUESS.
-
-Rating Effort Level:
-- small (1 day): Localized fix/change (1-2 files), clear logic.
-- medium (2-3 days): Harder to trace, state management, touches multiple components.
-- large (>3 days): Architectural issues, core protocol changes, or very complex multi-package bugs.
-
-REPRODUCTION RULE:
-If a bug is hard to reproduce (specific OS, complex setup, intermittent/flickering), it MUST NOT be rated as small.
-
-Output format (ONLY valid JSON, NO markdown):
-{
-  "analysis": "technical analysis of root cause and fix",
-  "effort_level": "small|medium|large",
-  "reasoning": "justification with specific files/lines/logic you found",
-  "recommended_implementation": "code snippets or specific logic changes (only if small)"
-}
-"""
-    prompt = f"{system_instruction}\n\nIssue Title: {issue.get('title')}\nIssue Body: {issue.get('body', '')[:1500]}"
-    messages = [{"role": "user", "parts": [{"text": prompt}]}]
-    
-    for turn in range(15):  # Limit turns to 15 for efficiency in unified loop
-        try:
-            res = call_gemini(messages, url)
-            candidate = res['candidates'][0]['content']
-            parts = candidate.get('parts', [])
-            
-            if 'role' not in candidate: candidate['role'] = 'model'
-            messages.append(candidate)
-            
-            function_calls = [p for p in parts if 'functionCall' in p]
-            
-            if function_calls:
-                tool_responses = []
-                for fcall in function_calls:
-                    call_data = fcall['functionCall']
-                    result = execute_tool(call_data, project_path)
-                    tool_responses.append({
-                        "functionResponse": {
-                            "name": call_data['name'],
-                            "response": {"result": result[:5000]}
-                        }
-                    })
-                messages.append({"role": "user", "parts": tool_responses})
-            else:
-                text = parts[0].get('text', '')
-                if not text: continue
-                text = text.replace('```json', '').replace('```', '').strip()
-                return json.loads(text)
-        except Exception as e:
-            break
-            
-    return {"analysis": "Failed to analyze autonomously", "effort_level": "medium", "reasoning": "Agent loop exceeded limit or errored."}
 
 def extract_keywords(text):
     words = re.findall(r'\b[A-Z][a-zA-Z0-9]+\b|\b\w+\.tsx?\b|\b\w+Service\b|\b\w+Command\b', text)
@@ -262,19 +134,14 @@ Output ONLY valid JSON (no markdown):
     except Exception as e:
         return current_effort, f"Dynamic validation failed: {str(e)}"
 
-
 def process_pipeline_task(args_tuple):
     issue, url, project_path, input_file, all_issues = args_tuple
     
     needs_analysis = not issue.get('analysis') or issue.get('analysis') == "Failed to analyze autonomously" or len(issue.get('analysis', '')) < 30
     
     if needs_analysis:
-        print(f"[{issue.get('number', 'unknown')}] Starting Agentic Analysis...")
-        result = analyze_issue_agentic(issue, url, project_path)
-        
-        if result.get('analysis') == "Failed to analyze autonomously":
-            print(f"[{issue.get('number', 'unknown')}] Agentic failed. Falling back to Single-Turn Context Analysis...")
-            result = analyze_issue_single_turn(issue, url, project_path)
+        print(f"[{issue.get('number', 'unknown')}] Starting Single-Turn Context Analysis...")
+        result = analyze_issue_single_turn(issue, url, project_path)
 
         issue['analysis'] = result.get('analysis', 'Failed to analyze')
         issue['effort_level'] = result.get('effort_level', 'medium')
@@ -341,7 +208,7 @@ def export_csv(issues, output_csv):
     print(f"Exported successfully to {output_csv}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Unified Effort Analysis Pipeline.")
+    parser = argparse.ArgumentParser(description="Unified Effort Analysis Pipeline (Single-Turn).")
     parser.add_argument("--api-key", required=True, help="Gemini API Key")
     parser.add_argument("--input", default="data/bugs.json", help="Input JSON file")
     parser.add_argument("--project", default="../../packages", help="Project root to analyze")
@@ -353,7 +220,7 @@ def main():
     with open(args.input, 'r') as f:
         issues = json.load(f)
 
-    print(f"Starting unified analysis pipeline on {len(issues)} issues...")
+    print(f"Starting single-turn analysis pipeline on {len(issues)} issues...")
     
     tasks = [(issue, url, args.project, args.input, issues) for issue in issues]
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
