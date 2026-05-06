@@ -52,7 +52,7 @@ def execute_tool(call):
         except: return "Error or no results."
     elif name == 'read_file':
         f = args.get('filepath', '')
-        if not f.startswith('/'): f = os.path.join('../../packages', f)
+        if not f.startswith('/'): f = os.path.join('../../../packages', f)
         if not os.path.exists(f): return "File not found."
         try:
             return subprocess.check_output(f'head -n 200 "{f}"', shell=True, text=True)
@@ -60,7 +60,7 @@ def execute_tool(call):
     return "Unknown tool"
 
 def debug_one(issue_num):
-    with open('data/bugs.json', 'r') as f:
+    with open('../data/bugs.json', 'r') as f:
         bugs = json.load(f)
     issue = next(b for b in bugs if b['number'] == issue_num)
     

@@ -1,6 +1,6 @@
 import json
 
-BUGS_FILE = 'data/bugs.json'
+BUGS_FILE = '../data/bugs.json'
 
 with open(BUGS_FILE, 'r') as f:
     bugs = json.load(f)

@@ -7,7 +7,10 @@ and determining implementation effort levels for the Gemini CLI project.
 
 - `data/`: Contains the issue data in JSON and CSV formats.
   - `bugs.json`: The primary source of truth for bug analysis.
-- `*.py`: Analysis and utility scripts.
+- `utils/`: Auxiliary scripts for manual overrides, debugging, and post-analysis
+  validation (e.g., `validate_effort.py`, `inject_manual_fixes.py`).
+- `*.py`: Core analysis and export scripts (e.g., `bug_analyzer_final.py`,
+  `generate_bugs_csv.py`).
 - `loop_analyzer.sh`: A shell script for running iterative analysis until all
   issues are processed.
 
@@ -39,10 +42,11 @@ Runs the single-turn analyzer in a loop until all issues have a valid analysis.
 
 ### 4. Validation & Export
 
-Run these after analysis to ensure consistency and generate a readable report.
+Run validation from the utils folder to ensure consistency, then generate a
+readable report.
 
 ```bash
-python3 validate_effort.py
+python3 utils/validate_effort.py
 python3 generate_bugs_csv.py
 ```
 
