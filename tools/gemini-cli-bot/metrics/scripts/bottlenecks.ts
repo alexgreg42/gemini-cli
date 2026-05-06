@@ -7,9 +7,8 @@
 import { GITHUB_OWNER, GITHUB_REPO } from '../types.js';
 import { execSync } from 'node:child_process';
 
-interface IssueNode {
+interface HotIssueNode {
   number: number;
-  updatedAt: string;
   comments: {
     totalCount: number;
   };
@@ -20,68 +19,35 @@ interface IssueNode {
  */
 function run() {
   try {
-    const issues: IssueNode[] = [];
-    let hasNextPage = true;
-    let endCursor: string | null = null;
-    const MAX_ISSUES = 1000;
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Fetch up to 1000 open issues, sorted by least recently updated, using pagination.
-    while (hasNextPage && issues.length < MAX_ISSUES) {
-      const query = `
-      query($owner: String!, $repo: String!, $after: String) {
-        repository(owner: $owner, name: $repo) {
-          issues(first: 100, states: OPEN, orderBy: {field: UPDATED_AT, direction: ASC}, after: $after) {
-            nodes {
-              number
-              updatedAt
-              comments {
-                totalCount
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
-          }
-        }
+    // 1. Count Zombie issues using Search API totalCount (unlimited)
+    const zombieSearchQuery = `is:issue is:open repo:${GITHUB_OWNER}/${GITHUB_REPO} updated:<${thirtyDaysAgo.toISOString()}`;
+    const zombieQuery = `
+    query($searchQuery: String!) {
+      search(query: $searchQuery, type: ISSUE, first: 0) {
+        issueCount
       }
-      `;
-      const variables = endCursor ? `-F after=${endCursor}` : '';
-      const output = execSync(
-        `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} ${variables} -f query='${query}'`,
-        { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
-      ).trim();
-
-      const data = JSON.parse(output).data.repository.issues;
-      issues.push(...data.nodes);
-      hasNextPage = data.pageInfo.hasNextPage;
-      endCursor = data.pageInfo.endCursor;
     }
+    `;
+    const zombieOutput = execSync(
+      `gh api graphql -F searchQuery='${zombieSearchQuery}' -f query='${zombieQuery}'`,
+      { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
+    ).trim();
+    const zombieCount = JSON.parse(zombieOutput).data.search.issueCount;
+    process.stdout.write(`bottleneck_zombie_issues_count,${zombieCount}\n`);
 
-    if (issues.length === 0) {
-      process.stdout.write('bottleneck_zombie_issues_count,0\n');
-      return;
-    }
-
-    const now = new Date().getTime();
-    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
-
-    const zombies = issues.filter((issue) => {
-      const updated = new Date(issue.updatedAt).getTime();
-      return updated < thirtyDaysAgo;
-    });
-
-    process.stdout.write(`bottleneck_zombie_issues_count,${zombies.length}\n`);
-
-    // Also identify "Hot" issues in the same sample (though less likely to find them in the 'oldest' sample)
-    // But we can also fetch 'most recently updated' to find Hot issues.
+    // 2. Identify "Hot" issues. Since we need to count comments per issue, 
+    // we still need to fetch some nodes, but we can target the most active ones.
+    const hotSearchQuery = `is:issue is:open repo:${GITHUB_OWNER}/${GITHUB_REPO} updated:>${sevenDaysAgo.toISOString()} sort:comments-desc`;
     const hotQuery = `
-    query($owner: String!, $repo: String!) {
-      repository(owner: $owner, name: $repo) {
-        issues(last: 100, states: OPEN, orderBy: {field: UPDATED_AT, direction: ASC}) {
-          nodes {
+    query($searchQuery: String!) {
+      search(query: $searchQuery, type: ISSUE, first: 100) {
+        nodes {
+          ... on Issue {
             number
-            updatedAt
             comments {
               totalCount
             }
@@ -91,19 +57,17 @@ function run() {
     }
     `;
     const hotOutput = execSync(
-      `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${hotQuery}'`,
+      `gh api graphql -F searchQuery='${hotSearchQuery}' -f query='${hotQuery}'`,
       { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
     ).trim();
-    const hotData = JSON.parse(hotOutput).data.repository;
-    const hotIssues: IssueNode[] = hotData.issues.nodes;
-
-    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
-    const veryHot = hotIssues.filter((issue) => {
-      const updated = new Date(issue.updatedAt).getTime();
-      return updated > sevenDaysAgo && issue.comments.totalCount > 10;
-    });
-
+    const hotNodes = JSON.parse(hotOutput).data.search.nodes as HotIssueNode[];
+    
+    // We define "Hot" as > 10 comments in the last 7 days.
+    // Note: Search query 'sort:comments-desc' gets those with most total comments,
+    // which is a good proxy for 'Hot' when filtered by recent updates.
+    const veryHot = hotNodes.filter((node) => node.comments.totalCount > 10);
     process.stdout.write(`bottleneck_hot_issues_count,${veryHot.length}\n`);
+
   } catch (error) {
     process.stderr.write(
       error instanceof Error ? error.message : String(error),
