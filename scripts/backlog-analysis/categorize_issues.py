@@ -1,8 +1,9 @@
 """
 Purpose: Automatically categorizes GitHub issues as 'bug' or 'feature' and applies the corresponding label on GitHub.
-It fetches issues matching a search query, uses the Gemini API to classify them, and runs 'gh issue edit' to update GitHub.
+It fetches issues matching a search URL, uses the Gemini API to classify them, and runs 'gh issue edit' to update GitHub.
 """
 import argparse
+import urllib.parse
 import urllib.request
 import json
 import subprocess
@@ -80,14 +81,29 @@ def process_issue(issue, api_key):
         print(f"Error labeling #{issue['number']}: {e.stderr}", file=sys.stderr)
 
 def main():
-    parser = argparse.ArgumentParser(description="Auto-categorize GitHub issues (bug vs feature) and apply labels on GitHub.")
+    parser = argparse.ArgumentParser(description="Auto-categorize GitHub issues (bug vs feature) from a GitHub URL and apply labels on GitHub.")
+    parser.add_argument("url", help="The full GitHub Issues search URL (e.g., https://github.com/.../issues/?q=...)")
     parser.add_argument("--api-key", required=True, help="Gemini API Key")
-    parser.add_argument("--search", required=True, help="GitHub search query for issues to categorize")
     parser.add_argument("--limit", type=int, default=50, help="Maximum number of issues to process")
     args = parser.parse_args()
 
-    print(f"Fetching issues matching: '{args.search}'")
-    issues = fetch_issues(args.search, args.limit)
+    parsed_url = urllib.parse.urlparse(args.url)
+    query_params = urllib.parse.parse_qs(parsed_url.query)
+    
+    if 'q' in query_params:
+        search_query = query_params['q'][0]
+    else:
+        print("Warning: No 'q=' search parameter found in URL. Fetching default open issues.")
+        search_query = "is:issue is:open"
+
+    if 'repo:' not in search_query:
+        path_parts = [p for p in parsed_url.path.split('/') if p]
+        if len(path_parts) >= 2:
+            repo = f"{path_parts[0]}/{path_parts[1]}"
+            search_query = f"repo:{repo} {search_query}"
+
+    print(f"Fetching issues matching: '{search_query}'")
+    issues = fetch_issues(search_query, args.limit)
     if not issues:
         print("No issues found matching the query.")
         return

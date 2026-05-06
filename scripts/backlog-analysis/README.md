@@ -23,12 +23,12 @@ correct types (`bug` or `feature`) directly on GitHub, and then fetch the data
 into a local JSON file for analysis.
 
 **A) Auto-Categorize on GitHub:** We provide a dedicated Python script that will
-automatically fetch uncategorized issues matching your search query, classify
-them using the Gemini API, and apply the correct labels and title prefixes
-(`[Bug]` or `[Feature]`) directly on GitHub.
+automatically fetch uncategorized issues matching your search URL, classify them
+using the Gemini API, and apply the correct labels and title prefixes (`[Bug]`
+or `[Feature]`) directly on GitHub.
 
 ```bash
-python3 categorize_issues.py --api-key "YOUR_KEY" --search "repo:google-gemini/gemini-cli -label:type/bug -label:type/feature is:open" --limit 50
+python3 categorize_issues.py "https://github.com/google-gemini/gemini-cli/issues/?q=-label:type/bug+-label:type/feature+is:open" --api-key "YOUR_KEY" --limit 50
 ```
 
 **B) Export to JSON:** Once the issues are correctly labeled on GitHub, fetch
