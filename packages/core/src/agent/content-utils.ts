@@ -99,8 +99,6 @@ export function contentPartsToGeminiParts(content: ContentPart[]): Part[] {
         })(part);
         break;
       }
-        break;
-      }
     }
   }
   return result;
