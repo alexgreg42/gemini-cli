@@ -13,7 +13,10 @@ import { GeminiEventType } from '../core/turn.js';
 import type { Part } from '@google/genai';
 import type { GeminiClient } from '../core/client.js';
 import type { Config } from '../config/config.js';
-import type { ToolCallRequestInfo } from '../scheduler/types.js';
+import {
+  type ToolCallRequestInfo,
+  CoreToolCallStatus,
+} from '../scheduler/types.js';
 import { Scheduler } from '../scheduler/scheduler.js';
 import { recordToolCallInteractions } from '../code_assist/telemetry.js';
 import { ToolErrorType, isFatalToolError } from '../tools/tool-error.js';
@@ -289,7 +292,7 @@ export class LegacyAgentProtocol implements AgentProtocol {
             name: request.name,
             status: response.error
               ? 'errored'
-              : tc.status === 'cancelled'
+              : tc.status === CoreToolCallStatus.Cancelled
                 ? 'aborted'
                 : 'succeeded',
             content,
@@ -521,18 +524,29 @@ export class LegacyAgentProtocol implements AgentProtocol {
       }
 
       let status: ToolEventStatus = 'pending';
-      if (tc.status === 'validating' || tc.status === 'scheduled') {
-        status = 'pending';
-      } else if (tc.status === 'awaiting_approval') {
-        status = 'pending_input';
-      } else if (tc.status === 'executing') {
-        status = 'executing';
-      } else if (tc.status === 'success') {
-        status = 'succeeded';
-      } else if (tc.status === 'error') {
-        status = 'errored';
-      } else if (tc.status === 'cancelled') {
-        status = 'aborted';
+      switch (tc.status) {
+        case CoreToolCallStatus.Validating:
+        case CoreToolCallStatus.Scheduled:
+          status = 'pending';
+          break;
+        case CoreToolCallStatus.AwaitingApproval:
+          status = 'pending_input';
+          break;
+        case CoreToolCallStatus.Executing:
+          status = 'executing';
+          break;
+        case CoreToolCallStatus.Success:
+          status = 'succeeded';
+          break;
+        case CoreToolCallStatus.Error:
+          status = 'errored';
+          break;
+        case CoreToolCallStatus.Cancelled:
+          status = 'aborted';
+          break;
+        default:
+          status = 'pending';
+          break;
       }
 
       const lastStatus = this._lastToolStatuses.get(callId);
