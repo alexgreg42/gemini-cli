@@ -39,6 +39,7 @@ import {
 import {
   ChatRecordingService,
   type ResumedSessionData,
+  type ConversationRecord,
 } from '../services/chatRecordingService.js';
 import {
   ContentRetryEvent,
@@ -1220,6 +1221,13 @@ export class GeminiChat {
    */
   getChatRecordingService(): ChatRecordingService {
     return this.chatRecordingService;
+  }
+
+  /**
+   * Gets all subagent trajectories associated with this chat session.
+   */
+  async getSubagentTrajectories(): Promise<Record<string, ConversationRecord>> {
+    return this.chatRecordingService.getSubagentTrajectories();
   }
 
   /**
