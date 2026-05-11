@@ -182,6 +182,7 @@ export class LegacyAgentProtocol implements AgentProtocol {
       } else {
         this._emitErrorAndAgentEnd(err);
       }
+    } finally {
       this._clearActiveStream();
     }
   }
@@ -411,6 +412,7 @@ export class LegacyAgentProtocol implements AgentProtocol {
     const meta: Record<string, unknown> = {};
     if (err instanceof Error) {
       meta['errorName'] = err.constructor.name;
+      meta['stack'] = err.stack;
       if ('exitCode' in err && typeof err.exitCode === 'number') {
         meta['exitCode'] = err.exitCode;
       }
