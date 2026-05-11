@@ -2,41 +2,49 @@
  * @license
  * Copyright 2026 Google LLC
  * SPDX-License-Identifier: Apache-2.0
- *
- * @license
  */
 
 import { GITHUB_OWNER, GITHUB_REPO } from '../types.js';
 import { execSync } from 'node:child_process';
 
 try {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  
   const query = `
-  query($owner: String!, $repo: String!) {
+  query($owner: String!, $repo: String!, $issueQuery: String!, $prQuery: String!) {
     repository(owner: $owner, name: $repo) {
-      pullRequests(last: 100, states: MERGED) {
+      issues: search(query: $issueQuery, type: ISSUE, first: 100) {
         nodes {
-          authorAssociation
-          createdAt
-          mergedAt
+          ... on Issue {
+            authorAssociation
+            createdAt
+            closedAt
+          }
         }
       }
-      issues(last: 100, states: CLOSED) {
+      prs: search(query: $prQuery, type: ISSUE, first: 100) {
         nodes {
-          authorAssociation
-          createdAt
-          closedAt
+          ... on PullRequest {
+            authorAssociation
+            createdAt
+            mergedAt
+          }
         }
       }
     }
   }
   `;
+
+  const issueQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:issue is:closed closed:>${sevenDaysAgo.split('T')[0]} sort:closed-desc`;
+  const prQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:pr is:merged merged:>${sevenDaysAgo.split('T')[0]} sort:merged-desc`;
+
   const output = execSync(
-    `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${query}'`,
+    `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -F issueQuery='${issueQuery}' -F prQuery='${prQuery}' -f query='${query}'`,
     { encoding: 'utf-8' },
   );
   const data = JSON.parse(output).data.repository;
 
-  const prs = data.pullRequests.nodes.map(
+  const prs = data.prs.nodes.map(
     (p: {
       authorAssociation: string;
       mergedAt: string;
@@ -96,24 +104,12 @@ try {
   );
   const issueOverall = calculateAvg(issues);
 
-  process.stdout.write(
-    `latency_pr_overall_hours,${Math.round(prOverall * 100) / 100}\n`,
-  );
-  process.stdout.write(
-    `latency_pr_maintainers_hours,${Math.round(prMaintainers * 100) / 100}\n`,
-  );
-  process.stdout.write(
-    `latency_pr_community_hours,${Math.round(prCommunity * 100) / 100}\n`,
-  );
-  process.stdout.write(
-    `latency_issue_overall_hours,${Math.round(issueOverall * 100) / 100}\n`,
-  );
-  process.stdout.write(
-    `latency_issue_maintainers_hours,${Math.round(issueMaintainers * 100) / 100}\n`,
-  );
-  process.stdout.write(
-    `latency_issue_community_hours,${Math.round(issueCommunity * 100) / 100}\n`,
-  );
+  process.stdout.write(`latency_pr_overall_hours,${Math.round(prOverall * 100) / 100}\n`);
+  process.stdout.write(`latency_pr_maintainers_hours,${Math.round(prMaintainers * 100) / 100}\n`);
+  process.stdout.write(`latency_pr_community_hours,${Math.round(prCommunity * 100) / 100}\n`);
+  process.stdout.write(`latency_issue_overall_hours,${Math.round(issueOverall * 100) / 100}\n`);
+  process.stdout.write(`latency_issue_maintainers_hours,${Math.round(issueMaintainers * 100) / 100}\n`);
+  process.stdout.write(`latency_issue_community_hours,${Math.round(issueCommunity * 100) / 100}\n`);
 } catch (err) {
   process.stderr.write(err instanceof Error ? err.message : String(err));
   process.exit(1);
