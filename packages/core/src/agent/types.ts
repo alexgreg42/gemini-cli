@@ -38,6 +38,11 @@ export interface AgentProtocol extends Trajectory {
   abort(): Promise<void>;
 
   /**
+   * Disposes of the protocol, cleaning up any long-lived resources.
+   */
+  dispose?(): void;
+
+  /**
    * AgentProtocol implements the Trajectory interface and can retrieve existing events.
    */
   readonly events: readonly AgentEvent[];

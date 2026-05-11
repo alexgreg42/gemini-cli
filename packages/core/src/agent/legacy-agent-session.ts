@@ -71,6 +71,7 @@ export class LegacyAgentProtocol implements AgentProtocol {
   private _agentEndEmitted = false;
   private _activeStreamId?: string;
   private _abortController = new AbortController();
+  private _disposalController = new AbortController();
   private _nextStreamIdOverride?: string;
   private _lastToolStatuses = new Map<string, ToolEventStatus>();
 
@@ -106,8 +107,14 @@ export class LegacyAgentProtocol implements AgentProtocol {
       this._config.messageBus.subscribe(
         MessageBusType.TOOL_CALLS_UPDATE,
         this._handleToolCallsUpdate.bind(this),
+        { signal: this._disposalController.signal },
       );
     }
+  }
+
+  dispose(): void {
+    this._disposalController.abort();
+    void this.abort();
   }
 
   get events(): readonly AgentEvent[] {
