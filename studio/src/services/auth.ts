@@ -4,18 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * Auth modes matching the CLI's AuthType enum.
- * - google_oauth : Login with Google (free unlimited tokens via Code Assist)
- * - api_key      : Gemini API key (paid / limited free tier)
- */
 export type AuthMode = 'google_oauth' | 'api_key';
 
 export interface AuthState {
   mode: AuthMode;
-  /** Email of the logged-in Google account, if available */
-  googleEmail?: string;
-  /** True when an OAuth token is present */
+  email?: string;
   isAuthenticated: boolean;
 }
 
@@ -35,15 +28,43 @@ export const saveAuthState = (state: AuthState): void => {
   localStorage.setItem(AUTH_KEY, JSON.stringify(state));
 };
 
-// ── Google OAuth (via Electron IPC or browser redirect) ────────────────────
+// ── Electron API types ────────────────────────────────────────────────────────
 
 declare global {
   interface Window {
     electronAPI?: {
-      isElectron: boolean;
-      oauthStart: () => Promise<{ status: string; authUrl?: string }>;
-      oauthReadCredentials: () => Promise<{ ok: boolean; data?: unknown }>;
+      isElectron: true;
+      // OAuth
+      oauthStart: () => Promise<{
+        ok: boolean;
+        email?: string;
+        error?: string;
+      }>;
+      oauthStatus: () => Promise<{
+        authenticated: boolean;
+        email?: string;
+        expired?: boolean;
+      }>;
       oauthLogout: () => Promise<{ ok: boolean }>;
+      // Gemini Code Assist API
+      geminiGenerate: (params: {
+        messages: Array<{ role: string; content: string }>;
+        model: string;
+      }) => Promise<{ ok: boolean; text?: string; error?: string }>;
+      // CLI background process
+      cliStart: () => Promise<{
+        ok: boolean;
+        running?: boolean;
+        error?: string;
+      }>;
+      cliSend: (params: {
+        text: string;
+      }) => Promise<{ ok: boolean; error?: string }>;
+      cliStop: () => Promise<{ ok: boolean }>;
+      cliStatus: () => Promise<{ running: boolean }>;
+      onCliOutput: (
+        callback: (data: { type: string; text: string }) => void,
+      ) => () => void;
     };
   }
 }
@@ -51,69 +72,56 @@ declare global {
 export const isElectron = (): boolean =>
   typeof window !== 'undefined' && window.electronAPI?.isElectron === true;
 
+// ── OAuth actions ─────────────────────────────────────────────────────────────
+
 /**
- * Starts the Google OAuth flow.
- * - In Electron: triggers the CLI's `gemini auth login` or opens browser.
- * - In browser: redirects to Google OAuth consent screen.
- * Returns a promise that resolves when the flow completes or opens.
+ * Starts the Google OAuth login flow via Electron's local callback server.
+ * This is the same flow as `gemini auth login` in the native CLI.
  */
 export const startGoogleOAuth = async (): Promise<{
   ok: boolean;
   message?: string;
 }> => {
-  if (isElectron() && window.electronAPI) {
-    const result = await window.electronAPI.oauthStart();
-    if (result.status === 'success') {
-      const creds = await window.electronAPI.oauthReadCredentials();
-      if (creds.ok) {
-        const state: AuthState = {
-          mode: 'google_oauth',
-          isAuthenticated: true,
-        };
-        saveAuthState(state);
-        return { ok: true };
-      }
-    }
-    if (result.status === 'browser_opened') {
-      return {
-        ok: false,
-        message:
-          'Connexion ouverte dans le navigateur. Après autorisation, revenez ici et cliquez "Vérifier la connexion".',
-      };
-    }
-    return { ok: false, message: 'Erreur lors du login Google.' };
+  if (!isElectron() || !window.electronAPI) {
+    return {
+      ok: false,
+      message:
+        "La connexion Google nécessite l'application desktop. " +
+        'Téléchargez et installez Gemini CLI Studio pour utiliser OAuth.',
+    };
   }
 
-  // Browser mode: redirect to Google OAuth
-  const CLIENT_ID =
-    '681255809680-s8ksldpdn5oc5j2o7bkgp5bk9vr1nrre.apps.googleusercontent.com';
-  const REDIRECT_URI = `${window.location.origin}/oauth-callback`;
-  const SCOPE = [
-    'https://www.googleapis.com/auth/generative-language.retriever',
-    'openid',
-    'email',
-    'profile',
-  ].join(' ');
+  const result = await window.electronAPI.oauthStart();
+  if (result.ok) {
+    const state: AuthState = {
+      mode: 'google_oauth',
+      isAuthenticated: true,
+      email: result.email,
+    };
+    saveAuthState(state);
+    return {
+      ok: true,
+      message: `Connecté : ${result.email || 'compte Google'}`,
+    };
+  }
+  return { ok: false, message: result.error ?? 'Erreur lors de la connexion.' };
+};
 
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    redirect_uri: REDIRECT_URI,
-    response_type: 'token',
-    scope: SCOPE,
-    include_granted_scopes: 'true',
-  });
-
-  window.open(
-    `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
-    '_blank',
-    'width=500,height=620',
-  );
-
-  return {
-    ok: false,
-    message:
-      'Fenêtre de connexion Google ouverte. Après autorisation, cliquez "Vérifier la connexion".',
+/**
+ * Checks the current OAuth status from Electron main (reads ~/.gemini/oauth_creds.json).
+ */
+export const checkOAuthStatus = async (): Promise<AuthState> => {
+  if (!isElectron() || !window.electronAPI) {
+    return loadAuthState();
+  }
+  const status = await window.electronAPI.oauthStatus();
+  const state: AuthState = {
+    mode: 'google_oauth',
+    isAuthenticated: status.authenticated,
+    email: status.email,
   };
+  if (status.authenticated) saveAuthState(state);
+  return state;
 };
 
 export const logoutGoogle = async (): Promise<void> => {
@@ -121,23 +129,4 @@ export const logoutGoogle = async (): Promise<void> => {
     await window.electronAPI.oauthLogout();
   }
   saveAuthState({ mode: 'api_key', isAuthenticated: false });
-};
-
-/**
- * Checks whether the CLI has stored OAuth credentials on disk.
- * Only works in Electron (has filesystem access).
- */
-export const checkOAuthCredentials = async (): Promise<boolean> => {
-  if (isElectron() && window.electronAPI) {
-    const result = await window.electronAPI.oauthReadCredentials();
-    if (result.ok) {
-      const state: AuthState = {
-        mode: 'google_oauth',
-        isAuthenticated: true,
-      };
-      saveAuthState(state);
-      return true;
-    }
-  }
-  return false;
 };

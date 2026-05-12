@@ -5,6 +5,7 @@
  */
 import { GoogleGenerativeAI, type Part } from '@google/generative-ai';
 import { loadSettings } from './settings';
+import { loadAuthState } from './auth';
 
 export interface GeminiModel {
   id: string;
@@ -60,25 +61,49 @@ export interface AttachedFile {
   size: number;
 }
 
-export const sendMessageToGemini = async (
+// ── Route: OAuth via Electron (Code Assist API — no API key) ─────────────────
+
+async function sendViaElectronOAuth(
   prompt: string,
   history: Message[],
-  attachedFiles: AttachedFile[] = [],
-  modelId?: string,
-): Promise<string> => {
-  const settings = loadSettings();
-  const apiKey = settings.geminiApiKey;
+  attachedFiles: AttachedFile[],
+  modelId: string,
+): Promise<string> {
+  const api = window.electronAPI;
+  if (!api) throw new Error('Electron API not available');
 
-  if (!apiKey) {
-    throw new Error(
-      'Clé API Gemini manquante. Configurez-la dans les Paramètres ⚙.',
-    );
+  // Build message list with file content injected before prompt
+  const fileContext = attachedFiles
+    .filter((f) => !f.isImage)
+    .map((f) => `[Fichier: ${f.name}]\n\`\`\`\n${f.content}\n\`\`\``)
+    .join('\n\n');
+
+  const fullPrompt = fileContext ? `${fileContext}\n\n${prompt}` : prompt;
+
+  const messages: Array<{ role: string; content: string }> = [
+    ...history,
+    { role: 'user', content: fullPrompt },
+  ];
+
+  const result = await api.geminiGenerate({ messages, model: modelId });
+
+  if (!result.ok) {
+    throw new Error(result.error ?? 'Erreur API Code Assist');
   }
+  return result.text ?? '';
+}
 
+// ── Route: API key (standard Gemini SDK) ─────────────────────────────────────
+
+async function sendViaApiKey(
+  prompt: string,
+  history: Message[],
+  attachedFiles: AttachedFile[],
+  modelId: string,
+  apiKey: string,
+): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: modelId ?? settings.selectedModel,
-  });
+  const model = genAI.getGenerativeModel({ model: modelId });
 
   const chat = model.startChat({
     history: history.map((msg) => ({
@@ -105,4 +130,38 @@ export const sendMessageToGemini = async (
 
   const result = await chat.sendMessage(parts);
   return result.response.text();
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+export const sendMessageToGemini = async (
+  prompt: string,
+  history: Message[],
+  attachedFiles: AttachedFile[] = [],
+  modelId?: string,
+): Promise<string> => {
+  const settings = loadSettings();
+  const authState = loadAuthState();
+  const resolvedModel = modelId ?? settings.selectedModel;
+
+  // Prefer OAuth (no API key) when running in Electron and authenticated
+  if (
+    authState.mode === 'google_oauth' &&
+    authState.isAuthenticated &&
+    typeof window !== 'undefined' &&
+    window.electronAPI?.isElectron
+  ) {
+    return sendViaElectronOAuth(prompt, history, attachedFiles, resolvedModel);
+  }
+
+  // Fallback: API key mode
+  const apiKey = settings.geminiApiKey;
+  if (!apiKey) {
+    throw new Error(
+      'Aucune authentification configurée.\n' +
+        'Connectez-vous avec Google (⚙ Paramètres) ou ajoutez une clé API.',
+    );
+  }
+
+  return sendViaApiKey(prompt, history, attachedFiles, resolvedModel, apiKey);
 };

@@ -16,7 +16,7 @@ import {
   MoreVertical,
   Paperclip,
   Sparkles,
-  Github,
+  GitBranch,
   GitCommit,
   RefreshCw,
   X,
@@ -59,8 +59,9 @@ import {
   loadAuthState,
   saveAuthState,
   startGoogleOAuth,
-  checkOAuthCredentials,
+  checkOAuthStatus,
   logoutGoogle,
+  isElectron,
   type AuthState,
 } from './services/auth';
 
@@ -111,7 +112,7 @@ const newSession = (): ChatSession => ({
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type RightTab = 'github' | 'files';
+type RightTab = 'github' | 'files' | 'cli';
 type CommitStatus = 'idle' | 'loading' | 'success' | 'error';
 
 // ─── Tier badge ──────────────────────────────────────────────────────────────
@@ -140,6 +141,11 @@ const App: React.FC = () => {
   const [authState, setAuthState] = useState<AuthState>(loadAuthState);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [oauthMessage, setOauthMessage] = useState('');
+
+  // CLI background process
+  const [cliRunning, setCliRunning] = useState(false);
+  const [cliLog, setCliLog] = useState<string[]>([]);
+  const [cliInput, setCliInput] = useState('');
 
   // Session / history
   const [session, setSession] = useState<ChatSession>(newSession);
@@ -251,15 +257,12 @@ const App: React.FC = () => {
 
   const handleCheckOAuth = async () => {
     setOauthLoading(true);
-    const ok = await checkOAuthCredentials();
-    if (ok) {
-      const newState = loadAuthState();
-      setAuthState(newState);
-      setOauthMessage('Connexion Google vérifiée !');
+    const newState = await checkOAuthStatus();
+    setAuthState(newState);
+    if (newState.isAuthenticated) {
+      setOauthMessage(`Connecté : ${newState.email ?? 'compte Google'}`);
     } else {
-      setOauthMessage(
-        'Aucune session Google trouvée. Essayez de vous reconnecter.',
-      );
+      setOauthMessage('Aucune session Google trouvée. Connectez-vous.');
     }
     setOauthLoading(false);
   };
@@ -268,6 +271,37 @@ const App: React.FC = () => {
     await logoutGoogle();
     setAuthState({ mode: 'api_key', isAuthenticated: false });
     setOauthMessage('Déconnecté.');
+  };
+
+  // ── CLI process ────────────────────────────────────────────────────────────
+
+  const handleCliStart = async () => {
+    if (!window.electronAPI) return;
+    const result = await window.electronAPI.cliStart();
+    if (result.ok) {
+      setCliRunning(true);
+      setCliLog((l) => [...l, '▶ CLI démarré']);
+      window.electronAPI.onCliOutput((data) => {
+        setCliLog((l) => [...l.slice(-200), data.text.trimEnd()]);
+        if (data.type === 'exit') setCliRunning(false);
+      });
+    } else {
+      setCliLog((l) => [...l, `✗ ${result.error ?? 'Erreur démarrage CLI'}`]);
+    }
+  };
+
+  const handleCliStop = async () => {
+    if (!window.electronAPI) return;
+    await window.electronAPI.cliStop();
+    setCliRunning(false);
+    setCliLog((l) => [...l, '■ CLI arrêté']);
+  };
+
+  const handleCliSend = async () => {
+    if (!window.electronAPI || !cliInput.trim()) return;
+    await window.electronAPI.cliSend({ text: cliInput });
+    setCliLog((l) => [...l, `> ${cliInput}`]);
+    setCliInput('');
   };
 
   const handleDisconnectGitHub = () => {
@@ -783,7 +817,7 @@ const App: React.FC = () => {
             className={`right-tab${rightTab === 'github' ? ' active' : ''}`}
             onClick={() => setRightTab('github')}
           >
-            <Github size={15} />
+            <GitBranch size={15} />
             <span>GitHub</span>
             {repos.length > 0 && <span className="badge">{repos.length}</span>}
           </button>
@@ -797,6 +831,20 @@ const App: React.FC = () => {
               <span className="badge">{attachedFiles.length}</span>
             )}
           </button>
+          {isElectron() && (
+            <button
+              className={`right-tab${rightTab === 'cli' ? ' active' : ''}`}
+              onClick={() => setRightTab('cli')}
+            >
+              <Terminal size={15} />
+              <span>CLI</span>
+              {cliRunning && (
+                <span className="badge" style={{ background: '#10b981' }}>
+                  ON
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         {/* GitHub Tab */}
@@ -821,7 +869,7 @@ const App: React.FC = () => {
                   className="panel-btn primary"
                   onClick={handleConnectGitHub}
                 >
-                  <Github size={14} /> Connecter
+                  <GitBranch size={14} /> Connecter
                 </button>
                 <p
                   className="panel-hint"
@@ -1069,6 +1117,51 @@ const App: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* CLI Tab */}
+        {rightTab === 'cli' && isElectron() && (
+          <div className="panel-body" style={{ gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {!cliRunning ? (
+                <button className="panel-btn primary" onClick={handleCliStart}>
+                  <Zap size={13} /> Démarrer CLI
+                </button>
+              ) : (
+                <button className="panel-btn secondary" onClick={handleCliStop}>
+                  <X size={13} /> Arrêter CLI
+                </button>
+              )}
+            </div>
+            <div className="cli-log">
+              {cliLog.length === 0 ? (
+                <span className="cli-placeholder">
+                  Le CLI Gemini s&apos;exécute ici en arrière-plan.
+                </span>
+              ) : (
+                cliLog.map((line, i) => (
+                  <div key={i} className="cli-line">
+                    {line}
+                  </div>
+                ))
+              )}
+            </div>
+            {cliRunning && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <input
+                  className="panel-input small"
+                  style={{ flex: 1 }}
+                  placeholder="Envoyer une commande au CLI..."
+                  value={cliInput}
+                  onChange={(e) => setCliInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCliSend()}
+                />
+                <button className="icon-btn" onClick={handleCliSend}>
+                  <Send size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </aside>
 
       {/* ── Settings Modal ── */}
@@ -1222,7 +1315,7 @@ const App: React.FC = () => {
                 {/* GitHub Token */}
                 <div className="setting-group">
                   <label className="setting-label">
-                    <Github size={14} /> GitHub Personal Access Token
+                    <GitBranch size={14} /> GitHub Personal Access Token
                   </label>
                   <input
                     type="password"
@@ -1442,6 +1535,11 @@ const App: React.FC = () => {
         .model-setting-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,.03); border: 1px solid var(--glass-border); color: var(--text-primary); cursor: pointer; transition: all .2s; font-family: inherit; }
         .model-setting-item:hover { background: rgba(255,255,255,.06); }
         .model-setting-item.selected { border-color: var(--accent-blue); background: rgba(59,130,246,.1); }
+
+        /* ── CLI terminal ── */
+        .cli-log { flex: 1; min-height: 120px; max-height: 340px; overflow-y: auto; background: #0a0a0c; border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px; font-family: var(--font-mono); font-size: .72rem; }
+        .cli-line { color: #a3e635; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+        .cli-placeholder { color: var(--text-secondary); font-size: .78rem; font-family: inherit; }
 
         /* ── Auth card ── */
         .auth-card { background: rgba(255,255,255,.03); border: 1px solid var(--glass-border); border-radius: 10px; padding: 14px; }
