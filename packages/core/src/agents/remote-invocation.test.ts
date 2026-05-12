@@ -825,7 +825,9 @@ describe('RemoteAgentInvocation', () => {
         abortSignal: new AbortController().signal,
       });
 
-      expect(result.returnDisplay).toMatchObject({ state: 'error' });
+      expect(result.returnDisplay).toMatchObject({
+        state: SubagentState.ERROR,
+      });
       // Should contain both the partial output and the error message
       expect(result.returnDisplay).toMatchObject({
         result: expect.stringContaining('Partial response'),
