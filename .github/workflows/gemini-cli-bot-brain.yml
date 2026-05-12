@@ -28,6 +28,15 @@ on:
         description: 'Enable PRs (automatically promote changes to PRs)'
         type: 'boolean'
         default: true
+      mandate:
+        description: 'Mandate to execute'
+        type: 'choice'
+        options:
+          - auto
+          - issue-fixer
+          - metrics
+          - interactive
+        default: auto
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.event.issue.number || github.event.inputs.issue_number || github.ref }}'
@@ -132,7 +141,16 @@ jobs:
           PROMPT_FILE="tools/gemini-cli-bot/brain/scheduled.md"
           MANDATE="Your specific mandate for this run: Implement surgical fixes for repository issues (issue-fixer skill)."
           
-          if [ "${{ github.event_name }}" = "issue_comment" ] || [ "${{ github.event.inputs.run_interactive }}" = "true" ]; then
+          MANDATE_INPUT="${{ github.event.inputs.mandate || 'auto' }}"
+
+          if [ "$MANDATE_INPUT" = "issue-fixer" ]; then
+             MANDATE="Your specific mandate for this run: Implement surgical fixes for repository issues (issue-fixer skill)."
+          elif [ "$MANDATE_INPUT" = "metrics" ]; then
+             MANDATE="Your specific mandate for this run: Analyze repository metrics to identify bottlenecks and self-evolve (metrics skill)."
+          elif [ "$MANDATE_INPUT" = "interactive" ]; then
+             PROMPT_FILE="tools/gemini-cli-bot/brain/interactive.md"
+             MANDATE="Your specific mandate for this run: Respond to the user request in <untrusted_context>."
+          elif [ "${{ github.event_name }}" = "issue_comment" ] || [ "${{ github.event.inputs.run_interactive }}" = "true" ]; then
             PROMPT_FILE="tools/gemini-cli-bot/brain/interactive.md"
             MANDATE="Your specific mandate for this run: Respond to the user request in <untrusted_context>."
           elif [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then
