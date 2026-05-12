@@ -40,6 +40,8 @@ describe('RecordingContentGenerator', () => {
       generateContentStream: vi.fn(),
       countTokens: vi.fn(),
       embedContent: vi.fn(),
+      createCachedContent: vi.fn(),
+      updateCachedContent: vi.fn(),
     };
     recorder = new RecordingContentGenerator(mockRealGenerator, filePath);
     vi.clearAllMocks();

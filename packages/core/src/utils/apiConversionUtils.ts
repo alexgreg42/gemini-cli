@@ -46,12 +46,16 @@ export function convertToRestPayload(
   }
 
   // Assign extracted capabilities to the root level.
-  if (restSystemInstruction)
+  // CRITICAL: systemInstruction and cachedContent are mutually exclusive in the API.
+  if (sdkCachedContent) {
+    restPayload['cachedContent'] = sdkCachedContent;
+  } else if (restSystemInstruction) {
     restPayload['systemInstruction'] = restSystemInstruction;
+  }
+
   if (sdkTools) restPayload['tools'] = sdkTools;
   if (sdkToolConfig) restPayload['toolConfig'] = sdkToolConfig;
   if (sdkSafetySettings) restPayload['safetySettings'] = sdkSafetySettings;
-  if (sdkCachedContent) restPayload['cachedContent'] = sdkCachedContent;
 
   return restPayload;
 }

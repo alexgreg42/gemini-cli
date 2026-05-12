@@ -112,9 +112,10 @@ export class GeminiClient {
     this.loopDetector = new LoopDetectionService(this.config);
     this.compressionService = new ChatCompressionService();
     this.agentHistoryProvider = new AgentHistoryProvider(
-      this.config.agentHistoryProviderConfig,
+      this.config.getAgentHistoryProviderConfig(),
       this.config,
     );
+
     this.toolOutputMaskingService = new ToolOutputMaskingService();
     this.lastPromptId = this.config.getSessionId();
 

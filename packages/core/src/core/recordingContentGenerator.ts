@@ -5,17 +5,20 @@
  */
 
 import type {
+  Content,
   CountTokensResponse,
   GenerateContentParameters,
   GenerateContentResponse,
   CountTokensParameters,
   EmbedContentResponse,
   EmbedContentParameters,
+  CachedContent,
+  CreateCachedContentParameters,
 } from '@google/genai';
 import { appendFileSync } from 'node:fs';
 import type { ContentGenerator } from './contentGenerator.js';
 import type { FakeResponse } from './fakeContentGenerator.js';
-import type { UserTierId } from '../code_assist/types.js';
+import type { UserTierId, GeminiUserTier } from '../code_assist/types.js';
 import { safeJsonStringify } from '../utils/safeJsonStringify.js';
 import type { LlmRole } from '../telemetry/types.js';
 
@@ -29,6 +32,7 @@ export class RecordingContentGenerator implements ContentGenerator {
   constructor(
     private readonly realGenerator: ContentGenerator,
     private readonly filePath: string,
+    readonly history: Content[] = [],
   ) {}
 
   get userTier(): UserTierId | undefined {
@@ -37,6 +41,10 @@ export class RecordingContentGenerator implements ContentGenerator {
 
   get userTierName(): string | undefined {
     return this.realGenerator.userTierName;
+  }
+
+  get paidTier(): GeminiUserTier | undefined {
+    return this.realGenerator.paidTier;
   }
 
   async generateContent(
@@ -111,13 +119,37 @@ export class RecordingContentGenerator implements ContentGenerator {
     request: EmbedContentParameters,
   ): Promise<EmbedContentResponse> {
     const response = await this.realGenerator.embedContent(request);
-
     const recordedResponse: FakeResponse = {
       method: 'embedContent',
       response: {
         embeddings: response.embeddings,
         metadata: response.metadata,
       },
+    };
+    appendFileSync(this.filePath, `${safeJsonStringify(recordedResponse)}\n`);
+    return response;
+  }
+
+  async createCachedContent(
+    request: CreateCachedContentParameters,
+  ): Promise<CachedContent> {
+    const response = await this.realGenerator.createCachedContent(request);
+    const recordedResponse: FakeResponse = {
+      method: 'createCachedContent',
+      response,
+    };
+    appendFileSync(this.filePath, `${safeJsonStringify(recordedResponse)}\n`);
+    return response;
+  }
+
+  async updateCachedContent(request: {
+    name: string;
+    config?: { ttl?: string; expireTime?: string };
+  }): Promise<CachedContent> {
+    const response = await this.realGenerator.updateCachedContent(request);
+    const recordedResponse: FakeResponse = {
+      method: 'updateCachedContent',
+      response,
     };
     appendFileSync(this.filePath, `${safeJsonStringify(recordedResponse)}\n`);
     return response;

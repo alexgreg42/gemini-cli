@@ -6,11 +6,14 @@
 
 import {
   GenerateContentResponse,
+  type Content,
   type CountTokensResponse,
   type GenerateContentParameters,
   type CountTokensParameters,
   EmbedContentResponse,
   type EmbedContentParameters,
+  type CachedContent,
+  type CreateCachedContentParameters,
 } from '@google/genai';
 import { promises } from 'node:fs';
 import type { ContentGenerator } from './contentGenerator.js';
@@ -34,6 +37,14 @@ export type FakeResponse =
   | {
       method: 'embedContent';
       response: EmbedContentResponse;
+    }
+  | {
+      method: 'createCachedContent';
+      response: CachedContent;
+    }
+  | {
+      method: 'updateCachedContent';
+      response: CachedContent;
     };
 
 // A ContentGenerator that responds with canned responses.
@@ -46,7 +57,10 @@ export class FakeContentGenerator implements ContentGenerator {
   userTierName?: string;
   paidTier?: GeminiUserTier;
 
-  constructor(private readonly responses: FakeResponse[]) {}
+  constructor(
+    private readonly responses: FakeResponse[],
+    readonly history: Content[] = [],
+  ) {}
 
   static async fromFile(filePath: string): Promise<FakeContentGenerator> {
     const fileContent = await promises.readFile(filePath, 'utf-8');
@@ -123,5 +137,20 @@ export class FakeContentGenerator implements ContentGenerator {
       this.getNextResponse('embedContent', request),
       EmbedContentResponse.prototype,
     );
+  }
+
+  async createCachedContent(
+    request: CreateCachedContentParameters,
+  ): Promise<CachedContent> {
+     
+    return this.getNextResponse('createCachedContent', request);
+  }
+
+  async updateCachedContent(request: {
+    name: string;
+    config?: { ttl?: string; expireTime?: string };
+  }): Promise<CachedContent> {
+     
+    return this.getNextResponse('updateCachedContent', request);
   }
 }

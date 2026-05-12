@@ -146,6 +146,7 @@ export {
 } from './services/memoryService.js';
 export { isProjectSkillPatchTarget } from './services/memoryPatchUtils.js';
 export * from './context/memoryContextManager.js';
+export * from './context/contextCacheManager.js';
 export * from './services/trackerService.js';
 export * from './services/trackerTypes.js';
 export * from './services/keychainService.js';

@@ -90,6 +90,22 @@ describe('apiConversionUtils', () => {
       expect(result['generationConfig']).toBeUndefined();
     });
 
+    it('omits systemInstruction when cachedContent is present', () => {
+      const req: GenerateContentParameters = {
+        model: 'gemini-3-flash',
+        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        config: {
+          systemInstruction: 'Original instruction',
+          cachedContent: 'cached-content-id',
+        },
+      };
+
+      const result = convertToRestPayload(req);
+
+      expect(result['cachedContent']).toBe('cached-content-id');
+      expect(result['systemInstruction']).toBeUndefined();
+    });
+
     it('retains pure hyperparameters in generationConfig', () => {
       const req: GenerateContentParameters = {
         model: 'gemini-3-flash',

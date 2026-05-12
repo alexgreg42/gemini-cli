@@ -42,14 +42,58 @@ import type { AgentLoopContext } from '../config/agent-loop-context.js';
  */
 export class PromptProvider {
   /**
-   * Generates the core system prompt.
+   * Generates the core system prompt, optionally split into stable and dynamic parts.
    */
   getCoreSystemPrompt(
     context: AgentLoopContext,
     userMemory?: string | HierarchicalMemory,
     interactiveOverride?: boolean,
     topicUpdateNarrationOverride?: boolean,
+    splitMode: 'combined' | 'stable' | 'dynamic' = 'combined',
   ): string {
+    if (splitMode === 'dynamic') {
+      const today = new Date().toLocaleDateString(undefined, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+      const platform = process.platform;
+      const tempDir = context.config.storage.getProjectTempDir();
+
+      let dynamicPrompt = `
+<session_context>
+This is the Gemini CLI. We are setting up the context for our chat.
+Today's date is ${today} (formatted according to the user's locale).
+My operating system is: ${platform}
+The project's temporary directory is: ${tempDir}`;
+
+      if (context.config.getIncludeDirectoryTree()) {
+        const workspaceContext = context.config.getWorkspaceContext();
+        const workspaceDirectories = workspaceContext.getDirectories();
+        const dirList = workspaceDirectories
+          .map((dir) => `  - ${dir}`)
+          .join('\n');
+        dynamicPrompt += `\n- **Workspace Directories:**\n${dirList}\n- **Directory Structure:**\n\n[Recursive file tree provided in history]`;
+      }
+
+      if (
+        topicUpdateNarrationOverride ??
+        context.config.isTopicUpdateNarrationEnabled()
+      ) {
+        const activeTopic = context.config.topicState.getTopic();
+        if (activeTopic) {
+          const sanitizedTopic = activeTopic
+            .replace(/\n/g, ' ')
+            .replace(/\]/g, '');
+          dynamicPrompt += `\n\n[Active Topic: ${sanitizedTopic}]`;
+        }
+      }
+
+      dynamicPrompt += `\n</session_context>`;
+      return dynamicPrompt.trim();
+    }
+
     const systemMdResolution = resolvePathFromEnv(
       process.env['GEMINI_SYSTEM_MD'],
     );
@@ -274,6 +318,10 @@ export class PromptProvider {
 
     // Sanitize erratic newlines from composition
     let sanitizedPrompt = finalPrompt.replace(/\n{3,}/g, '\n\n');
+
+    if (splitMode === 'stable') {
+      return sanitizedPrompt;
+    }
 
     // Context Reinjection (Active Topic)
     if (isTopicUpdateNarrationEnabled) {

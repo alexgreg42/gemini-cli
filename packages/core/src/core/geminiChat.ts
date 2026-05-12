@@ -45,7 +45,7 @@ import {
   ContentRetryEvent,
   ContentRetryFailureEvent,
   NetworkRetryAttemptEvent,
-  type LlmRole,
+  LlmRole,
 } from '../telemetry/types.js';
 import { handleFallback } from '../fallback/handler.js';
 import { isFunctionResponse } from '../utils/messageInspectors.js';
@@ -61,6 +61,9 @@ import {
 import { coreEvents } from '../utils/events.js';
 import type { AgentLoopContext } from '../config/agent-loop-context.js';
 import { debugLogger } from '../utils/debugLogger.js';
+import { contextCacheManager } from '../context/contextCacheManager.js';
+import { getCoreSystemPrompt } from './prompts.js';
+import { getDirectoryContextString } from '../utils/environmentContext.js';
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */
@@ -747,7 +750,134 @@ export class GeminiChat {
       lastConfig = config;
       lastContentsToUse = contentsToUse;
 
-      const finalContents = stripToolCallIdPrefixes(contentsToUse);
+      // Handle explicit context caching
+      const cachingConfig = this.context.config.getContextCachingConfig();
+      let effectiveContents = contentsToUse;
+
+      if (cachingConfig.enabled && role === LlmRole.MAIN) {
+        try {
+          const userMemory = this.context.config.getSystemInstructionMemory();
+          const stableSI = getCoreSystemPrompt(
+            this.context.config,
+            userMemory,
+            undefined,
+            undefined,
+            'stable',
+          );
+          const siHash = contextCacheManager.calculateHash(stableSI);
+          const existingCache = contextCacheManager.getCache(siHash);
+
+          if (existingCache && existingCache.model === modelToUse) {
+            config.cachedContent = existingCache.cacheName;
+            debugLogger.log(
+              `[ContextCache] Using existing cache: ${existingCache.cacheName}`,
+            );
+
+            // Prepend dynamic context to history
+            const dynamicContext = getCoreSystemPrompt(
+              this.context.config,
+              userMemory,
+              undefined,
+              undefined,
+              'dynamic',
+            );
+            const dirContext = await getDirectoryContextString(
+              this.context.config,
+            );
+            const dynamicWithTree = dynamicContext.replace(
+              '[Recursive file tree provided in history]',
+              dirContext,
+            );
+
+            effectiveContents = [
+              { role: 'user', parts: [{ text: dynamicWithTree }] },
+              ...contentsToUse,
+            ];
+
+            // Asynchronously renew TTL if enabled
+            if (cachingConfig.autoRenew) {
+              this.context.config
+                .getContentGenerator()
+                .updateCachedContent({
+                  name: existingCache.cacheName,
+                  config: { ttl: `${cachingConfig.ttlMinutes * 60}s` },
+                })
+                .then((updated) => {
+                  if (updated.expireTime) {
+                    existingCache.expiresAt = updated.expireTime;
+                    contextCacheManager.setCache(siHash, existingCache);
+                    debugLogger.log(
+                      `[ContextCache] Renewed TTL for ${existingCache.cacheName}`,
+                    );
+                  }
+                })
+                .catch((e) =>
+                  debugLogger.error(`[ContextCache] Failed to renew TTL:`, e),
+                );
+            }
+          } else {
+            // Check if we should create a new cache
+            const siTokens = contextCacheManager.calculateTokenCount(stableSI);
+            if (siTokens >= cachingConfig.thresholdTokens) {
+              debugLogger.log(
+                `[ContextCache] Creating new cache for stable SI (${siTokens} tokens)`,
+              );
+              const newCache = await this.context.config
+                .getContentGenerator()
+                .createCachedContent({
+                  model: modelToUse,
+                  config: {
+                    systemInstruction: { parts: [{ text: stableSI }] },
+                    ttl: `${cachingConfig.ttlMinutes * 60}s`,
+                  },
+                });
+
+              if (newCache.name && newCache.expireTime) {
+                const entry = {
+                  cacheName: newCache.name,
+                  model: modelToUse,
+                  expiresAt: newCache.expireTime,
+                  tokenCount: siTokens,
+                };
+                contextCacheManager.setCache(siHash, entry);
+                config.cachedContent = newCache.name;
+                debugLogger.log(
+                  `[ContextCache] Created and using new cache: ${newCache.name}`,
+                );
+
+                // Prepend dynamic context to history for this initial call
+                const dynamicContext = getCoreSystemPrompt(
+                  this.context.config,
+                  userMemory,
+                  undefined,
+                  undefined,
+                  'dynamic',
+                );
+                const dirContext = await getDirectoryContextString(
+                  this.context.config,
+                );
+                const dynamicWithTree = dynamicContext.replace(
+                  '[Recursive file tree provided in history]',
+                  dirContext,
+                );
+
+                effectiveContents = [
+                  { role: 'user', parts: [{ text: dynamicWithTree }] },
+                  ...contentsToUse,
+                ];
+              }
+            }
+          }
+        } catch (error) {
+          // Fall back to standard request on cache failure
+          debugLogger.error(
+            '[ContextCache] Error managing context cache:',
+            error,
+          );
+        }
+      }
+
+      const finalContents = stripToolCallIdPrefixes(effectiveContents);
 
       return this.context.config.getContentGenerator().generateContentStream(
         {

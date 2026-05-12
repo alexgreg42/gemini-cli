@@ -4,14 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
+import type {
+  EmbedContentResponse,
   GoogleGenAI,
+  type Content,
   type CountTokensResponse,
   type GenerateContentResponse,
   type GenerateContentParameters,
   type CountTokensParameters,
-  type EmbedContentResponse,
   type EmbedContentParameters,
+  type CachedContent,
+  type CreateCachedContentParameters,
 } from '@google/genai';
 import * as os from 'node:os';
 import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
@@ -49,6 +52,15 @@ export interface ContentGenerator {
 
   embedContent(request: EmbedContentParameters): Promise<EmbedContentResponse>;
 
+  createCachedContent(
+    request: CreateCachedContentParameters,
+  ): Promise<CachedContent>;
+
+  updateCachedContent(request: {
+    name: string;
+    config?: { ttl?: string; expireTime?: string };
+  }): Promise<CachedContent>;
+
   userTier?: UserTierId;
 
   userTierName?: string;
@@ -63,6 +75,72 @@ export enum AuthType {
   LEGACY_CLOUD_SHELL = 'cloud-shell',
   COMPUTE_ADC = 'compute-default-credentials',
   GATEWAY = 'gateway',
+}
+
+/**
+ * Implementation of ContentGenerator for standard Gemini/Vertex SDKs.
+ */
+class SdkContentGenerator implements ContentGenerator {
+  paidTier?: GeminiUserTier;
+
+  constructor(
+    private readonly genAI: GoogleGenAI,
+    private readonly modelName: string,
+    readonly history: Content[] = [],
+  ) {}
+
+  async generateContent(
+    request: GenerateContentParameters,
+    _userPromptId: string,
+    _role: LlmRole,
+  ): Promise<GenerateContentResponse> {
+    return this.genAI.models.generateContent({
+      ...request,
+      model: this.modelName,
+    });
+  }
+
+  async generateContentStream(
+    request: GenerateContentParameters,
+    _userPromptId: string,
+    _role: LlmRole,
+  ): Promise<AsyncGenerator<GenerateContentResponse>> {
+    return this.genAI.models.generateContentStream({
+      ...request,
+      model: this.modelName,
+    });
+  }
+
+  async countTokens(
+    request: CountTokensParameters,
+  ): Promise<CountTokensResponse> {
+    return this.genAI.models.countTokens({
+      ...request,
+      model: this.modelName,
+    });
+  }
+
+  async embedContent(
+    request: EmbedContentParameters,
+  ): Promise<EmbedContentResponse> {
+    return this.genAI.models.embedContent({
+      ...request,
+      model: this.modelName,
+    });
+  }
+
+  async createCachedContent(
+    request: CreateCachedContentParameters,
+  ): Promise<CachedContent> {
+    return this.genAI.caches.create(request);
+  }
+
+  async updateCachedContent(request: {
+    name: string;
+    config?: { ttl?: string; expireTime?: string };
+  }): Promise<CachedContent> {
+    return this.genAI.caches.update(request);
+  }
 }
 
 /**
@@ -197,7 +275,7 @@ export async function createContentGenerator(
       const fakeGenerator = await FakeContentGenerator.fromFile(
         gcConfig.fakeResponses,
       );
-      return new LoggingContentGenerator(fakeGenerator, gcConfig);
+      return new LoggingContentGenerator(fakeGenerator, gcConfig, []);
     }
     const version = await getVersion();
     const model = resolveModel(
@@ -278,6 +356,7 @@ export async function createContentGenerator(
           sessionId,
         ),
         gcConfig,
+        [],
       );
     }
 
@@ -330,11 +409,10 @@ export async function createContentGenerator(
       const httpOptions: {
         baseUrl?: string;
         headers: Record<string, string>;
-      } = { headers };
-
-      if (baseUrl) {
-        httpOptions.baseUrl = baseUrl;
-      }
+      } = {
+        headers,
+        ...(baseUrl ? { baseUrl } : {}),
+      };
 
       const googleGenAI = new GoogleGenAI({
         apiKey: config.apiKey === '' ? undefined : config.apiKey,
@@ -342,7 +420,11 @@ export async function createContentGenerator(
         httpOptions,
         ...(apiVersionEnv && { apiVersion: apiVersionEnv }),
       });
-      return new LoggingContentGenerator(googleGenAI.models, gcConfig);
+      return new LoggingContentGenerator(
+        new SdkContentGenerator(googleGenAI, model, []),
+        gcConfig,
+        [],
+      );
     }
     throw new Error(
       `Error creating contentGenerator: Unsupported authType: ${config.authType}`,
@@ -350,7 +432,11 @@ export async function createContentGenerator(
   })();
 
   if (gcConfig.recordResponses) {
-    return new RecordingContentGenerator(generator, gcConfig.recordResponses);
+    return new RecordingContentGenerator(
+      generator,
+      gcConfig.recordResponses,
+      [],
+    );
   }
 
   return generator;

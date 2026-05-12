@@ -346,6 +346,14 @@ export class CodeAssistServer implements ContentGenerator {
     throw Error();
   }
 
+  async createCachedContent(): Promise<never> {
+    throw new Error('Explicit caching is not supported for Code Assist auth.');
+  }
+
+  async updateCachedContent(): Promise<never> {
+    throw new Error('Explicit caching is not supported for Code Assist auth.');
+  }
+
   async listExperiments(
     metadata: ClientMetadata,
   ): Promise<ListExperimentsResponse> {

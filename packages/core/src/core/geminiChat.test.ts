@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import * as crypto from 'node:crypto';
 import {
   ApiError,
   ThinkingLevel,
@@ -25,6 +26,7 @@ import {
   CoreToolCallStatus,
 } from '../scheduler/types.js';
 import { MockTool } from '../test-utils/mock-tool.js';
+import { Storage } from '../config/storage.js';
 import type { Config } from '../config/config.js';
 import { setSimulate429 } from '../utils/testUtils.js';
 import { DEFAULT_THINKING_MODE } from '../config/models.js';
@@ -132,6 +134,8 @@ describe('GeminiChat', () => {
       countTokens: vi.fn(),
       embedContent: vi.fn(),
       batchEmbedContents: vi.fn(),
+      createCachedContent: vi.fn(),
+      updateCachedContent: vi.fn(),
     } as unknown as ContentGenerator;
 
     mockHandleFallback.mockClear();
@@ -186,6 +190,24 @@ describe('GeminiChat', () => {
       getMaxAttempts: vi.fn().mockReturnValue(10),
       getUserTier: vi.fn().mockReturnValue(undefined),
       isContextManagementEnabled: vi.fn().mockReturnValue(false),
+      getContextCachingConfig: vi.fn().mockReturnValue({
+        enabled: false,
+        thresholdTokens: 32768,
+        ttlMinutes: 60,
+        autoRenew: true,
+      }),
+      getSystemInstructionMemory: vi.fn().mockReturnValue(undefined),
+      getIncludeDirectoryTree: vi.fn().mockReturnValue(true),
+      getWorkspaceContext: vi.fn().mockReturnValue({
+        getDirectories: vi.fn().mockReturnValue([]),
+      }),
+      isTopicUpdateNarrationEnabled: vi.fn().mockReturnValue(false),
+      topicState: {
+        getTopic: vi.fn().mockReturnValue(undefined),
+      },
+      getSkillManager: vi.fn().mockReturnValue({
+        getSkills: vi.fn().mockReturnValue([]),
+      }),
       modelConfigService: {
         getResolvedConfig: vi.fn().mockImplementation((modelConfigKey) => {
           const model = modelConfigKey.model ?? mockConfig.getModel();
@@ -3091,6 +3113,135 @@ describe('GeminiChat', () => {
       const stripped = stripToolCallIdPrefixes(contents);
       expect(stripped[0].parts![0].functionCall!.id).toBe('call_123');
       expect(stripped[1].parts![0].functionResponse!.id).toBe('call_123');
+    });
+  });
+
+  describe('explicit context caching', () => {
+    it('should create a new cache if enabled and SI is large enough', async () => {
+      const si = 'Large system instruction...'.repeat(2000); // Definitely > 32k
+      chat = new GeminiChat(mockConfig, si);
+
+      vi.mocked(mockConfig.getContextCachingConfig).mockReturnValue({
+        enabled: true,
+        thresholdTokens: 32768,
+        ttlMinutes: 60,
+        autoRenew: true,
+      });
+
+      vi.mocked(mockContentGenerator.createCachedContent).mockResolvedValue({
+        name: 'cachedContents/new-cache',
+        expireTime: new Date(Date.now() + 3600000).toISOString(),
+      });
+
+      vi.mocked(mockContentGenerator.generateContentStream).mockResolvedValue(
+        (async function* () {
+          yield {
+            candidates: [
+              {
+                content: { role: 'model', parts: [{ text: 'response' }] },
+                finishReason: 'STOP',
+              },
+            ],
+          } as unknown as GenerateContentResponse;
+        })(),
+      );
+
+      const stream = await chat.sendMessageStream(
+        { model: 'gemini-pro' },
+        'test',
+        'prompt-id',
+        new AbortController().signal,
+        LlmRole.MAIN,
+      );
+      for await (const chunk of stream) {
+        expect(chunk).toBeDefined();
+      }
+
+      expect(mockContentGenerator.createCachedContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          systemInstruction: { parts: [{ text: si }] },
+        }),
+      );
+      expect(mockContentGenerator.generateContentStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            cachedContent: 'cachedContents/new-cache',
+          }),
+        }),
+        'prompt-id',
+        LlmRole.MAIN,
+      );
+    });
+
+    it('should reuse existing cache if present', async () => {
+      const si = 'Large system instruction...'.repeat(2000);
+      chat = new GeminiChat(mockConfig, si);
+
+      const siHash = crypto.createHash('sha256').update(si).digest('hex');
+      const futureDate = new Date(Date.now() + 3600000).toISOString();
+
+      // Seed the metadata file via the mock fs
+      mockFileSystem.set(
+        Storage.getContextCacheMetadataPath(),
+        JSON.stringify({
+          version: '1.0',
+          entries: {
+            [siHash]: {
+              cacheName: 'cachedContents/existing-cache',
+              model: 'gemini-pro',
+              expiresAt: futureDate,
+              tokenCount: 40000,
+            },
+          },
+        }),
+      );
+
+      vi.mocked(mockConfig.getContextCachingConfig).mockReturnValue({
+        enabled: true,
+        thresholdTokens: 32768,
+        ttlMinutes: 60,
+        autoRenew: true,
+      });
+
+      vi.mocked(mockContentGenerator.updateCachedContent).mockResolvedValue({
+        name: 'cachedContents/existing-cache',
+        expireTime: new Date(Date.now() + 7200000).toISOString(),
+      });
+
+      vi.mocked(mockContentGenerator.generateContentStream).mockResolvedValue(
+        (async function* () {
+          yield {
+            candidates: [
+              {
+                content: { role: 'model', parts: [{ text: 'response' }] },
+                finishReason: 'STOP',
+              },
+            ],
+          } as unknown as GenerateContentResponse;
+        })(),
+      );
+
+      const stream = await chat.sendMessageStream(
+        { model: 'gemini-pro' },
+        'test',
+        'prompt-id',
+        new AbortController().signal,
+        LlmRole.MAIN,
+      );
+      for await (const chunk of stream) {
+        expect(chunk).toBeDefined();
+      }
+
+      expect(mockContentGenerator.createCachedContent).not.toHaveBeenCalled();
+      expect(mockContentGenerator.generateContentStream).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            cachedContent: 'cachedContents/existing-cache',
+          }),
+        }),
+        'prompt-id',
+        LlmRole.MAIN,
+      );
     });
   });
 });

@@ -14,6 +14,7 @@ import type { ConversationRecord } from '../services/chatRecordingService.js';
 import type {
   AgentHistoryProviderConfig,
   ContextManagementConfig,
+  ContextCachingConfig,
   ToolOutputMaskingConfig,
 } from '../context/types.js';
 export type { ConversationRecord };
@@ -717,6 +718,7 @@ export interface ConfigParameters {
   experimentalAutoMemory?: boolean;
   experimentalGemma?: boolean;
   experimentalContextManagementConfig?: string;
+  experimentalContextCaching?: Partial<ContextCachingConfig>;
   experimentalAgentHistoryTruncation?: boolean;
   experimentalAgentHistoryTruncationThreshold?: number;
   experimentalAgentHistoryRetainedMessages?: number;
@@ -972,6 +974,7 @@ export class Config implements McpContext, AgentLoopContext {
   private readonly modelSteering: boolean;
   private memoryContextManager?: MemoryContextManager;
   private readonly contextManagement: ContextManagementConfig;
+  private readonly contextCaching: ContextCachingConfig;
   private terminalBackground: string | undefined = undefined;
   private remoteAdminSettings: AdminControlsSettings | undefined;
   private latestApiRequest: GenerateContentParameters | undefined;
@@ -1223,6 +1226,13 @@ export class Config implements McpContext, AgentLoopContext {
             DEFAULT_PROTECT_LATEST_TURN,
         },
       },
+    };
+    this.contextCaching = {
+      enabled: params.experimentalContextCaching?.enabled ?? false,
+      thresholdTokens:
+        params.experimentalContextCaching?.thresholdTokens ?? 32768,
+      ttlMinutes: params.experimentalContextCaching?.ttlMinutes ?? 60,
+      autoRenew: params.experimentalContextCaching?.autoRenew ?? true,
     };
     this.topicUpdateNarration = params.topicUpdateNarration ?? true;
     this.modelSteering = params.modelSteering ?? false;
@@ -2574,7 +2584,11 @@ export class Config implements McpContext, AgentLoopContext {
     return this.contextManagement;
   }
 
-  get agentHistoryProviderConfig(): AgentHistoryProviderConfig {
+  getContextCachingConfig(): ContextCachingConfig {
+    return this.contextCaching;
+  }
+
+  getAgentHistoryProviderConfig(): AgentHistoryProviderConfig {
     return {
       maxTokens: this.contextManagement.historyWindow.maxTokens,
       retainedTokens: this.contextManagement.historyWindow.retainedTokens,

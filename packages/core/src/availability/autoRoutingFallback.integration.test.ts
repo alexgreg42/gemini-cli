@@ -59,7 +59,7 @@ describe('Auto Routing Fallback Integration', () => {
       return ''; // Fallback for other files
     });
 
-    fakeGenerator = new FakeContentGenerator([]);
+    fakeGenerator = new FakeContentGenerator([], []);
   });
 
   afterEach(() => {

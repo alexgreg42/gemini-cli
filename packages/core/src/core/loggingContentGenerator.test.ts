@@ -65,6 +65,8 @@ describe('LoggingContentGenerator', () => {
       generateContentStream: vi.fn(),
       countTokens: vi.fn(),
       embedContent: vi.fn(),
+      createCachedContent: vi.fn(),
+      updateCachedContent: vi.fn(),
     };
     config = {
       getGoogleAIConfig: vi.fn(),

@@ -18,6 +18,13 @@ export interface ToolOutputMaskingConfig {
   protectLatestTurn: boolean;
 }
 
+export interface ContextCachingConfig {
+  enabled: boolean;
+  thresholdTokens: number;
+  ttlMinutes: number;
+  autoRenew: boolean;
+}
+
 export interface ContextManagementConfig {
   enabled: boolean;
   historyWindow: {

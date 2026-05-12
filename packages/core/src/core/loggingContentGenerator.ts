@@ -15,6 +15,8 @@ import type {
   GenerateContentParameters,
   GenerateContentResponseUsageMetadata,
   GenerateContentResponse,
+  CachedContent,
+  CreateCachedContentParameters,
 } from '@google/genai';
 import {
   ApiRequestEvent,
@@ -150,6 +152,7 @@ export class LoggingContentGenerator implements ContentGenerator {
   constructor(
     private readonly wrapped: ContentGenerator,
     private readonly config: Config,
+    readonly history: Content[] = [],
   ) {}
 
   getWrapped(): ContentGenerator {
@@ -622,5 +625,18 @@ export class LoggingContentGenerator implements ContentGenerator {
         return output;
       },
     );
+  }
+
+  async createCachedContent(
+    request: CreateCachedContentParameters,
+  ): Promise<CachedContent> {
+    return this.wrapped.createCachedContent(request);
+  }
+
+  async updateCachedContent(request: {
+    name: string;
+    config?: { ttl?: string; expireTime?: string };
+  }): Promise<CachedContent> {
+    return this.wrapped.updateCachedContent(request);
   }
 }

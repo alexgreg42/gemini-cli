@@ -87,6 +87,13 @@ export class Storage {
     return path.join(Storage.getGlobalGeminiDir(), GOOGLE_ACCOUNTS_FILENAME);
   }
 
+  static getContextCacheMetadataPath(): string {
+    return path.join(
+      Storage.getGlobalGeminiDir(),
+      'context-cache-metadata.json',
+    );
+  }
+
   static getTrustedFoldersPath(): string {
     if (process.env['GEMINI_CLI_TRUSTED_FOLDERS_PATH']) {
       return process.env['GEMINI_CLI_TRUSTED_FOLDERS_PATH'];

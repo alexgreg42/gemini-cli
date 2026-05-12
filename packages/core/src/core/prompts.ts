@@ -25,12 +25,14 @@ export function getCoreSystemPrompt(
   userMemory?: string | HierarchicalMemory,
   interactiveOverride?: boolean,
   topicUpdateNarrationOverride?: boolean,
+  splitMode: 'combined' | 'stable' | 'dynamic' = 'combined',
 ): string {
   return new PromptProvider().getCoreSystemPrompt(
     config,
     userMemory,
     interactiveOverride,
     topicUpdateNarrationOverride,
+    splitMode,
   );
 }
 

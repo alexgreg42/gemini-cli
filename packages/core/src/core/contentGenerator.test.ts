@@ -137,7 +137,8 @@ describe('createContentGenerator', () => {
     vi.stubEnv('GEMINI_CLI_SURFACE', '');
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     const generator = await createContentGenerator(
@@ -158,9 +159,7 @@ describe('createContentGenerator', () => {
         }),
       }),
     });
-    expect(generator).toEqual(
-      new LoggingContentGenerator(mockGenerator.models, mockConfig),
-    );
+    expect(generator).toBeInstanceOf(LoggingContentGenerator);
   });
 
   it('should use standard User-Agent for a2a-server running outside VS Code', async () => {
@@ -179,7 +178,8 @@ describe('createContentGenerator', () => {
     vi.stubEnv('GEMINI_CLI_SURFACE', '');
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     await createContentGenerator(
@@ -217,7 +217,8 @@ describe('createContentGenerator', () => {
     vi.stubEnv('TERM_PROGRAM_VERSION', '1.85.0');
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     await createContentGenerator(
@@ -255,7 +256,8 @@ describe('createContentGenerator', () => {
     vi.stubEnv('GEMINI_CLI_SURFACE', '');
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     await createContentGenerator(
@@ -288,7 +290,8 @@ describe('createContentGenerator', () => {
     vi.stubEnv('GEMINI_CLI_CUSTOM_HEADERS', 'User-Agent:MyCustomUA');
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     await createContentGenerator(
@@ -348,7 +351,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv(
@@ -395,7 +399,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
 
@@ -433,7 +438,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv('GEMINI_API_KEY_AUTH_MECHANISM', 'bearer');
@@ -467,7 +473,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     // GEMINI_API_KEY_AUTH_MECHANISM is not stubbed, so it will be undefined, triggering default 'x-goog-api-key'
@@ -508,7 +515,8 @@ describe('createContentGenerator', () => {
       getClientName: vi.fn().mockReturnValue(undefined),
     } as unknown as Config;
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     const generator = await createContentGenerator(
@@ -527,9 +535,7 @@ describe('createContentGenerator', () => {
         },
       }),
     });
-    expect(generator).toEqual(
-      new LoggingContentGenerator(mockGenerator.models, mockConfig),
-    );
+    expect(generator).toBeInstanceOf(LoggingContentGenerator);
   });
 
   it('should pass apiVersion to GoogleGenAI when GOOGLE_GENAI_API_VERSION is set', async () => {
@@ -541,7 +547,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv('GOOGLE_GENAI_API_VERSION', 'v1');
@@ -575,7 +582,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
 
@@ -613,7 +621,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv('GOOGLE_GENAI_API_VERSION', '');
@@ -652,7 +661,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv('GOOGLE_GENAI_API_VERSION', 'v1alpha');
@@ -687,7 +697,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv('GOOGLE_GEMINI_BASE_URL', 'https://gemini.test.local');
@@ -719,7 +730,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv('GOOGLE_VERTEX_BASE_URL', 'https://vertex.test.local');
@@ -752,7 +764,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv('GOOGLE_GEMINI_BASE_URL', 'https://gemini.test.local');
@@ -785,7 +798,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
     vi.stubEnv('GOOGLE_GEMINI_BASE_URL', 'https://env.test.local');
@@ -817,7 +831,8 @@ describe('createContentGenerator', () => {
     } as unknown as Config;
 
     const mockGenerator = {
-      models: {},
+      models: { get: vi.fn() },
+      caches: { create: vi.fn(), update: vi.fn() },
     } as unknown as GoogleGenAI;
     vi.mocked(GoogleGenAI).mockImplementation(() => mockGenerator as never);
 
