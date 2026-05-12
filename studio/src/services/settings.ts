@@ -13,17 +13,29 @@ export interface AppSettings {
 const KEY = 'gemini_studio_settings';
 
 const defaults: AppSettings = {
-  geminiApiKey: (import.meta.env.VITE_GEMINI_API_KEY as string) ?? '',
-  githubToken: (import.meta.env.VITE_GITHUB_TOKEN as string) ?? '',
+  geminiApiKey: '',
+  githubToken: '',
   selectedModel: 'gemini-2.5-flash',
 };
 
 export const loadSettings = (): AppSettings => {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...defaults, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      return {
+        geminiApiKey:
+          typeof parsed.geminiApiKey === 'string' ? parsed.geminiApiKey : '',
+        githubToken:
+          typeof parsed.githubToken === 'string' ? parsed.githubToken : '',
+        selectedModel:
+          typeof parsed.selectedModel === 'string'
+            ? parsed.selectedModel
+            : defaults.selectedModel,
+      };
+    }
   } catch {
-    // ignore
+    // ignore malformed JSON
   }
   return { ...defaults };
 };

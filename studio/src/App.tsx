@@ -8,7 +8,6 @@ import {
   Send,
   MessageSquare,
   Settings,
-  Code,
   Terminal,
   FileText,
   Cpu,
@@ -43,6 +42,7 @@ import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import {
   sendMessageToGemini,
+  validateAttachedFiles,
   AVAILABLE_MODELS,
   type Message,
   type AttachedFile,
@@ -86,9 +86,18 @@ const loadHistory = (): ChatSession[] => {
 };
 
 const persistSession = (session: ChatSession) => {
-  const history = loadHistory().filter((s) => s.id !== session.id);
-  history.unshift(session);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+  try {
+    const history = loadHistory().filter((s) => s.id !== session.id);
+    history.unshift(session);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+  } catch {
+    // localStorage quota exceeded — trim old sessions and retry once
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify([session]));
+    } catch {
+      // ignore — session won't be persisted but app keeps working
+    }
+  }
 };
 
 const removeSession = (id: string) => {
@@ -165,7 +174,7 @@ const App: React.FC = () => {
 
   // GitHub
   const [githubToken, setGithubToken] = useState(
-    () => settings.githubToken || localStorage.getItem('github_token') || '',
+    () => settings.githubToken || '',
   );
   const [tokenInput, setTokenInput] = useState('');
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
@@ -210,7 +219,7 @@ const App: React.FC = () => {
     checkOAuthStatus().then((state) => {
       if (state.isAuthenticated) setAuthState(state);
     });
-  }, []);  
+  }, []);
 
   useEffect(() => {
     if (githubToken && repos.length === 0) loadRepos(githubToken);
@@ -224,7 +233,6 @@ const App: React.FC = () => {
     try {
       const data = await fetchGitHubRepos(token);
       setRepos(data);
-      localStorage.setItem('github_token', token);
     } catch (err: unknown) {
       setReposError(
         err instanceof Error ? err.message : 'Erreur de connexion GitHub',
@@ -238,6 +246,8 @@ const App: React.FC = () => {
     const t = tokenInput.trim();
     if (!t) return;
     setGithubToken(t);
+    const saved = saveSettings({ githubToken: t });
+    setSettings(saved);
     loadRepos(t);
     setTokenInput('');
   };
@@ -315,7 +325,8 @@ const App: React.FC = () => {
     setGithubToken('');
     setRepos([]);
     setSelectedRepo(null);
-    localStorage.removeItem('github_token');
+    const saved = saveSettings({ githubToken: '' });
+    setSettings(saved);
   };
 
   // ── File upload ────────────────────────────────────────────────────────────
@@ -324,12 +335,25 @@ const App: React.FC = () => {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
 
-    const newFiles: AttachedFile[] = await Promise.all(
+    // Validate sizes before reading (10 MB per file)
+    const MAX_FILE = 10 * 1024 * 1024;
+    const oversized = files.filter((f) => f.size > MAX_FILE);
+    if (oversized.length > 0) {
+      alert(
+        `Fichier(s) trop volumineux (max 10 MB) :\n${oversized.map((f) => f.name).join('\n')}`,
+      );
+      e.target.value = '';
+      return;
+    }
+
+    const results = await Promise.allSettled(
       files.map(
         (file) =>
-          new Promise<AttachedFile>((resolve) => {
+          new Promise<AttachedFile>((resolve, reject) => {
             const reader = new FileReader();
             const isImage = file.type.startsWith('image/');
+            reader.onerror = () =>
+              reject(new Error(`Impossible de lire ${file.name}`));
             if (isImage) {
               reader.readAsDataURL(file);
               reader.onload = () => {
@@ -357,6 +381,12 @@ const App: React.FC = () => {
           }),
       ),
     );
+    const newFiles = results
+      .filter(
+        (r): r is PromiseFulfilledResult<AttachedFile> =>
+          r.status === 'fulfilled',
+      )
+      .map((r) => r.value);
 
     setAttachedFiles((prev) => [...prev, ...newFiles]);
     e.target.value = '';
@@ -367,6 +397,12 @@ const App: React.FC = () => {
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
+    try {
+      validateAttachedFiles(attachedFiles);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Fichier invalide');
+      return;
+    }
 
     const userMsg: Message = {
       role: 'user',
@@ -563,17 +599,23 @@ const App: React.FC = () => {
             <MessageSquare size={18} />
             <span>Nouveau Chat</span>
           </div>
-          <div className="nav-item">
-            <Code size={18} />
-            <span>Index Projet</span>
-          </div>
-          <div className="nav-item">
-            <Terminal size={18} />
-            <span>CLI Commands</span>
-          </div>
-          <div className="nav-item">
+          {isElectron() && (
+            <div
+              className="nav-item"
+              onClick={() => setRightTab('cli')}
+              title="Terminal CLI Gemini"
+            >
+              <Terminal size={18} />
+              <span>CLI Terminal</span>
+            </div>
+          )}
+          <div
+            className="nav-item"
+            onClick={() => setRightTab('files')}
+            title="Fichiers joints"
+          >
             <FileText size={18} />
-            <span>Fichiers Contexte</span>
+            <span>Fichiers</span>
           </div>
 
           {history.length > 0 && (
@@ -1228,9 +1270,12 @@ const App: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={(e) =>
-              e.target === e.currentTarget && setShowSettings(false)
-            }
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setSettingsDraft(loadSettings());
+                setShowSettings(false);
+              }
+            }}
           >
             <motion.div
               className="modal"
@@ -1246,7 +1291,10 @@ const App: React.FC = () => {
                 </div>
                 <button
                   className="icon-btn"
-                  onClick={() => setShowSettings(false)}
+                  onClick={() => {
+                    setSettingsDraft(loadSettings());
+                    setShowSettings(false);
+                  }}
                 >
                   <X size={16} />
                 </button>

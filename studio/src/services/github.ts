@@ -15,6 +15,27 @@ export interface GitHubRepo {
   private: boolean;
 }
 
+function githubError(status: number, body: { message?: string }): Error {
+  const msg = body?.message ?? '';
+  if (status === 401) return new Error('Token GitHub invalide ou expiré.');
+  if (status === 403) {
+    if (msg.includes('rate limit'))
+      return new Error(
+        'Limite de requêtes GitHub atteinte. Réessayez dans une minute.',
+      );
+    return new Error(
+      'Accès refusé. Vérifiez les permissions du token (scope: repo).',
+    );
+  }
+  if (status === 404) return new Error('Dépôt ou fichier introuvable.');
+  if (status === 409)
+    return new Error(
+      'Conflit : le fichier a été modifié entre-temps. Rechargez et réessayez.',
+    );
+  if (status === 422) return new Error(`Données invalides : ${msg}`);
+  return new Error(msg || `GitHub erreur ${status}`);
+}
+
 export const fetchGitHubRepos = async (
   token: string,
 ): Promise<GitHubRepo[]> => {
@@ -28,7 +49,10 @@ export const fetchGitHubRepos = async (
     },
   );
   if (!response.ok) {
-    throw new Error(`GitHub API: ${response.status} ${response.statusText}`);
+    const body = (await response.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    throw githubError(response.status, body);
   }
   return response.json();
 };
@@ -41,12 +65,16 @@ export const commitFileToGitHub = async (
   message: string,
   sha?: string,
 ): Promise<void> => {
-  const encoded = btoa(unescape(encodeURIComponent(content)));
+  // Use TextEncoder for proper Unicode → base64 conversion
+  const bytes = new TextEncoder().encode(content);
+  const binary = String.fromCharCode(...bytes);
+  const encoded = btoa(binary);
+
   const body: Record<string, string> = { message, content: encoded };
   if (sha) body.sha = sha;
 
   const response = await fetch(
-    `https://api.github.com/repos/${fullName}/contents/${path}`,
+    `https://api.github.com/repos/${fullName}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`,
     {
       method: 'PUT',
       headers: {
@@ -58,10 +86,10 @@ export const commitFileToGitHub = async (
     },
   );
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(
-      (err as { message?: string }).message ?? `GitHub ${response.status}`,
-    );
+    const err = (await response.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    throw githubError(response.status, err);
   }
 };
 
@@ -71,7 +99,7 @@ export const getFileSha = async (
   path: string,
 ): Promise<string | undefined> => {
   const response = await fetch(
-    `https://api.github.com/repos/${fullName}/contents/${path}`,
+    `https://api.github.com/repos/${fullName}/contents/${encodeURIComponent(path).replace(/%2F/g, '/')}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

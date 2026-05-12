@@ -292,11 +292,12 @@ ipcMain.handle('oauth:start', async () => {
           }
 
           const tokens = tokenResult.body;
+          const expiresIn = Number(tokens.expires_in);
           const creds = {
             access_token: tokens.access_token,
             refresh_token: tokens.refresh_token,
             token_type: tokens.token_type || 'Bearer',
-            expiry_date: Date.now() + (tokens.expires_in || 3600) * 1000,
+            expiry_date: Date.now() + (isFinite(expiresIn) && expiresIn > 0 ? expiresIn : 3600) * 1000,
             scope: tokens.scope,
           };
           saveCreds(creds);
@@ -409,16 +410,21 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
     );
 
     if (result.status !== 200) {
-      throw new Error(
-        `Code Assist API error ${result.status}: ${JSON.stringify(result.body)}`,
-      );
+      const errBody = result.body;
+      const errMsg = errBody?.error?.message || JSON.stringify(errBody);
+      throw new Error(`Code Assist API error ${result.status}: ${errMsg}`);
     }
 
-    // Extract text from response
-    const response = result.body.response || result.body;
+    // Extract text from response — handle both wrapped and unwrapped formats
+    const body = result.body;
+    if (body?.error) {
+      throw new Error(`Code Assist API: ${body.error.message || JSON.stringify(body.error)}`);
+    }
+    const response = body.response || body;
     const candidate = response.candidates?.[0];
-    if (!candidate) throw new Error('No candidates in response');
+    if (!candidate) throw new Error('Aucune réponse du modèle (no candidates). Essayez un autre modèle.');
     const text = candidate.content?.parts?.map((p) => p.text || '').join('') || '';
+    if (!text) throw new Error('Le modèle a retourné une réponse vide.');
     return { ok: true, text };
   } catch (e) {
     return { ok: false, error: e.message };

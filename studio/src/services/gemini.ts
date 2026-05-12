@@ -61,6 +61,26 @@ export interface AttachedFile {
   size: number;
 }
 
+// 10 MB per file, 30 MB total across all files
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_TOTAL_SIZE = 30 * 1024 * 1024;
+
+export function validateAttachedFiles(files: AttachedFile[]): void {
+  for (const f of files) {
+    if (f.size > MAX_FILE_SIZE) {
+      throw new Error(
+        `Le fichier "${f.name}" dépasse la limite de 10 MB (${(f.size / 1048576).toFixed(1)} MB).`,
+      );
+    }
+  }
+  const total = files.reduce((s, f) => s + f.size, 0);
+  if (total > MAX_TOTAL_SIZE) {
+    throw new Error(
+      `La taille totale des fichiers (${(total / 1048576).toFixed(1)} MB) dépasse la limite de 30 MB.`,
+    );
+  }
+}
+
 // APIs require history to start with a 'user' message — strip any leading model turns
 function toApiHistory(history: Message[]): Message[] {
   const first = history.findIndex((m) => m.role === 'user');
@@ -78,7 +98,6 @@ async function sendViaElectronOAuth(
   const api = window.electronAPI;
   if (!api) throw new Error('Electron API not available');
 
-  // Build message list with file content injected before prompt
   const fileContext = attachedFiles
     .filter((f) => !f.isImage)
     .map((f) => `[Fichier: ${f.name}]\n\`\`\`\n${f.content}\n\`\`\``)
@@ -96,7 +115,9 @@ async function sendViaElectronOAuth(
   if (!result.ok) {
     throw new Error(result.error ?? 'Erreur API Code Assist');
   }
-  return result.text ?? '';
+  const text = result.text ?? '';
+  if (!text) throw new Error('Le modèle a retourné une réponse vide.');
+  return text;
 }
 
 // ── Route: API key (standard Gemini SDK) ─────────────────────────────────────
@@ -135,7 +156,9 @@ async function sendViaApiKey(
   parts.push({ text: prompt });
 
   const result = await chat.sendMessage(parts);
-  return result.response.text();
+  const text = result.response.text();
+  if (!text) throw new Error('Le modèle a retourné une réponse vide.');
+  return text;
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -146,6 +169,8 @@ export const sendMessageToGemini = async (
   attachedFiles: AttachedFile[] = [],
   modelId?: string,
 ): Promise<string> => {
+  validateAttachedFiles(attachedFiles);
+
   const settings = loadSettings();
   const authState = loadAuthState();
   const resolvedModel = modelId ?? settings.selectedModel;

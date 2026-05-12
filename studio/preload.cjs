@@ -22,8 +22,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   cliSend: (params) => ipcRenderer.invoke('cli:send', params),
   cliStop: () => ipcRenderer.invoke('cli:stop'),
   cliStatus: () => ipcRenderer.invoke('cli:status'),
+
+  // Returns an unsubscribe function that removes only this specific listener
   onCliOutput: (callback) => {
-    ipcRenderer.on('cli:output', (_event, data) => callback(data));
-    return () => ipcRenderer.removeAllListeners('cli:output');
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('cli:output', handler);
+    return () => ipcRenderer.removeListener('cli:output', handler);
   },
 });
