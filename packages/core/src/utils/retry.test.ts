@@ -665,6 +665,51 @@ describe('retryWithBackoff', () => {
         expect(mockFn).toHaveBeenCalledTimes(1);
       },
     );
+
+    it('should wait before retrying when fallback returns same model and fails terminally', async () => {
+      let attempts = 0;
+      const mockFn = vi.fn().mockImplementation(async () => {
+        attempts++;
+        if (attempts > 2) {
+          throw new Error('Test terminated to prevent infinite loop');
+        }
+        throw new TerminalQuotaError('Quota exhausted', {} as any);
+      });
+
+      const mockPolicy = {
+        model: 'same-model',
+        actions: {},
+        stateTransitions: {},
+      };
+      const getAvailabilityContext = vi
+        .fn()
+        .mockReturnValue({ policy: mockPolicy });
+
+      const promise = retryWithBackoff(mockFn, {
+        maxAttempts: 2,
+        initialDelayMs: 10,
+        onPersistent429: async () => 'same-model',
+        getAvailabilityContext,
+        authType: 'oauth-personal',
+      });
+
+      // Handle rejection early to avoid unhandled rejection warnings
+      const catchPromise = promise.catch((e) => e);
+
+      // At this point, it should have failed once and be waiting.
+      expect(mockFn).toHaveBeenCalledTimes(1);
+
+      // We need to advance timers to allow retries
+      await vi.advanceTimersByTimeAsync(10); // 1st retry delay
+      await vi.advanceTimersByTimeAsync(20); // 2nd retry delay
+
+      const result = await catchPromise;
+      expect(result).toBeInstanceOf(Error);
+      if (result instanceof Error) {
+        expect(result.message).toBe('Test terminated to prevent infinite loop');
+      }
+      expect(mockFn).toHaveBeenCalledTimes(3);
+    });
   });
   it('should abort the retry loop when the signal is aborted', async () => {
     const abortController = new AbortController();

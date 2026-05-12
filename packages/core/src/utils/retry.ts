@@ -307,6 +307,9 @@ export async function retryWithBackoff<T>(
       ) {
         if (onPersistent429) {
           try {
+            const currentContext = getAvailabilityContext?.();
+            const currentModel = currentContext?.policy.model;
+
             const fallbackModel = await onPersistent429(
               authType,
               classifiedError,
@@ -314,7 +317,21 @@ export async function retryWithBackoff<T>(
             if (fallbackModel) {
               attempt = 0; // Reset attempts and retry with the new model.
               currentDelay = initialDelayMs;
-              continue;
+
+              // Only continue (immediate retry) if fallbackModel is a NEW model
+              if (
+                typeof fallbackModel === 'string' &&
+                fallbackModel !== currentModel
+              ) {
+                continue;
+              } else {
+                // If it's the same model (or a boolean retry signal), wait before retrying
+                const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
+                const delayWithJitter = Math.max(0, currentDelay + jitter);
+                await delay(delayWithJitter, signal);
+                currentDelay = Math.min(maxDelayMs, currentDelay * 2);
+                continue;
+              }
             }
           } catch (fallbackError) {
             debugLogger.warn('Fallback to Flash model failed:', fallbackError);
@@ -356,6 +373,9 @@ export async function retryWithBackoff<T>(
           );
           if (onPersistent429) {
             try {
+              const currentContext = getAvailabilityContext?.();
+              const currentModel = currentContext?.policy.model;
+
               const fallbackModel = await onPersistent429(
                 authType,
                 classifiedError,
@@ -363,7 +383,21 @@ export async function retryWithBackoff<T>(
               if (fallbackModel) {
                 attempt = 0; // Reset attempts and retry with the new model.
                 currentDelay = initialDelayMs;
-                continue;
+
+                // Only continue (immediate retry) if fallbackModel is a NEW model
+                if (
+                  typeof fallbackModel === 'string' &&
+                  fallbackModel !== currentModel
+                ) {
+                  continue;
+                } else {
+                  // If it's the same model (or a boolean retry signal), wait before retrying
+                  const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
+                  const delayWithJitter = Math.max(0, currentDelay + jitter);
+                  await delay(delayWithJitter, signal);
+                  currentDelay = Math.min(maxDelayMs, currentDelay * 2);
+                  continue;
+                }
               }
             } catch (fallbackError) {
               debugLogger.warn('Model fallback failed:', fallbackError);
