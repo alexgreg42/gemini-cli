@@ -113,6 +113,7 @@
     "generate:notices": "node ./scripts/generate-notices.js",
     "prepare": "npm run generate:notices",
     "check-types": "tsc --noEmit",
+    "typecheck": "npm run check-types",
     "lint": "eslint src",
     "watch": "npm-run-all2 -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",

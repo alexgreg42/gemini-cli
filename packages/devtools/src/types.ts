@@ -6,6 +6,7 @@
 
 export interface NetworkLog {
   id: string;
+  type?: string;
   sessionId?: string;
   timestamp: number;
   method: string;

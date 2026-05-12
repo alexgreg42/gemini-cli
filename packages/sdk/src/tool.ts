@@ -84,8 +84,9 @@ export interface Tool<T extends z.ZodTypeAny> extends ToolDefinition<T> {
   action: (params: z.infer<T>, context?: SessionContext) => Promise<unknown>;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 class SdkToolInvocation<T extends z.ZodTypeAny> extends BaseToolInvocation<
-  z.infer<T>,
+  any,
   ToolResult
 > {
   constructor(
@@ -144,7 +145,7 @@ class SdkToolInvocation<T extends z.ZodTypeAny> extends BaseToolInvocation<
  * @typeParam T - The Zod schema type that validates the tool's input parameters.
  */
 export class SdkTool<T extends z.ZodTypeAny> extends BaseDeclarativeTool<
-  z.infer<T>,
+  any,
   ToolResult
 > {
   constructor(
@@ -198,6 +199,7 @@ export class SdkTool<T extends z.ZodTypeAny> extends BaseDeclarativeTool<
     );
   }
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * Helper function to create a {@link Tool} by combining a definition and an action.

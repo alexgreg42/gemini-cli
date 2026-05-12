@@ -169,17 +169,20 @@ export class GeminiCliSession {
 
     if (this.resumedData) {
       const history: Content[] = this.resumedData.conversation.messages.map(
-        (m) => {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        (m: any) => {
           const role = m.type === 'gemini' ? 'model' : 'user';
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let parts: any[] = [];
           if (Array.isArray(m.content)) {
+            /* eslint-disable @typescript-eslint/no-unsafe-assignment */
             parts = m.content;
+            /* eslint-enable @typescript-eslint/no-unsafe-assignment */
           } else if (m.content) {
             parts = [{ text: String(m.content) }];
           }
           return { role, parts };
         },
+        /* eslint-enable @typescript-eslint/no-explicit-any */
       );
       await this.client.resumeChat(history, this.resumedData);
     }
@@ -303,9 +306,12 @@ export class GeminiCliSession {
         },
       );
 
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       const functionResponses = completedCalls.flatMap(
-        (call) => call.response.responseParts,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-type-assertion
+        (call: any) => call.response.responseParts as any[],
       );
+      /* eslint-enable @typescript-eslint/no-explicit-any */
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       request = functionResponses as unknown as Parameters<

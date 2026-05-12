@@ -6,10 +6,8 @@
 
 import * as path from 'node:path';
 import {
-  Storage,
-  createSessionId,
-  type ResumedSessionData,
-  type ConversationRecord,
+  type SessionFile,
+  type Storage,
   loadConversationRecord,
 } from '@google/gemini-cli-core';
 
@@ -18,79 +16,49 @@ import type { GeminiCliAgentOptions } from './types.js';
 
 /**
  * The main entry point for the Gemini CLI SDK.
- *
- * An agent encapsulates configuration (instructions, tools, skills, model)
- * and can create new sessions or resume existing ones.
- *
- * @example
- * ```typescript
- * const agent = new GeminiCliAgent({
- *   instructions: 'You are a helpful coding assistant.',
- *   tools: [myTool],
- * });
- *
- * const session = agent.session();
- * await session.initialize();
- *
- * for await (const event of session.sendStream('Hello!')) {
- *   console.log(event);
- * }
- * ```
+ * Provides access to chat sessions, file management, and agent orchestration.
  */
 export class GeminiCliAgent {
-  private options: GeminiCliAgentOptions;
+  private readonly storage: Storage;
+  private readonly options: GeminiCliAgentOptions;
 
   constructor(options: GeminiCliAgentOptions) {
     this.options = options;
+    this.storage = options.storage;
   }
 
   /**
-   * Create a new conversation session.
-   *
-   * @param options - Optional session configuration. Pass `{ sessionId }` to
-   *   use a specific session ID; otherwise a new one is generated.
-   * @returns A new {@link GeminiCliSession} instance.
+   * Creates a new chat session.
+   * @returns A new GeminiCliSession instance.
    */
-  session(options?: { sessionId?: string }): GeminiCliSession {
-    const sessionId = options?.sessionId || createSessionId();
-    return new GeminiCliSession(this.options, sessionId, this);
+  async createSession(): Promise<GeminiCliSession> {
+    const session = new GeminiCliSession(this.storage, this.options, this);
+    await session.initialize();
+    return session;
   }
 
   /**
-   * Resume a previously created session by its ID.
-   *
-   * Looks up the session's conversation history from storage and replays it
-   * so the agent can continue the conversation.
-   *
-   * @param sessionId - The ID of the session to resume.
-   * @returns A {@link GeminiCliSession} with the prior conversation loaded.
-   * @throws {Error} If no sessions exist or the specified ID is not found.
+   * Resumes an existing chat session by ID.
+   * @param sessionId - The full or partial session ID to resume.
+   * @returns A GeminiCliSession instance for the specified session.
+   * @throws Error if the session cannot be found or is ambiguous.
    */
   async resumeSession(sessionId: string): Promise<GeminiCliSession> {
-    const cwd = this.options.cwd || process.cwd();
-    const storage = new Storage(cwd);
-    await storage.initialize();
-
-    let conversation: ConversationRecord | undefined;
-    let filePath: string | undefined;
-
+    const storage = this.storage;
     const sessions = await storage.listProjectChatFiles();
 
     if (sessions.length === 0) {
-      throw new Error(
-        `No sessions found in ${path.join(storage.getProjectTempDir(), 'chats')}`,
-      );
+      throw new Error('No sessions found in this project.');
     }
 
     const truncatedId = sessionId.slice(0, 8);
     // Optimization: filenames include first 8 chars of sessionId.
     // Filter sessions that might match.
-    const candidates = sessions.filter((s) => s.filePath.includes(truncatedId));
+    const candidates = sessions.filter((s: { filePath: string }) =>
+      s.filePath.includes(truncatedId),
+    );
 
     // If optimization fails (e.g. old files), check all?
-    // Assuming filenames always follow convention if created by this tool.
-    // But we can fallback to checking all if needed, but let's stick to candidates first.
-    // If candidates is empty, maybe fallback to all.
     const filesToCheck = candidates.length > 0 ? candidates : sessions;
 
     for (const sessionFile of filesToCheck) {
@@ -98,28 +66,33 @@ export class GeminiCliAgent {
         storage.getProjectTempDir(),
         sessionFile.filePath,
       );
-      const loaded = await loadConversationRecord(absolutePath);
-      if (loaded && loaded.sessionId === sessionId) {
-        conversation = loaded;
-        filePath = path.join(storage.getProjectTempDir(), sessionFile.filePath);
-        break;
+
+      try {
+        const record = await loadConversationRecord(absolutePath);
+        if (record.sessionId === sessionId) {
+          const session = new GeminiCliSession(
+            this.storage,
+            this.options,
+            this,
+            record,
+          );
+          await session.initialize();
+          return session;
+        }
+      } catch (error) {
+        // Skip unreadable or corrupted session files.
+        console.warn(`[SDK] Failed to load session record from ${absolutePath}:`, error);
       }
     }
 
-    if (!conversation || !filePath) {
-      throw new Error(`Session with ID ${sessionId} not found`);
-    }
+    throw new Error(`Session with ID "${sessionId}" not found.`);
+  }
 
-    const resumedData: ResumedSessionData = {
-      conversation,
-      filePath,
-    };
-
-    return new GeminiCliSession(
-      this.options,
-      conversation.sessionId,
-      this,
-      resumedData,
-    );
+  /**
+   * Lists all chat sessions in the current project.
+   * @returns A list of session files.
+   */
+  async listSessions(): Promise<SessionFile[]> {
+    return this.storage.listProjectChatFiles();
   }
 }

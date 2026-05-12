@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content } from '@google/gemini-cli-core';
+import type { Content, Storage } from '@google/gemini-cli-core';
 import type { Tool } from './tool.js';
 import type { SkillReference } from './skills.js';
 import type { GeminiCliAgent } from './agent.js';
@@ -29,6 +29,11 @@ export type SystemInstructions =
  * Configuration options for creating a {@link GeminiCliAgent}.
  */
 export interface GeminiCliAgentOptions {
+  /**
+   * The storage backend to use for chat sessions.
+   */
+  storage: Storage;
+
   /**
    * System instructions that define the agent's behavior.
    * Can be a static string or a dynamic function that receives session context.
