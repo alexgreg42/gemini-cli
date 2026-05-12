@@ -46,7 +46,7 @@
   "build": {
     "appId": "com.gemini.cli.studio",
     "productName": "Gemini CLI Studio",
-    "copyright": "Copyright © 2026 Gemini CLI Studio",
+    "copyright": "Copyright (c) 2026 Gemini CLI Studio",
     "directories": {
       "output": "release"
     },
@@ -65,6 +65,7 @@
           ]
         }
       ],
+      "executableName": "GeminiCLIStudio",
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
@@ -72,12 +73,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Gemini CLI Studio",
-      "installerLanguages": [
-        "French",
-        "English"
-      ],
-      "language": "1036"
+      "shortcutName": "Gemini CLI Studio"
     }
   }
 }
