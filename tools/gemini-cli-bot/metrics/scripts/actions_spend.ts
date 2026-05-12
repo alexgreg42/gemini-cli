@@ -11,22 +11,32 @@ async function getWorkflowMinutes(): Promise<Record<string, number>> {
     .toISOString()
     .split('T')[0];
 
-  const output = execFileSync(
-    'gh',
-    [
-      'run',
-      'list',
-      '--limit',
-      '1000',
-      '--created',
-      `>=${sevenDaysAgoDate}`,
-      '--json',
-      'databaseId,workflowName',
-    ],
-    { encoding: 'utf-8' },
-  );
+  let runs: any[] = [];
+  let page = 1;
+  while (true) {
+    const output = execFileSync(
+      'gh',
+      [
+        'run',
+        'list',
+        '--limit',
+        '1000',
+        '--page',
+        page.toString(),
+        '--created',
+        `>=${sevenDaysAgoDate}`,
+        '--json',
+        'databaseId,workflowName',
+      ],
+      { encoding: 'utf-8' },
+    );
+    const pageRuns = JSON.parse(output);
+    if (pageRuns.length === 0) break;
+    runs = runs.concat(pageRuns);
+    if (pageRuns.length < 1000) break;
+    page++;
+  }
 
-  const runs = JSON.parse(output);
   const workflowMinutes: Record<string, number> = {};
   const token = execFileSync('gh', ['auth', 'token'], {
     encoding: 'utf-8',
@@ -95,23 +105,12 @@ async function run() {
     }
 
     const now = new Date().toISOString();
-    console.log(
-      JSON.stringify({
-        metric: 'actions_spend_minutes',
-        value: totalMinutes,
-        timestamp: now,
-        details: workflowMinutes,
-      }),
-    );
+    process.stdout.write(`actions_spend_minutes,${totalMinutes}\n`);
 
     for (const [name, minutes] of Object.entries(workflowMinutes)) {
       const safeName = name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-      console.log(
-        JSON.stringify({
-          metric: `actions_spend_minutes_workflow:${safeName}`,
-          value: minutes,
-          timestamp: now,
-        }),
+      process.stdout.write(
+        `actions_spend_minutes_workflow:${safeName},${minutes}\n`,
       );
     }
   } catch (error) {

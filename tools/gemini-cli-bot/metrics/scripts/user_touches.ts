@@ -10,52 +10,30 @@ import { GITHUB_OWNER, GITHUB_REPO } from '../types.js';
 import { execSync } from 'node:child_process';
 
 try {
-  const query = `
-  query($owner: String!, $repo: String!) {
-    repository(owner: $owner, name: $repo) {
-      pullRequests(last: 100, states: MERGED) {
-        nodes {
-          authorAssociation
-          comments { totalCount }
-          reviews { totalCount }
-        }
-      }
-      issues(last: 100, states: CLOSED) {
-        nodes {
-          authorAssociation
-          comments { totalCount }
-        }
-      }
-    }
-  }
-  `;
-  const output = execSync(
-    `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${query}'`,
-    { encoding: 'utf-8' },
-  );
-  const data = JSON.parse(output).data.repository;
+  const days = 7;
+  const sinceDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-  const prs = data.pullRequests.nodes;
-  const issues = data.issues.nodes;
+  const getItems = (type: 'prs' | 'issues') => {
+    const field = type === 'prs' ? 'merged-at' : 'closed-at';
+    const jsonFields = type === 'prs' ? 'authorAssociation,comments,reviews' : 'authorAssociation,comments';
+    const output = execSync(
+      `gh search ${type} --repo ${GITHUB_OWNER}/${GITHUB_REPO} --${field} >=${sinceDate} --limit 1000 --json ${jsonFields}`,
+      { encoding: 'utf-8' }
+    );
+    return JSON.parse(output);
+  };
 
-  const allItems = [
-    ...prs.map(
-      (p: {
-        authorAssociation: string;
-        comments: { totalCount: number };
-        reviews?: { totalCount: number };
-      }) => ({
-        association: p.authorAssociation,
-        touches: p.comments.totalCount + (p.reviews ? p.reviews.totalCount : 0),
-      }),
-    ),
-    ...issues.map(
-      (i: { authorAssociation: string; comments: { totalCount: number } }) => ({
-        association: i.authorAssociation,
-        touches: i.comments.totalCount,
-      }),
-    ),
-  ];
+  const prs = getItems('prs').map((p: any) => ({
+    association: p.authorAssociation,
+    touches: (p.comments?.length || 0) + (p.reviews?.length || 0),
+  }));
+
+  const issues = getItems('issues').map((i: any) => ({
+    association: i.authorAssociation,
+    touches: i.comments?.length || 0,
+  }));
+
+  const allItems = [...prs, ...issues];
 
   const isMaintainer = (assoc: string) =>
     ['MEMBER', 'OWNER', 'COLLABORATOR'].includes(assoc);
@@ -84,3 +62,4 @@ try {
   process.stderr.write(err instanceof Error ? err.message : String(err));
   process.exit(1);
 }
+
