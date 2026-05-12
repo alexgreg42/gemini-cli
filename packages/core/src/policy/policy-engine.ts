@@ -543,13 +543,17 @@ export class PolicyEngine {
     let shellDirPath: string | undefined;
 
     const toolName = toolCall.name;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    const args = toolCall.args as { command?: unknown; dir_path?: unknown };
 
-    if (toolName && SHELL_TOOL_NAMES.includes(toolName)) {
+    if (
+      toolName &&
+      (SHELL_TOOL_NAMES.includes(toolName) ||
+        (typeof args?.command === 'string' && args.command.trim().length > 0))
+    ) {
       isShellCommand = true;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      const args = toolCall.args as { command?: string; dir_path?: string };
-      command = args?.command;
-      shellDirPath = args?.dir_path;
+      command = args.command as string;
+      shellDirPath = typeof args.dir_path === 'string' ? args.dir_path : undefined;
     }
 
     // Find the first matching rule (already sorted by priority)
@@ -645,7 +649,7 @@ export class PolicyEngine {
       debugLogger.debug(
         `[PolicyEngine.check] NO MATCH - using default decision: ${this.defaultDecision}`,
       );
-      if (toolName && SHELL_TOOL_NAMES.includes(toolName)) {
+      if (isShellCommand && toolName) {
         let heuristicDecision = this.defaultDecision;
         if (!skipHeuristics && command) {
           heuristicDecision = await this.applyShellHeuristics(

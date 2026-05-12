@@ -605,7 +605,7 @@ export async function loadCliConfig(
     process.env['GEMINI_CLI_INTEGRATION_TEST'] === 'true' ||
     process.env['VITEST'] === 'true'
       ? false
-      : (settings.security?.folderTrust?.enabled ?? false);
+      : (settings.security?.folderTrust?.enabled ?? true);
   const trustedFolder =
     isWorkspaceTrusted(settings, cwd, {
       prompt: argv.prompt,

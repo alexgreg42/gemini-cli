@@ -252,7 +252,9 @@ describe('DiscoveredMCPTool', () => {
         mockToolSuccessResultObject,
       );
       expect(toolResult.llmContent).toEqual([
-        { text: stringifiedResponseContent },
+        {
+          text: `<mcp_output tool="${serverToolName}">\n${stringifiedResponseContent}\n</mcp_output>`,
+        },
       ]);
       expect(toolResult.returnDisplay).toBe(stringifiedResponseContent);
     });
@@ -435,7 +437,9 @@ describe('DiscoveredMCPTool', () => {
           mockToolSuccessResultObject,
         );
         expect(toolResult.llmContent).toEqual([
-          { text: stringifiedResponseContent },
+          {
+            text: `<mcp_output tool="${serverToolName}">\n${stringifiedResponseContent}\n</mcp_output>`,
+          },
         ]);
         expect(toolResult.returnDisplay).toBe(stringifiedResponseContent);
       },
@@ -456,7 +460,11 @@ describe('DiscoveredMCPTool', () => {
         abortSignal: new AbortController().signal,
       });
       // 1. Assert that the llmContent sent to the scheduler is a clean Part array.
-      expect(toolResult.llmContent).toEqual([{ text: successMessage }]);
+      expect(toolResult.llmContent).toEqual([
+        {
+          text: `<mcp_output tool="${serverToolName}">\n${successMessage}\n</mcp_output>`,
+        },
+      ]);
 
       // 2. Assert that the display output is the simple text message.
       expect(toolResult.returnDisplay).toBe(successMessage);
@@ -482,7 +490,7 @@ describe('DiscoveredMCPTool', () => {
       );
 
       const invocation = tool.build(params);
-      const toolResult = await invocation.execute({
+      const toolResult: ToolResult = await invocation.execute({
         abortSignal: new AbortController().signal,
       });
       expect(toolResult.llmContent).toEqual([
@@ -515,12 +523,12 @@ describe('DiscoveredMCPTool', () => {
       );
 
       const invocation = tool.build(params);
-      const toolResult = await invocation.execute({
+      const toolResult: ToolResult = await invocation.execute({
         abortSignal: new AbortController().signal,
       });
       expect(toolResult.llmContent).toEqual([
         {
-          text: 'Resource Link: My Resource at file:///path/to/thing',
+          text: `[Tool '${serverToolName}' provided a resource link: My Resource at file:///path/to/thing]`,
         },
       ]);
       expect(toolResult.returnDisplay).toBe(
@@ -550,7 +558,9 @@ describe('DiscoveredMCPTool', () => {
         abortSignal: new AbortController().signal,
       });
       expect(toolResult.llmContent).toEqual([
-        { text: 'This is the text content.' },
+        {
+          text: `<mcp_resource_output tool="${serverToolName}" uri="file:///path/to/text.txt">\nThis is the text content.\n</mcp_resource_output>`,
+        },
       ]);
       expect(toolResult.returnDisplay).toBe('This is the text content.');
     });
@@ -573,7 +583,7 @@ describe('DiscoveredMCPTool', () => {
       );
 
       const invocation = tool.build(params);
-      const toolResult = await invocation.execute({
+      const toolResult: ToolResult = await invocation.execute({
         abortSignal: new AbortController().signal,
       });
       expect(toolResult.llmContent).toEqual([
@@ -609,11 +619,13 @@ describe('DiscoveredMCPTool', () => {
       );
 
       const invocation = tool.build(params);
-      const toolResult = await invocation.execute({
+      const toolResult: ToolResult = await invocation.execute({
         abortSignal: new AbortController().signal,
       });
       expect(toolResult.llmContent).toEqual([
-        { text: 'First part.' },
+        {
+          text: `<mcp_output tool="${serverToolName}">\nFirst part.\n</mcp_output>`,
+        },
         {
           text: `[Tool '${serverToolName}' provided the following image data with mime-type: image/jpeg]`,
         },
@@ -623,7 +635,9 @@ describe('DiscoveredMCPTool', () => {
             data: 'BASE64_IMAGE_DATA',
           },
         },
-        { text: 'Second part.' },
+        {
+          text: `<mcp_output tool="${serverToolName}">\nSecond part.\n</mcp_output>`,
+        },
       ]);
       expect(toolResult.returnDisplay).toBe(
         'First part.\n[Image: image/jpeg]\nSecond part.',
@@ -645,7 +659,11 @@ describe('DiscoveredMCPTool', () => {
       const toolResult = await invocation.execute({
         abortSignal: new AbortController().signal,
       });
-      expect(toolResult.llmContent).toEqual([{ text: 'Valid part.' }]);
+      expect(toolResult.llmContent).toEqual([
+        {
+          text: `<mcp_output tool="${serverToolName}">\nValid part.\n</mcp_output>`,
+        },
+      ]);
       expect(toolResult.returnDisplay).toBe(
         'Valid part.\n[Unknown content type: future_block]',
       );
@@ -681,15 +699,19 @@ describe('DiscoveredMCPTool', () => {
       );
 
       const invocation = tool.build(params);
-      const toolResult = await invocation.execute({
+      const toolResult: ToolResult = await invocation.execute({
         abortSignal: new AbortController().signal,
       });
       expect(toolResult.llmContent).toEqual([
-        { text: 'Here is a resource.' },
         {
-          text: 'Resource Link: My Resource at file:///path/to/resource',
+          text: `<mcp_output tool="${serverToolName}">\nHere is a resource.\n</mcp_output>`,
         },
-        { text: 'Embedded text content.' },
+        {
+          text: `[Tool '${serverToolName}' provided a resource link: My Resource at file:///path/to/resource]`,
+        },
+        {
+          text: `<mcp_resource_output tool="${serverToolName}" uri="file:///path/to/text.txt">\nEmbedded text content.\n</mcp_resource_output>`,
+        },
         {
           text: `[Tool '${serverToolName}' provided the following image data with mime-type: image/jpeg]`,
         },
@@ -771,7 +793,11 @@ describe('DiscoveredMCPTool', () => {
           abortSignal: controller.signal,
         });
 
-        expect(result.llmContent).toEqual([{ text: 'Success' }]);
+        expect(result.llmContent).toEqual([
+          {
+            text: `<mcp_output tool="${serverToolName}">\nSuccess\n</mcp_output>`,
+          },
+        ]);
         expect(result.returnDisplay).toBe('Success');
         expect(mockCallTool).toHaveBeenCalledWith([
           { name: serverToolName, args: params },

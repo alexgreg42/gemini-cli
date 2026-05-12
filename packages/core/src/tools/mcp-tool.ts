@@ -132,6 +132,7 @@ type McpMediaBlock = {
 type McpResourceBlock = {
   type: 'resource';
   resource: {
+    uri?: string;
     text?: string;
     blob?: string;
     mimeType?: string;
@@ -447,8 +448,23 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool<
   }
 }
 
-function transformTextBlock(block: McpTextBlock): Part {
-  return { text: block.text };
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escapeAttribute(text: string): string {
+  return escapeHtml(text).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function transformTextBlock(block: McpTextBlock, toolName: string): Part {
+  return {
+    text: `<mcp_output tool="${escapeAttribute(toolName)}">\n${escapeHtml(
+      block.text,
+    )}\n</mcp_output>`,
+  };
 }
 
 function transformImageAudioBlock(
@@ -476,7 +492,13 @@ function transformResourceBlock(
 ): Part | Part[] | null {
   const resource = block.resource;
   if (resource?.text) {
-    return { text: resource.text };
+    return {
+      text: `<mcp_resource_output tool="${escapeAttribute(
+        toolName,
+      )}" uri="${escapeAttribute(
+        resource.uri || 'unknown',
+      )}">\n${escapeHtml(resource.text)}\n</mcp_resource_output>`,
+    };
   }
   if (resource?.blob) {
     const mimeType = resource.mimeType || 'application/octet-stream';
@@ -495,9 +517,14 @@ function transformResourceBlock(
   return null;
 }
 
-function transformResourceLinkBlock(block: McpResourceLinkBlock): Part {
+function transformResourceLinkBlock(
+  block: McpResourceLinkBlock,
+  toolName: string,
+): Part {
   return {
-    text: `Resource Link: ${block.title || block.name} at ${block.uri}`,
+    text: `[Tool '${toolName}' provided a resource link: ${
+      block.title || block.name
+    } at ${block.uri}]`,
   };
 }
 
@@ -521,14 +548,14 @@ function transformMcpContentToParts(sdkResponse: Part[]): Part[] {
     (block: McpContentBlock): Part | Part[] | null => {
       switch (block.type) {
         case 'text':
-          return transformTextBlock(block);
+          return transformTextBlock(block, toolName);
         case 'image':
         case 'audio':
           return transformImageAudioBlock(block, toolName);
         case 'resource':
           return transformResourceBlock(block, toolName);
         case 'resource_link':
-          return transformResourceLinkBlock(block);
+          return transformResourceLinkBlock(block, toolName);
         default:
           return null;
       }
