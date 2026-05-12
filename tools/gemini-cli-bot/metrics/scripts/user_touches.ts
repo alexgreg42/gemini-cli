@@ -10,18 +10,23 @@ import { GITHUB_OWNER, GITHUB_REPO } from '../types.js';
 import { execSync } from 'node:child_process';
 
 try {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split('T')[0];
   const query = `
   query($owner: String!, $repo: String!) {
-    repository(owner: $owner, name: $repo) {
-      pullRequests(last: 100, states: MERGED) {
-        nodes {
+    pullRequests: search(query: "repo:$owner/$repo is:pr is:merged merged:>=${sevenDaysAgo}", type: ISSUE, first: 100) {
+      nodes {
+        ... on PullRequest {
           authorAssociation
           comments { totalCount }
           reviews { totalCount }
         }
       }
-      issues(last: 100, states: CLOSED) {
-        nodes {
+    }
+    issues: search(query: "repo:$owner/$repo is:issue is:closed closed:>=${sevenDaysAgo}", type: ISSUE, first: 100) {
+      nodes {
+        ... on Issue {
           authorAssociation
           comments { totalCount }
         }
@@ -33,7 +38,7 @@ try {
     `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${query}'`,
     { encoding: 'utf-8' },
   );
-  const data = JSON.parse(output).data.repository;
+  const data = JSON.parse(output).data;
 
   const prs = data.pullRequests.nodes;
   const issues = data.issues.nodes;
