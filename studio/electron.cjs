@@ -389,9 +389,10 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
       parts: [{ text: msg.content }],
     }));
 
-    const resolvedModel = model || 'gemini-2.5-flash';
+    // Strip 'models/' prefix if present — Code Assist API uses bare model IDs
+    const resolvedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
     const caRequest = {
-      model: resolvedModel.startsWith('models/') ? resolvedModel : `models/${resolvedModel}`,
+      model: resolvedModel,
       request: {
         contents,
         generationConfig: {
