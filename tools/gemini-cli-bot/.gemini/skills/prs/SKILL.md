@@ -10,6 +10,12 @@ description: Expertise in managing the Git and GitHub Pull Request lifecycle, in
 Standardize how the Gemini CLI Bot stages its changes, generates Pull Request
 descriptions, and manages the lifecycle of both new and existing PRs.
 
+## Mandatory PR Driver (Ownership)
+
+You are the "owner" of all PRs labeled `bot-fix`. You MUST proactively drive them to completion:
+1.  **Inventory**: Use `gh pr list --label "bot-fix" --json number,title,headRefName,statusCheckRollup,comments` to find your active PRs.
+2.  **Proactive Maintenance**: If a `bot-fix` PR has failing status checks or new maintainer comments, you MUST prioritize fixing the CI or responding to the feedback before starting new work.
+
 ## Staging & Patch Preparation (MANDATORY)
 
 If you are proposing fixes and PR creation is enabled (per the System Directive):
@@ -23,8 +29,8 @@ If you are proposing fixes and PR creation is enabled (per the System Directive)
 2.  **Generate PR Description**: Use the `write_file` tool to create
     `pr-description.md`.
     - **Title**: The very first line MUST be a concise, conventional title.
-    - **Body**: The rest should be the markdown body explaining the change, why
-      it is recommended, and the expected impact.
+    - **Body**: Explain the change and expected impact. You MUST identify the domain expert for the affected files and mention them (cc @<user>).
+    - **Labels**: Always apply the `bot-fix` label.
 3.  **Stage Fixes**: You MUST explicitly stage your fixes using the
     `git add <files>` command.
 4.  **Internal File Protection (CRITICAL)**: You are STRICTLY FORBIDDEN from

@@ -2,7 +2,8 @@ name: '🧠 Gemini CLI Bot: Brain'
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Every 24 hours
+    - cron: '0 0 * * *'   # Nightly (Strategic Metrics)
+    - cron: '0 */4 * * *' # Every 4 hours (Issue Fixing)
   issue_comment:
     types: ['created']
   workflow_dispatch:
@@ -26,7 +27,7 @@ on:
       enable_prs:
         description: 'Enable PRs (automatically promote changes to PRs)'
         type: 'boolean'
-        default: false
+        default: true
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.event.issue.number || github.event.inputs.issue_number || github.ref }}'
@@ -39,8 +40,7 @@ jobs:
     if: |
       github.repository == 'google-gemini/gemini-cli' && (
         github.event_name == 'schedule' ||
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.run_interactive != 'true') ||
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.run_interactive == 'true') ||
+        (github.event_name == 'workflow_dispatch') ||
         (github.event_name == 'issue_comment' && github.event.comment.user.login != 'gemini-cli[bot]' && contains(github.event.comment.body, '@gemini-cli') && contains(fromJSON('["COLLABORATOR", "MEMBER", "OWNER"]'), github.event.comment.author_association))
       )
     # The reasoning phase is strictly readonly.
@@ -124,16 +124,22 @@ jobs:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GEMINI_MODEL: 'gemini-3-flash-preview'
           GEMINI_CLI_HOME: 'tools/gemini-cli-bot'
-          ENABLE_PRS: "${{ github.event.inputs.enable_prs || 'false' }}"
+          ENABLE_PRS: "${{ github.event.inputs.enable_prs || 'true' }}"
           TRIGGER_ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
           TRIGGER_COMMENT_ID: '${{ github.event.comment.id || github.event.inputs.comment_id }}'
         run: |
-          PROMPT_PATH="tools/gemini-cli-bot/brain/scheduled.md"
+          # Determine trigger and intent
+          PROMPT_FILE="tools/gemini-cli-bot/brain/scheduled.md"
+          MANDATE="Your specific mandate for this run: Implement surgical fixes for repository issues (issue-fixer skill)."
+          
           if [ "${{ github.event_name }}" = "issue_comment" ] || [ "${{ github.event.inputs.run_interactive }}" = "true" ]; then
-            PROMPT_PATH="tools/gemini-cli-bot/brain/interactive.md"
-            export ENABLE_PRS="true"
+            PROMPT_FILE="tools/gemini-cli-bot/brain/interactive.md"
+            MANDATE="Your specific mandate for this run: Respond to the user request in <untrusted_context>."
+          elif [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then
+            MANDATE="Your specific mandate for this run: Analyze repository metrics to identify bottlenecks and self-evolve (metrics skill)."
           fi
 
+          # Prepare Context if available
           touch trigger_context.md
           if [ -n "$TRIGGER_ISSUE_NUMBER" ]; then
             echo "<untrusted_context>" > trigger_context.md
@@ -151,15 +157,17 @@ jobs:
             echo "</untrusted_context>" >> trigger_context.md
           fi
 
-          if [ "$ENABLE_PRS" = "true" ]; then
-            echo "**System Directive**: PR creation is ENABLED for this run. You MUST activate the **'prs' skill** to stage your changes and generate a \`pr-description.md\` file if you are proposing fixes." >> trigger_context.md
-            echo "**CRITICAL System Directive**: You MUST ONLY propose and implement a **SINGLE** improvement or fix per run. Bundling unrelated changes (e.g., a documentation update and a script fix, or a metrics update and a logic fix) into a single PR is STRICTLY FORBIDDEN and will result in immediate rejection during the critique phase. If you identify multiple issues, pick the most impactful one and ignore the others for now." >> trigger_context.md
-          else
-            echo "**System Directive**: PR creation is DISABLED for this run. You MUST NOT stage files or attempt to create a PR description." >> trigger_context.md
+          # Pass PR Enablement Directive
+          PR_DIRECTIVE="PR creation is DISABLED. You MUST NOT stage files."
+          if [ "${{ github.event.inputs.enable_prs || 'true' }}" = "true" ] || [ "${{ github.event_name }}" = "issue_comment" ]; then
+            PR_DIRECTIVE="PR creation is ENABLED. You MUST activate the 'prs' skill to stage changes if proposing fixes."
           fi
-          echo "" >> trigger_context.md
 
-          cat trigger_context.md "$PROMPT_PATH" > combined_prompt.md
+          # Assemble final prompt: Context + Base Brain + Specific Mandate
+          echo "System: $PR_DIRECTIVE" > combined_prompt.md
+          cat trigger_context.md "$PROMPT_FILE" >> combined_prompt.md
+          echo -e "\n\n# MANDATE FOR THIS RUN\n$MANDATE" >> combined_prompt.md
+          
           node bundle/gemini.js --policy tools/gemini-cli-bot/ci-policy.toml --prompt="$(cat combined_prompt.md)"
 
           if [ -n "$TRIGGER_ISSUE_NUMBER" ] && [ ! -s "issue-comment.md" ] && [ ! -s "pr-comment.md" ]; then
@@ -294,15 +302,12 @@ jobs:
             git apply "${{ runner.temp }}/brain-data/bot-changes.patch"
             git add .
 
+            PR_TITLE="🤖 Gemini Bot Maintenance Update"
             if [ -s "${{ runner.temp }}/brain-data/pr-description.md" ]; then
               git commit -F "${{ runner.temp }}/brain-data/pr-description.md"
-            else
-              git commit -m "🤖 Gemini Bot Productivity Optimizations"
-            fi
-
-            PR_TITLE="🤖 Gemini Bot Productivity Optimizations"
-            if [ -s "${{ runner.temp }}/brain-data/pr-description.md" ]; then
               PR_TITLE=$(head -n 1 "${{ runner.temp }}/brain-data/pr-description.md")
+            else
+              git commit -m "$PR_TITLE"
             fi
 
             if ! git push origin "$BRANCH_NAME" --force; then
