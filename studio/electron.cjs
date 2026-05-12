@@ -392,6 +392,8 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
 
     // Strip 'models/' prefix if present — Code Assist API uses bare model IDs
     const resolvedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
+    // thinkingBudget: 0 disables chain-of-thought tokens on Flash models (faster + fewer tokens)
+    const isFlash = resolvedModel.includes('flash');
     const caRequest = {
       model: resolvedModel,
       request: {
@@ -399,6 +401,7 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
         generationConfig: {
           maxOutputTokens: 8192,
           temperature: 0.7,
+          ...(isFlash && { thinkingConfig: { thinkingBudget: 0 } }),
         },
       },
     };
