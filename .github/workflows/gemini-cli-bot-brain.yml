@@ -137,25 +137,37 @@ jobs:
           TRIGGER_ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
           TRIGGER_COMMENT_ID: '${{ github.event.comment.id || github.event.inputs.comment_id }}'
         run: |
-          # Determine trigger and intent
+          # Determine intent and prompt
+          MANDATE_INPUT="${{ github.event.inputs.mandate || 'auto' }}"
+          
+          # Initialize defaults
           PROMPT_FILE="tools/gemini-cli-bot/brain/scheduled.md"
           MANDATE="Your specific mandate for this run: Implement surgical fixes for repository issues (issue-fixer skill)."
           
-          MANDATE_INPUT="${{ github.event.inputs.mandate || 'auto' }}"
-
+          # Resolve Mandate and Prompt File
           if [ "$MANDATE_INPUT" = "issue-fixer" ]; then
+             echo "Trigger: Manual Override (issue-fixer)"
              MANDATE="Your specific mandate for this run: Implement surgical fixes for repository issues (issue-fixer skill)."
           elif [ "$MANDATE_INPUT" = "metrics" ]; then
+             echo "Trigger: Manual Override (metrics)"
              MANDATE="Your specific mandate for this run: Analyze repository metrics to identify bottlenecks and self-evolve (metrics skill)."
           elif [ "$MANDATE_INPUT" = "interactive" ]; then
+             echo "Trigger: Manual Override (interactive)"
              PROMPT_FILE="tools/gemini-cli-bot/brain/interactive.md"
              MANDATE="Your specific mandate for this run: Respond to the user request in <untrusted_context>."
           elif [ "${{ github.event_name }}" = "issue_comment" ] || [ "${{ github.event.inputs.run_interactive }}" = "true" ]; then
+            echo "Trigger: Issue/PR Comment or Interactive Dispatch"
             PROMPT_FILE="tools/gemini-cli-bot/brain/interactive.md"
             MANDATE="Your specific mandate for this run: Respond to the user request in <untrusted_context>."
           elif [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then
+            echo "Trigger: Nightly Schedule (Metrics)"
             MANDATE="Your specific mandate for this run: Analyze repository metrics to identify bottlenecks and self-evolve (metrics skill)."
+          else
+            echo "Trigger: Scheduled or Manual Dispatch (Default: Issue-Fixer)"
           fi
+
+          echo "Selected Prompt: $PROMPT_FILE"
+          echo "Selected Mandate: $MANDATE"
 
           # Prepare Context if available
           touch trigger_context.md
