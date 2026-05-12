@@ -201,7 +201,7 @@ export const SubagentGroupDisplay: React.FC<SubagentGroupDisplayProps> = ({
           let content = 'Starting...';
           let formattedArgs: string | undefined;
 
-          if (progress.state === 'completed') {
+          if (progress.state === SubagentState.COMPLETED) {
             if (
               progress.terminateReason &&
               progress.terminateReason !== 'GOAL'
@@ -224,7 +224,7 @@ export const SubagentGroupDisplay: React.FC<SubagentGroupDisplayProps> = ({
           }
 
           const displayArgs =
-            progress.state === 'completed' ? '' : formattedArgs;
+            progress.state === SubagentState.COMPLETED ? '' : formattedArgs;
 
           const renderStatusIcon = () => {
             const state = progress.state ?? SubagentState.RUNNING;
