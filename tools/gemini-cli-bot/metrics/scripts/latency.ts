@@ -2,26 +2,30 @@
  * @license
  * Copyright 2026 Google LLC
  * SPDX-License-Identifier: Apache-2.0
- *
- * @license
  */
 
 import { GITHUB_OWNER, GITHUB_REPO } from '../types.js';
 import { execSync } from 'node:child_process';
 
 try {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const since = sevenDaysAgo.toISOString().split('T')[0];
+
   const query = `
-  query($owner: String!, $repo: String!) {
-    repository(owner: $owner, name: $repo) {
-      pullRequests(last: 100, states: MERGED) {
-        nodes {
+  query($prQuery: String!, $issueQuery: String!) {
+    prSearch: search(query: $prQuery, type: ISSUE, first: 100) {
+      nodes {
+        ... on PullRequest {
           authorAssociation
           createdAt
           mergedAt
         }
       }
-      issues(last: 100, states: CLOSED) {
-        nodes {
+    }
+    issueSearch: search(query: $issueQuery, type: ISSUE, first: 100) {
+      nodes {
+        ... on Issue {
           authorAssociation
           createdAt
           closedAt
@@ -30,36 +34,45 @@ try {
     }
   }
   `;
+
+  const prQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:pr is:merged merged:>=${since}`;
+  const issueQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:issue is:closed closed:>=${since}`;
+
   const output = execSync(
-    `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${query}'`,
+    `gh api graphql -F prQuery='${prQuery}' -F issueQuery='${issueQuery}' -f query='${query}'`,
     { encoding: 'utf-8' },
   );
-  const data = JSON.parse(output).data.repository;
+  const data = JSON.parse(output).data;
 
-  const prs = data.pullRequests.nodes.map(
-    (p: {
-      authorAssociation: string;
-      mergedAt: string;
-      createdAt: string;
-    }) => ({
-      association: p.authorAssociation,
-      latencyHours:
-        (new Date(p.mergedAt).getTime() - new Date(p.createdAt).getTime()) /
-        (1000 * 60 * 60),
-    }),
-  );
-  const issues = data.issues.nodes.map(
-    (i: {
-      authorAssociation: string;
-      closedAt: string;
-      createdAt: string;
-    }) => ({
-      association: i.authorAssociation,
-      latencyHours:
-        (new Date(i.closedAt).getTime() - new Date(i.createdAt).getTime()) /
-        (1000 * 60 * 60),
-    }),
-  );
+  const prs = (data?.prSearch?.nodes || [])
+    .filter((p: any) => p && p.mergedAt)
+    .map(
+      (p: {
+        authorAssociation: string;
+        mergedAt: string;
+        createdAt: string;
+      }) => ({
+        association: p.authorAssociation,
+        latencyHours:
+          (new Date(p.mergedAt).getTime() - new Date(p.createdAt).getTime()) /
+          (1000 * 60 * 60),
+      }),
+    );
+
+  const issues = (data?.issueSearch?.nodes || [])
+    .filter((i: any) => i && i.closedAt)
+    .map(
+      (i: {
+        authorAssociation: string;
+        closedAt: string;
+        createdAt: string;
+      }) => ({
+        association: i.authorAssociation,
+        latencyHours:
+          (new Date(i.closedAt).getTime() - new Date(i.createdAt).getTime()) /
+          (1000 * 60 * 60),
+      }),
+    );
 
   const isMaintainer = (assoc: string) =>
     ['MEMBER', 'OWNER', 'COLLABORATOR'].includes(assoc);
