@@ -389,8 +389,9 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
       parts: [{ text: msg.content }],
     }));
 
+    const resolvedModel = model || 'gemini-2.5-flash';
     const caRequest = {
-      model: model || 'gemini-2.5-flash',
+      model: resolvedModel.startsWith('models/') ? resolvedModel : `models/${resolvedModel}`,
       request: {
         contents,
         generationConfig: {

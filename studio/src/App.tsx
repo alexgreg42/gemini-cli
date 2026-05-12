@@ -205,6 +205,13 @@ const App: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Auto-check OAuth on startup (picks up existing ~/.gemini/oauth_creds.json)
+  useEffect(() => {
+    checkOAuthStatus().then((state) => {
+      if (state.isAuthenticated) setAuthState(state);
+    });
+  }, []);  
+
   useEffect(() => {
     if (githubToken && repos.length === 0) loadRepos(githubToken);
   }, [githubToken]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -673,6 +680,55 @@ const App: React.FC = () => {
             </button>
           </div>
         </header>
+
+        {/* Auth banner — shown when no Google auth and no API key */}
+        {!authState.isAuthenticated && !settings.geminiApiKey && (
+          <div
+            style={{
+              margin: '16px 24px 0',
+              padding: '16px 20px',
+              background: 'rgba(99,102,241,0.12)',
+              border: '1px solid rgba(99,102,241,0.35)',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+            }}
+          >
+            <LogIn size={22} color="#818cf8" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div
+                style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '14px' }}
+              >
+                Connexion Google requise
+              </div>
+              <div
+                style={{ color: '#94a3b8', fontSize: '12px', marginTop: '2px' }}
+              >
+                Connecte ton compte Google pour utiliser Gemini gratuitement
+                (sans clé API)
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setShowSettings(true);
+              }}
+              style={{
+                padding: '8px 16px',
+                background: '#6366f1',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Se connecter
+            </button>
+          </div>
+        )}
 
         {/* Messages */}
         <div className="chat-window">

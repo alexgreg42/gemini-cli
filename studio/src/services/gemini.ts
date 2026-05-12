@@ -61,6 +61,12 @@ export interface AttachedFile {
   size: number;
 }
 
+// APIs require history to start with a 'user' message — strip any leading model turns
+function toApiHistory(history: Message[]): Message[] {
+  const first = history.findIndex((m) => m.role === 'user');
+  return first === -1 ? [] : history.slice(first);
+}
+
 // ── Route: OAuth via Electron (Code Assist API — no API key) ─────────────────
 
 async function sendViaElectronOAuth(
@@ -81,7 +87,7 @@ async function sendViaElectronOAuth(
   const fullPrompt = fileContext ? `${fileContext}\n\n${prompt}` : prompt;
 
   const messages: Array<{ role: string; content: string }> = [
-    ...history,
+    ...toApiHistory(history),
     { role: 'user', content: fullPrompt },
   ];
 
@@ -106,7 +112,7 @@ async function sendViaApiKey(
   const model = genAI.getGenerativeModel({ model: modelId });
 
   const chat = model.startChat({
-    history: history.map((msg) => ({
+    history: toApiHistory(history).map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.content }],
     })),
