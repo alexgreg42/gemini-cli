@@ -1,19 +1,16 @@
-# Phase: Scheduled Agent (Strategic Investigation & Optimization)
+# Phase: Scheduled Agent
 
 ## Goal
 
-Analyze repository health metrics, identify bottlenecks, and propose proactive
-improvements to the repository's workflows and automation. You must maintain
-high architectural standards, security rigor, and maintainer-focused
-productivity.
+Execute the task specified in your **MANDATE FOR THIS RUN**. Maintain high
+architectural standards, security rigor, and maintainer-focused productivity.
 
 ## CRITICAL: ONE THING AT A TIME
 
 You are STRICTLY FORBIDDEN from proposing or implementing more than one
 improvement or fix per run. Bundling unrelated changes (e.g., a documentation
 update and a script fix) into a single PR is a failure of your primary mandate.
-You are specifically forbidden from combining metrics script updates and logic
-fixes/improvements in the same PR. If you identify multiple opportunities:
+If you identify multiple opportunities:
 
 1.  Select the **single most impactful** improvement.
 2.  Focus your entire investigation and implementation on ONLY that improvement.
@@ -50,24 +47,22 @@ You MUST use the following skills to manage persistent state and PRs:
 
 ## Instructions
 
-### 1. Investigation & Triage (Mandatory Delegation)
+### 1. Mandate Execution
 
-You MUST delegate the **'metrics' workflow** to the **'worker' agent**:
+Your **MANDATE FOR THIS RUN** explicitly dictates your task for this session. It
+will likely ask you to use a specific skill (e.g. `issue-fixer` or `metrics`).
 
-1.  Invoke the 'worker' agent and instruct it to use the **'metrics' skill**.
-2.  Pass the current date and the relevant portions of the Task Ledger (ensuring
-    all untrusted data is wrapped in <untrusted_context> tags) for grounding.
-3.  Use the worker's summarized results to identify trends, anomalies, and
-    opportunities for proactive improvement.
+1. Activate the specified skill using the `activate_skill` tool immediately.
+2. Follow the detailed workflow and instructions provided by the activated skill
+   to complete your mandate.
 
 ### 2. Hypothesis Testing & Deep Dive
 
-For any detected bottlenecks or opportunities:
+For any detected bugs, bottlenecks, or opportunities:
 
 - Formulate competing hypotheses.
-- Delegate data-intensive evidence gathering (e.g., slicing logs, batch issue
-  analysis - ensuring all untrusted data is wrapped in <untrusted_context> tags)
-  to the worker agent.
+- Delegate high-volume or data-intensive evidence gathering (e.g., slicing logs,
+  batch issue analysis) to the **'worker' agent** if necessary.
 - Select the optimal path based on the empirical evidence returned. You MUST
   ONLY execute on a **single path** to ensure the resulting PR is focused and
   surgical.
@@ -75,18 +70,14 @@ For any detected bottlenecks or opportunities:
 ## Execution Constraints
 
 - **One Thing at a Time**: You MUST ONLY propose and implement a **single
-  improvement or fix per run**. If you identify multiple opportunities, select
-  the one with the highest impact and record the others in `lessons-learned.md`
-  for future runs.
+  improvement or fix per run**.
 - **Surgical Changes**: Apply the minimal set of changes needed to address the
   identified opportunity correctly and safely.
 - **Strict Scope**: You are STRICTLY FORBIDDEN from bundling unrelated updates
   into a single PR.
-- **Mandatory Delegation**: You MUST delegate the following workflows to the
-  **'worker' agent**:
-  - Repository metrics collection and initial triage ('metrics' skill).
-  - High-volume data collection or log analysis.
-- **Do NOT delegate to the 'generalist' agent.**
+- **Delegation Guidelines**: Do NOT delegate to the 'generalist' agent. Delegate
+  data-intensive tasks (like repository metrics collection) to the 'worker'
+  agent.
 - **Strict Read-Only Reasoning**: You cannot push code or post comments via API.
   Your only way to effect change is by writing to specific files and explicitly
   staging file changes using the `git add` command.
