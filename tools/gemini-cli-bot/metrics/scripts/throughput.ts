@@ -10,17 +10,20 @@ import { GITHUB_OWNER, GITHUB_REPO } from '../types.js';
 import { execSync } from 'node:child_process';
 
 try {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const query = `
-  query($owner: String!, $repo: String!) {
-    repository(owner: $owner, name: $repo) {
-      pullRequests(last: 100, states: MERGED) {
-        nodes {
+  query($prQuery: String!, $issueQuery: String!) {
+    prs: search(query: $prQuery, type: ISSUE, last: 100) {
+      nodes {
+        ... on PullRequest {
           authorAssociation
           mergedAt
         }
       }
-      issues(last: 100, states: CLOSED) {
-        nodes {
+    }
+    issues: search(query: $issueQuery, type: ISSUE, last: 100) {
+      nodes {
+        ... on Issue {
           authorAssociation
           closedAt
         }
@@ -28,25 +31,27 @@ try {
     }
   }
   `;
+  const prSearchQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:pr is:merged merged:>${sevenDaysAgo}`;
+  const issueSearchQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:issue is:closed closed:>${sevenDaysAgo}`;
   const output = execSync(
-    `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${query}'`,
+    `gh api graphql -F prQuery='${prSearchQuery}' -F issueQuery='${issueSearchQuery}' -f query='${query}'`,
     { encoding: 'utf-8' },
   );
-  const data = JSON.parse(output).data.repository;
+  const data = JSON.parse(output).data;
 
-  const prs = data.pullRequests.nodes
-    .map((p: { authorAssociation: string; mergedAt: string }) => ({
+  const prs = data.prs.nodes
+    .filter((p: any) => p && p.mergedAt)
+    .map((p: any) => ({
       association: p.authorAssociation,
       date: new Date(p.mergedAt).getTime(),
-    }))
-    .sort((a: { date: number }, b: { date: number }) => a.date - b.date);
+    }));
 
   const issues = data.issues.nodes
-    .map((i: { authorAssociation: string; closedAt: string }) => ({
+    .filter((i: any) => i && i.closedAt)
+    .map((i: any) => ({
       association: i.authorAssociation,
       date: new Date(i.closedAt).getTime(),
-    }))
-    .sort((a: { date: number }, b: { date: number }) => a.date - b.date);
+    }));
 
   const isMaintainer = (assoc: string) =>
     ['MEMBER', 'OWNER', 'COLLABORATOR'].includes(assoc);
@@ -54,11 +59,7 @@ try {
   const calculateThroughput = (
     items: { association: string; date: number }[],
   ) => {
-    if (items.length < 2) return 0;
-    const first = items[0].date;
-    const last = items[items.length - 1].date;
-    const days = (last - first) / (1000 * 60 * 60 * 24);
-    return days > 0 ? items.length / days : items.length; // items per day
+    return items.length / 7; // items per day over 7 day window
   };
 
   const prOverall = calculateThroughput(prs);

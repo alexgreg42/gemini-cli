@@ -10,18 +10,21 @@ import { GITHUB_OWNER, GITHUB_REPO } from '../types.js';
 import { execSync } from 'node:child_process';
 
 try {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const query = `
-  query($owner: String!, $repo: String!) {
-    repository(owner: $owner, name: $repo) {
-      pullRequests(last: 100, states: MERGED) {
-        nodes {
+  query($prQuery: String!, $issueQuery: String!) {
+    prs: search(query: $prQuery, type: ISSUE, last: 100) {
+      nodes {
+        ... on PullRequest {
           authorAssociation
           comments { totalCount }
           reviews { totalCount }
         }
       }
-      issues(last: 100, states: CLOSED) {
-        nodes {
+    }
+    issues: search(query: $issueQuery, type: ISSUE, last: 100) {
+      nodes {
+        ... on Issue {
           authorAssociation
           comments { totalCount }
         }
@@ -29,14 +32,16 @@ try {
     }
   }
   `;
+  const prSearchQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:pr is:merged merged:>${sevenDaysAgo}`;
+  const issueSearchQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:issue is:closed closed:>${sevenDaysAgo}`;
   const output = execSync(
-    `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${query}'`,
+    `gh api graphql -F prQuery='${prSearchQuery}' -F issueQuery='${issueSearchQuery}' -f query='${query}'`,
     { encoding: 'utf-8' },
   );
-  const data = JSON.parse(output).data.repository;
+  const data = JSON.parse(output).data;
 
-  const prs = data.pullRequests.nodes;
-  const issues = data.issues.nodes;
+  const prs = data.prs.nodes.filter((p: any) => p && p.comments);
+  const issues = data.issues.nodes.filter((i: any) => i && i.comments);
 
   const allItems = [
     ...prs.map(

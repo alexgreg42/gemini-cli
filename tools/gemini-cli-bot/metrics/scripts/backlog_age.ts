@@ -15,7 +15,7 @@ function run() {
     const query = `
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {
-        issues(first: 100, states: OPEN, orderBy: {field: CREATED_AT, direction: ASC}) {
+        issues(first: 500, states: OPEN, orderBy: {field: CREATED_AT, direction: ASC}) {
           nodes {
             createdAt
           }
@@ -28,7 +28,7 @@ function run() {
       { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] },
     ).trim();
     const data = JSON.parse(output).data.repository;
-    const issues = data.issues.nodes;
+    const issues = data.issues.nodes.filter((n: any) => n && n.createdAt);
 
     if (issues.length === 0) {
       process.stdout.write('backlog_age_days,0\n');

@@ -10,18 +10,21 @@ import { GITHUB_OWNER, GITHUB_REPO } from '../types.js';
 import { execSync } from 'node:child_process';
 
 try {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const query = `
-  query($owner: String!, $repo: String!) {
-    repository(owner: $owner, name: $repo) {
-      pullRequests(last: 100, states: MERGED) {
-        nodes {
+  query($prQuery: String!, $issueQuery: String!) {
+    prs: search(query: $prQuery, type: ISSUE, last: 100) {
+      nodes {
+        ... on PullRequest {
           authorAssociation
           createdAt
           mergedAt
         }
       }
-      issues(last: 100, states: CLOSED) {
-        nodes {
+    }
+    issues: search(query: $issueQuery, type: ISSUE, last: 100) {
+      nodes {
+        ... on Issue {
           authorAssociation
           createdAt
           closedAt
@@ -30,36 +33,34 @@ try {
     }
   }
   `;
+  const prSearchQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:pr is:merged merged:>${sevenDaysAgo}`;
+  const issueSearchQuery = `repo:${GITHUB_OWNER}/${GITHUB_REPO} is:issue is:closed closed:>${sevenDaysAgo}`;
   const output = execSync(
-    `gh api graphql -F owner=${GITHUB_OWNER} -F repo=${GITHUB_REPO} -f query='${query}'`,
+    `gh api graphql -F prQuery='${prSearchQuery}' -F issueQuery='${issueSearchQuery}' -f query='${query}'`,
     { encoding: 'utf-8' },
   );
-  const data = JSON.parse(output).data.repository;
+  const data = JSON.parse(output).data;
 
-  const prs = data.pullRequests.nodes.map(
-    (p: {
-      authorAssociation: string;
-      mergedAt: string;
-      createdAt: string;
-    }) => ({
-      association: p.authorAssociation,
-      latencyHours:
-        (new Date(p.mergedAt).getTime() - new Date(p.createdAt).getTime()) /
-        (1000 * 60 * 60),
-    }),
-  );
-  const issues = data.issues.nodes.map(
-    (i: {
-      authorAssociation: string;
-      closedAt: string;
-      createdAt: string;
-    }) => ({
-      association: i.authorAssociation,
-      latencyHours:
-        (new Date(i.closedAt).getTime() - new Date(i.createdAt).getTime()) /
-        (1000 * 60 * 60),
-    }),
-  );
+  const prs = data.prs.nodes
+    .filter((p: any) => p && p.mergedAt && p.createdAt)
+    .map(
+      (p: any) => ({
+        association: p.authorAssociation,
+        latencyHours:
+          (new Date(p.mergedAt).getTime() - new Date(p.createdAt).getTime()) /
+          (1000 * 60 * 60),
+      }),
+    );
+  const issues = data.issues.nodes
+    .filter((i: any) => i && i.closedAt && i.createdAt)
+    .map(
+      (i: any) => ({
+        association: i.authorAssociation,
+        latencyHours:
+          (new Date(i.closedAt).getTime() - new Date(i.createdAt).getTime()) /
+          (1000 * 60 * 60),
+      }),
+    );
 
   const isMaintainer = (assoc: string) =>
     ['MEMBER', 'OWNER', 'COLLABORATOR'].includes(assoc);
