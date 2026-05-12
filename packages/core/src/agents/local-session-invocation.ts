@@ -126,7 +126,8 @@ export class LocalSessionInvocation extends BaseToolInvocation<
 
       switch (activity.type) {
         case 'THOUGHT_CHUNK': {
-          const text = String(activity.data['text']);
+          const rawText = activity.data['text'];
+          const text = typeof rawText === 'string' ? rawText.trim() : '';
           const lastItem = recentActivity[recentActivity.length - 1];
 
           if (
@@ -152,9 +153,10 @@ export class LocalSessionInvocation extends BaseToolInvocation<
           break;
         }
         case 'TOOL_CALL_START': {
-          const name = String(activity.data['name']);
+          const rawName = activity.data['name'];
+          const name = typeof rawName === 'string' ? rawName.trim() : '';
           const displayName = activity.data['displayName']
-            ? sanitizeErrorMessage(String(activity.data['displayName']))
+            ? sanitizeErrorMessage(String(activity.data['displayName']).trim())
             : undefined;
           const description = activity.data['description']
             ? sanitizeErrorMessage(String(activity.data['description']))
@@ -178,7 +180,8 @@ export class LocalSessionInvocation extends BaseToolInvocation<
           break;
         }
         case 'TOOL_CALL_END': {
-          const name = String(activity.data['name']);
+          const rawName = activity.data['name'];
+          const name = typeof rawName === 'string' ? rawName.trim() : '';
           const data = activity.data['data'];
           const isError = isToolActivityError(data);
 
@@ -198,7 +201,8 @@ export class LocalSessionInvocation extends BaseToolInvocation<
           break;
         }
         case 'ERROR': {
-          const error = String(activity.data['error']);
+          const rawError = activity.data['error'];
+          const error = typeof rawError === 'string' ? rawError.trim() : '';
           const errorType = activity.data['errorType'];
           const sanitizedError = sanitizeErrorMessage(error);
           const isCancellation =
