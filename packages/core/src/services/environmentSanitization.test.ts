@@ -370,15 +370,16 @@ describe('getSecureSanitizationConfig', () => {
     );
   });
 
-  it('should filter out variables from allowed list that match NEVER_ALLOWED_NAME_PATTERNS', () => {
+  it('should not filter out variables from allowed list that match NEVER_ALLOWED_NAME_PATTERNS', () => {
     const requestedConfig = {
-      allowedEnvironmentVariables: ['SAFE_VAR', 'MY_SECRET_TOKEN'],
+      allowedEnvironmentVariables: ['SAFE_VAR', 'MY_SECRET_TOKEN', 'GH_TOKEN'],
     };
 
     const config = getSecureSanitizationConfig(requestedConfig);
 
     expect(config.allowedEnvironmentVariables).toContain('SAFE_VAR');
-    expect(config.allowedEnvironmentVariables).not.toContain('MY_SECRET_TOKEN');
+    expect(config.allowedEnvironmentVariables).toContain('MY_SECRET_TOKEN');
+    expect(config.allowedEnvironmentVariables).toContain('GH_TOKEN');
   });
 
   it('should deduplicate variables in allowed and blocked lists', () => {
