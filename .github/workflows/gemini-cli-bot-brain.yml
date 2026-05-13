@@ -267,6 +267,7 @@ jobs:
             pr-comment.md
             pr-number.txt
             issue-comment.md
+            pr-labels.txt
           retention-days: 90
 
   publish:
