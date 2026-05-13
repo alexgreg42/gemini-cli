@@ -16,3 +16,9 @@ toolName = "invoke_agent"
 decision = "allow"
 priority = 999
 interactive = false
+
+[[rule]]
+toolName = "google_web_search"
+decision = "deny"
+priority = 999
+interactive = false

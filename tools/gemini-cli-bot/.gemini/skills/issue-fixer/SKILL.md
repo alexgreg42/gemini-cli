@@ -26,7 +26,7 @@ maintain existing PRs to reduce the repository backlog.
     - If any require attention (CI failure, requested changes), focus your entire run on resolving ONE of them.
     - Do NOT start a new issue fix if an existing PR needs work.
 2.  **Search for Candidates**: If no PRs need attention, search for `effort/small` issues: `gh issue list --label "effort/small" --limit 10 --json number,title,url`.
-    - **CRITICAL**: Do NOT run local discovery commands (e.g., `npm run lint`, `npm run typecheck`) to look for "easy fixes". `gh issue list` is your ONLY source for new tasks.
+    - **CRITICAL**: `gh issue list` is your ONLY source for new tasks. If `gh` fails, you MUST diagnose the environment or abort the discovery phase. You are STRICTLY FORBIDDEN from using `google_web_search` to query GitHub, as it indexes closed issues. Do NOT run local discovery commands (e.g., `npm run lint`, `npm run typecheck`) to look for "easy fixes".
 3.  **Select ONE Issue** and implement a fix on a new branch.
 4.  **Verify** via `npm run preflight`.
 5.  **Use the `prs` Skill** to stage changes and prepare the draft PR (label: `bot-fix`).
