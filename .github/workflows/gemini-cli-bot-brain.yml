@@ -36,7 +36,7 @@ on:
           - 'issue-fixer'
           - 'metrics'
           - 'interactive'
-        default: auto
+        default: 'auto'
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.event.issue.number || github.event.inputs.issue_number || github.ref }}'
@@ -63,6 +63,7 @@ jobs:
       - name: 'Determine Checkout Ref'
         id: 'determine_ref'
         env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
         run: |
@@ -96,6 +97,7 @@ jobs:
 
       - name: 'Download Previous State'
         env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         run: |
           if [ "${{ github.event.inputs.clear_memory }}" = "true" ]; then
@@ -124,12 +126,14 @@ jobs:
 
       - name: 'Collect Current Metrics'
         env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         run: 'npx tsx tools/gemini-cli-bot/metrics/index.ts'
 
       - name: 'Run Brain Phases'
         env:
           GEMINI_API_KEY: '${{ secrets.GEMINI_API_KEY }}'
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GEMINI_MODEL: 'gemini-3-flash-preview'
           GEMINI_CLI_HOME: 'tools/gemini-cli-bot'
@@ -217,6 +221,7 @@ jobs:
         if: "${{ github.event.inputs.enable_prs == 'true' || github.event_name == 'issue_comment' || github.event.inputs.run_interactive == 'true' }}"
         env:
           GEMINI_API_KEY: '${{ secrets.GEMINI_API_KEY }}'
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GEMINI_MODEL: 'gemini-3-flash-preview'
           GEMINI_CLI_HOME: 'tools/gemini-cli-bot'
@@ -291,6 +296,7 @@ jobs:
       - name: 'Determine Checkout Ref'
         id: 'determine_ref'
         env:
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
         run: |
