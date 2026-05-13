@@ -11,6 +11,11 @@ export interface AppSettings {
 }
 
 const KEY = 'gemini_studio_settings';
+const VALID_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite-preview-06-17',
+  'gemini-2.5-pro',
+];
 
 const defaults: AppSettings = {
   geminiApiKey: '',
@@ -29,7 +34,8 @@ export const loadSettings = (): AppSettings => {
         githubToken:
           typeof parsed.githubToken === 'string' ? parsed.githubToken : '',
         selectedModel:
-          typeof parsed.selectedModel === 'string'
+          typeof parsed.selectedModel === 'string' &&
+          VALID_MODELS.includes(parsed.selectedModel)
             ? parsed.selectedModel
             : defaults.selectedModel,
       };
