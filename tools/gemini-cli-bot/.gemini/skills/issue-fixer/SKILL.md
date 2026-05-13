@@ -25,7 +25,7 @@ maintain existing PRs to reduce the repository backlog.
 1.  **Inventory & Drive PRs**: Use the `prs` skill to list all open PRs labeled `bot-fix`.
     - If any require attention (CI failure, requested changes), focus your entire run on resolving ONE of them.
     - Do NOT start a new issue fix if an existing PR needs work.
-2.  **Search for Candidates**: If no PRs need attention, search for `effort/small` issues: `gh issue list --label "effort/small" --limit 10`.
+2.  **Search for Candidates**: If no PRs need attention, search for `effort/small` issues: `gh issue list --label "effort/small" --limit 10 --json number,title,url`.
     - **CRITICAL**: Do NOT run local discovery commands (e.g., `npm run lint`, `npm run typecheck`) to look for "easy fixes". `gh issue list` is your ONLY source for new tasks.
 3.  **Select ONE Issue** and implement a fix on a new branch.
 4.  **Verify** via `npm run preflight`.

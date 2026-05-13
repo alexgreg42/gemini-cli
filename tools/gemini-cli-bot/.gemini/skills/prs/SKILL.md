@@ -52,6 +52,6 @@ existing bot PR:
 3.  **Respond to Maintainers**:
     - For general responses, write your markdown comment to `issue-comment.md`.
     - For specific PR feedback, write your markdown response to `pr-comment.md`.
-4.  **Handle CI Failures**: Diagnose failing checks using `gh run view`. Your
+4.  **Handle CI Failures**: Diagnose failing checks using `gh --no-pager run view` or `gh api`. Your
     priority must be generating a new patch and staging it with `git add` to fix
     the failure.
