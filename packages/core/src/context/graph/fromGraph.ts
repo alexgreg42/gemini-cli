@@ -23,6 +23,7 @@ export function fromGraph(nodes: readonly ConcreteNode[]): Content[] {
 
   for (const node of nodes) {
     const turnId = node.turnId;
+    const partWithId = { ...node.payload, _synthId: node.id };
 
     // We start a new turn if:
     // 1. We don't have a current turn.
@@ -35,12 +36,12 @@ export function fromGraph(nodes: readonly ConcreteNode[]): Content[] {
     ) {
       currentTurn = {
         role: node.role,
-        parts: [node.payload],
+        parts: [partWithId],
         _turnId: turnId,
       };
       history.push(currentTurn);
     } else {
-      currentTurn.parts = [...(currentTurn.parts || []), node.payload];
+      currentTurn.parts = [...(currentTurn.parts || []), partWithId];
     }
   }
 

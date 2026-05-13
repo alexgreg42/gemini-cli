@@ -47,8 +47,6 @@ export class ContextManager {
     };
   };
 
-  private lastAppliedNodes?: readonly ConcreteNode[];
-
   private hasPerformedHotStart = false;
 
   constructor(
@@ -80,6 +78,21 @@ export class ContextManager {
       this.evaluateTriggers(event.newNodes);
     });
     this.eventBus.onProcessorResult((event) => {
+      // Defensive: Verify all targets are still present in the buffer.
+      // If a synchronous render or a previous async task already removed them,
+      // this result is stale and should be dropped.
+      const currentIds = new Set(this.buffer.nodes.map((n) => n.id));
+      const allTargetsPresent = event.targets.every((t) =>
+        currentIds.has(t.id),
+      );
+
+      if (!allTargetsPresent) {
+        debugLogger.log(
+          `[ContextManager] Dropping stale processor result from ${event.processorId}. One or more targets were already removed.`,
+        );
+        return;
+      }
+
       this.buffer = this.buffer.applyProcessorResult(
         event.processorId,
         event.targets,
@@ -371,7 +384,16 @@ export class ContextManager {
       processedNodes,
     } = renderResult;
 
-    this.lastAppliedNodes = processedNodes;
+    if (didApplyManagement) {
+      // Commit the GC backstop results back to the master buffer.
+      // We filter out preview nodes because they are ephemeral and will be
+      // added to history naturally by the client after the turn completes.
+      this.buffer = this.buffer.applyProcessorResult(
+        'sync_backstop',
+        this.buffer.nodes,
+        processedNodes.filter((n) => !previewNodeIds.has(n.id)),
+      );
+    }
 
     // Structural validation in debug mode
     checkContextInvariants(this.buffer.nodes, 'RenderHistory');
@@ -444,9 +466,7 @@ export class ContextManager {
   }
 
   exportState(): ContextEngineState {
-    return SnapshotStateHelper.exportState(
-      this.lastAppliedNodes || this.buffer.nodes,
-    );
+    return SnapshotStateHelper.exportState(this.buffer.nodes);
   }
 
   restoreState(state: ContextEngineState): void {
