@@ -29,4 +29,4 @@ maintain existing PRs to reduce the repository backlog.
     - **CRITICAL**: `gh issue list` is your ONLY source for new tasks. If `gh` fails, you MUST diagnose the environment or abort the discovery phase. You are STRICTLY FORBIDDEN from using `google_web_search` to query GitHub, as it indexes closed issues. Do NOT run local discovery commands (e.g., `npm run lint`, `npm run typecheck`) to look for "easy fixes".
 3.  **Select ONE Issue** and implement a fix on a new branch.
 4.  **Verify** via `npm run preflight`.
-5.  **Use the `prs` Skill** to stage changes and prepare the draft PR (label: `bot-fix`).
+5.  **Use the `prs` Skill** to stage changes and prepare the draft PR (labels: `bot-fix`, `issue-fixer`).

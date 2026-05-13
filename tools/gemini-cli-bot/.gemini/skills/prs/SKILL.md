@@ -30,14 +30,14 @@ If you are proposing fixes and PR creation is enabled (per the System Directive)
     `pr-description.md`.
     - **Title**: The very first line MUST be a concise, conventional title.
     - **Body**: Explain the change and expected impact. You MUST identify the domain expert for the affected files and mention them (cc @<user>).
-    - **Labels**: Always apply the `bot-fix` label.
+    - **Labels**: Use the `write_file` tool to create `pr-labels.txt` containing one label per line. You MUST ALWAYS add the `bot-fix` label.
 3.  **Stage Fixes**: You MUST explicitly stage your fixes using the
     `git add <files>` command.
 4.  **Internal File Protection (CRITICAL)**: You are STRICTLY FORBIDDEN from
     staging internal bot management files. If they are accidentally staged, you
     MUST unstage them using `git reset <file>`.
     - **NEVER STAGE**: `pr-description.md`, `lessons-learned.md`,
-      `branch-name.txt`, `pr-comment.md`, `pr-number.txt`, `issue-comment.md`, or
+      `branch-name.txt`, `pr-comment.md`, `pr-number.txt`, `issue-comment.md`, `pr-labels.txt`, or
       anything in `history/`.
 
 ## Unblocking & PR Updates (Recovery)
