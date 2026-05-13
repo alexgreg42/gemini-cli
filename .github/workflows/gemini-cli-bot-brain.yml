@@ -2,7 +2,7 @@ name: '🧠 Gemini CLI Bot: Brain'
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # Nightly (Strategic Metrics)
+    - cron: '0 0 * * *' # Nightly (Strategic Metrics)
     - cron: '0 */4 * * *' # Every 4 hours (Issue Fixing)
   issue_comment:
     types: ['created']
@@ -139,11 +139,11 @@ jobs:
         run: |
           # Determine intent and prompt
           MANDATE_INPUT="${{ github.event.inputs.mandate || 'auto' }}"
-          
+
           # Initialize defaults
           PROMPT_FILE="tools/gemini-cli-bot/brain/scheduled.md"
           MANDATE="Your specific mandate for this run: Implement surgical fixes for repository issues (issue-fixer skill)."
-          
+
           # Resolve Mandate and Prompt File
           if [ "$MANDATE_INPUT" = "issue-fixer" ]; then
              echo "Trigger: Manual Override (issue-fixer)"
@@ -197,7 +197,7 @@ jobs:
           echo "System: $PR_DIRECTIVE" > combined_prompt.md
           cat trigger_context.md "$PROMPT_FILE" >> combined_prompt.md
           echo -e "\n\n# MANDATE FOR THIS RUN\n$MANDATE" >> combined_prompt.md
-          
+
           node bundle/gemini.js --policy tools/gemini-cli-bot/ci-policy.toml --prompt="$(cat combined_prompt.md)"
 
           if [ -n "$TRIGGER_ISSUE_NUMBER" ] && [ ! -s "issue-comment.md" ] && [ ! -s "pr-comment.md" ]; then
@@ -247,6 +247,8 @@ jobs:
           path: |
             tools/gemini-cli-bot/lessons-learned.md
             tools/gemini-cli-bot/history/*.csv
+            brain-telemetry.json
+            brain-debug.log
             bot-changes.patch
             pr-description.md
             branch-name.txt
@@ -381,5 +383,8 @@ jobs:
             # Skipping author validation here to let the app post.
 
             # Use REST API (gh api) for consistency and robot identity
+            gh api "repos/${{ github.repository }}/issues/$PR_NUM/comments" -F body=@"${{ runner.temp }}/brain-data/pr-comment.md"
+          fi
+ REST API (gh api) for consistency and robot identity
             gh api "repos/${{ github.repository }}/issues/$PR_NUM/comments" -F body=@"${{ runner.temp }}/brain-data/pr-comment.md"
           fi
