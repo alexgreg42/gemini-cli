@@ -1,10 +1,13 @@
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestRig } from './test-helper.js';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import * as fs from 'node:fs';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Context Management Resume E2E', () => {
   let rig: TestRig;
@@ -64,7 +67,7 @@ describe('Context Management Resume E2E', () => {
       ],
     });
 
-    const setupResponses = (fileName: string, mocks: any[]) => {
+    const setupResponses = (fileName: string, mocks: unknown[]) => {
       const filePath = path.join(rig.testDir!, fileName);
       fs.writeFileSync(
         filePath,
@@ -100,7 +103,6 @@ describe('Context Management Resume E2E', () => {
       runMocks.push(countTokensResponse);
     }
 
-    console.log('=== STARTING RUN 1 ===');
     await rig.run({
       args: [
         '--debug',
@@ -111,7 +113,6 @@ describe('Context Management Resume E2E', () => {
       env: commonEnv,
     });
 
-    console.log('=== STARTING RUN 2 ===');
     await rig.run({
       args: [
         '--debug',
@@ -124,7 +125,6 @@ describe('Context Management Resume E2E', () => {
       env: commonEnv,
     });
 
-    console.log('=== STARTING RUN 3 ===');
     const result3 = await rig.run({
       args: [
         '--debug',
@@ -141,9 +141,6 @@ describe('Context Management Resume E2E', () => {
 
     const traces = fs.readFileSync(traceLog, 'utf-8');
     expect(traces).toContain('Hitting Synchronous Pressure Barrier');
-    console.log('GC Trigger Verification: SUCCESS');
-
     expect(traces).toContain('GC Triggered.');
-    console.log('Snapshot Utilization Verification: SUCCESS');
   });
 });
