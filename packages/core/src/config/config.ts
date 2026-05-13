@@ -688,6 +688,7 @@ export interface ConfigParameters {
   enableShellOutputEfficiency?: boolean;
   shellToolInactivityTimeout?: number;
   fakeResponses?: string;
+  fakeResponsesNonStrict?: string;
   recordResponses?: string;
   ptyInfo?: string;
   disableYoloMode?: boolean;
@@ -919,6 +920,7 @@ export class Config implements McpContext, AgentLoopContext {
   private readonly enableShellOutputEfficiency: boolean;
   private readonly shellToolInactivityTimeout: number;
   readonly fakeResponses?: string;
+  readonly fakeResponsesNonStrict?: string;
   readonly recordResponses?: string;
   private readonly disableYoloMode: boolean;
   private readonly disableAlwaysAllow: boolean;
@@ -1299,6 +1301,7 @@ export class Config implements McpContext, AgentLoopContext {
     this.storage.setCustomPlansDir(params.planSettings?.directory);
 
     this.fakeResponses = params.fakeResponses;
+    this.fakeResponsesNonStrict = params.fakeResponsesNonStrict;
     this.recordResponses = params.recordResponses;
     this.fileExclusions = new FileExclusions(this);
     this.eventEmitter = params.eventEmitter;

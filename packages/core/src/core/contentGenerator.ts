@@ -23,6 +23,7 @@ import type { UserTierId, GeminiUserTier } from '../code_assist/types.js';
 import { LoggingContentGenerator } from './loggingContentGenerator.js';
 import { InstallationManager } from '../utils/installationManager.js';
 import { FakeContentGenerator } from './fakeContentGenerator.js';
+import { NonStrictFakeContentGenerator } from './nonStrictFakeContentGenerator.js';
 import { parseCustomHeaders } from '../utils/customHeaderUtils.js';
 import { determineSurface } from '../utils/surface.js';
 import { RecordingContentGenerator } from './recordingContentGenerator.js';
@@ -193,6 +194,12 @@ export async function createContentGenerator(
   sessionId?: string,
 ): Promise<ContentGenerator> {
   const generator = await (async () => {
+    if (gcConfig.fakeResponsesNonStrict) {
+      const fakeGenerator = await NonStrictFakeContentGenerator.fromFile(
+        gcConfig.fakeResponsesNonStrict,
+      );
+      return new LoggingContentGenerator(fakeGenerator, gcConfig);
+    }
     if (gcConfig.fakeResponses) {
       const fakeGenerator = await FakeContentGenerator.fromFile(
         gcConfig.fakeResponses,

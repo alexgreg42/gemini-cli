@@ -90,6 +90,9 @@ export function createStateSnapshotProcessor(
           const isValid = consumedIds.every((id) => targetIds.has(id));
 
           if (isValid) {
+            debugLogger.log(
+              `[StateSnapshotProcessor] Successfully spliced PROPOSED_SNAPSHOT from Inbox into Graph. Consumed ${consumedIds.length} nodes.`,
+            );
             // If valid, apply it!
             const newId = randomUUID();
 
@@ -120,6 +123,10 @@ export function createStateSnapshotProcessor(
 
             inbox.consume(proposed.id);
             return returnedNodes;
+          } else {
+            debugLogger.log(
+              `[StateSnapshotProcessor] Rejected PROPOSED_SNAPSHOT from Inbox because one or more target IDs were missing from the current graph window.`,
+            );
           }
         }
       }

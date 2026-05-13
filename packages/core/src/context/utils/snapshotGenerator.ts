@@ -82,12 +82,21 @@ export function findLatestSnapshotBaseline(
 
 import type { LiveInbox } from '../pipeline/inbox.js';
 import type { ContextEngineState } from '../../services/chatRecordingTypes.js';
+import { debugLogger } from '../../utils/debugLogger.js';
 
 export const SnapshotStateHelper = {
   exportState(nodes: readonly ConcreteNode[]): ContextEngineState {
     const baseline = findLatestSnapshotBaseline(nodes);
-    if (!baseline) return {};
+    if (!baseline) {
+      debugLogger.log(
+        '[SnapshotStateHelper] exportState: No snapshot baseline found in current nodes.',
+      );
+      return {};
+    }
 
+    debugLogger.log(
+      `[SnapshotStateHelper] exportState: Exporting snapshot ID ${baseline.id} representing ${baseline.abstractsIds.length} consumed nodes.`,
+    );
     return {
       snapshot: {
         text: baseline.text,
@@ -98,18 +107,30 @@ export const SnapshotStateHelper = {
   },
 
   restoreState(state: ContextEngineState, inbox: LiveInbox): void {
-    if (!state.snapshot) return;
+    if (!state.snapshot) {
+      debugLogger.log(
+        '[SnapshotStateHelper] restoreState: No snapshot found in provided ContextEngineState.',
+      );
+      return;
+    }
 
     if (
       typeof state.snapshot.text === 'string' &&
       Array.isArray(state.snapshot.consumedIds)
     ) {
+      debugLogger.log(
+        `[SnapshotStateHelper] restoreState: Publishing hydrated snapshot to LiveInbox with ${state.snapshot.consumedIds.length} consumed IDs.`,
+      );
       inbox.publish('PROPOSED_SNAPSHOT', {
         newText: state.snapshot.text,
         consumedIds: state.snapshot.consumedIds,
         type: 'accumulate',
         timestamp: state.snapshot.timestamp ?? Date.now(),
       });
+    } else {
+      debugLogger.log(
+        '[SnapshotStateHelper] restoreState: Invalid snapshot structural format.',
+      );
     }
   },
 };
