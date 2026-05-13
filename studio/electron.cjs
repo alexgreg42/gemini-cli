@@ -392,7 +392,6 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
 
     // Strip 'models/' prefix if present — Code Assist API uses bare model IDs
     const resolvedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
-    // thinkingBudget: 0 disables chain-of-thought tokens on Flash models (faster + fewer tokens)
     const isFlash = resolvedModel.includes('flash');
     const caRequest = {
       model: resolvedModel,
@@ -401,6 +400,7 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
         generationConfig: {
           maxOutputTokens: 8192,
           temperature: 0.7,
+          // Flash models don't support thinking tokens — disabling avoids API 500 errors
           ...(isFlash && { thinkingConfig: { thinkingBudget: 0 } }),
         },
       },
@@ -442,7 +442,8 @@ ipcMain.handle('cli:start', async () => {
   try {
     // Find gemini CLI binary
     const geminiBin = process.platform === 'win32' ? 'gemini.cmd' : 'gemini';
-    const cliArgs = ['--no-interactive', '--model', 'gemini-2.5-flash'];
+    // Interactive mode (default) — user sends prompts via stdin, --yolo skips confirmation prompts
+    const cliArgs = ['--model', 'gemini-2.5-flash', '--yolo'];
 
     cliProcess = spawn(geminiBin, cliArgs, {
       env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' },

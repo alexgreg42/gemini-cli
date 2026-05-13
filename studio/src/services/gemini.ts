@@ -22,28 +22,16 @@ export const AVAILABLE_MODELS: GeminiModel[] = [
     description: 'Rapide · Gratuit',
   },
   {
-    id: 'gemini-2.5-flash-lite',
+    id: 'gemini-2.5-flash-lite-preview-06-17',
     name: 'Gemini 2.5 Flash Lite',
     tier: 'free',
     description: 'Ultra rapide · Gratuit',
-  },
-  {
-    id: 'gemini-3-flash-preview',
-    name: 'Gemini 3 Flash Preview',
-    tier: 'preview',
-    description: 'Nouvelle gen · Gratuit',
   },
   {
     id: 'gemini-2.5-pro',
     name: 'Gemini 2.5 Pro',
     tier: 'limited',
     description: 'Pro · Limité',
-  },
-  {
-    id: 'gemini-3-pro-preview',
-    name: 'Gemini 3 Pro Preview',
-    tier: 'preview',
-    description: 'Preview Pro · Limité',
   },
 ];
 
