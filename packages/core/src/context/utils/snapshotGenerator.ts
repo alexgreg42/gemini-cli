@@ -147,7 +147,7 @@ export const SnapshotStateHelper = {
       inbox.publish('PROPOSED_SNAPSHOT', {
         newText: state.snapshot.text,
         consumedIds: state.snapshot.consumedIds,
-        type: 'restored',
+        type: 'accumulate',
         timestamp: state.snapshot.timestamp ?? Date.now(),
       });
     } else {
