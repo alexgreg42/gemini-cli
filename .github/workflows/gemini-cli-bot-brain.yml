@@ -385,6 +385,3 @@ jobs:
             # Use REST API (gh api) for consistency and robot identity
             gh api "repos/${{ github.repository }}/issues/$PR_NUM/comments" -F body=@"${{ runner.temp }}/brain-data/pr-comment.md"
           fi
- REST API (gh api) for consistency and robot identity
-            gh api "repos/${{ github.repository }}/issues/$PR_NUM/comments" -F body=@"${{ runner.temp }}/brain-data/pr-comment.md"
-          fi
