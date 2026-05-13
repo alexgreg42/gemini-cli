@@ -163,6 +163,7 @@ export class LocalSessionInvocation extends BaseToolInvocation<
             ? sanitizeErrorMessage(String(activity.data['description']))
             : undefined;
           const args = JSON.stringify(sanitizeToolArgs(activity.data['args']));
+          // TODO: Use unique callId when available instead of randomUUID to support parallel calls reliably.
           recentActivity.push({
             id: randomUUID(),
             type: 'tool_call',
@@ -186,6 +187,8 @@ export class LocalSessionInvocation extends BaseToolInvocation<
           const data = activity.data['data'];
           const isError = isToolActivityError(data);
 
+          // TODO: Matching tool calls by name is unreliable when parallel tool calls are active.
+          // Use unique callId when available to find the correct TOOL_CALL_START item.
           for (let i = recentActivity.length - 1; i >= 0; i--) {
             if (
               recentActivity[i].type === 'tool_call' &&
@@ -219,6 +222,8 @@ export class LocalSessionInvocation extends BaseToolInvocation<
             ? String(activity.data['name'])
             : undefined;
 
+          // TODO: Matching tool calls by name is unreliable when parallel tool calls are active.
+          // Use unique callId when available to find the correct TOOL_CALL_START item.
           if (toolName && (isCancellation || isRejection)) {
             for (let i = recentActivity.length - 1; i >= 0; i--) {
               if (
