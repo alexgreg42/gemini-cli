@@ -32,10 +32,10 @@ on:
         description: 'Mandate to execute'
         type: 'choice'
         options:
-          - auto
-          - issue-fixer
-          - metrics
-          - interactive
+          - 'auto'
+          - 'issue-fixer'
+          - 'metrics'
+          - 'interactive'
         default: auto
 
 concurrency:

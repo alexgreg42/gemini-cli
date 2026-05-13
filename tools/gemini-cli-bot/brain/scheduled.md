@@ -83,6 +83,10 @@ For any detected bugs, bottlenecks, or opportunities:
 - **Delegation Guidelines**: Do NOT delegate to the 'generalist' agent. Delegate
   data-intensive tasks (like repository metrics collection) to the 'worker'
   agent.
+- **Monorepo Build Order**: When verifying the workspace or diagnosing errors,
+  you MUST run `npm run build` BEFORE running `npm run typecheck`. In a clean
+  state, `tsc` will report widespread errors (TS6305) if the project's build
+  artifacts do not yet exist. These are environment issues, not code bugs.
 - **Strict Read-Only Reasoning**: You cannot push code or post comments via API.
   Your only way to effect change is by writing to specific files and explicitly
   staging file changes using the `git add` command.
