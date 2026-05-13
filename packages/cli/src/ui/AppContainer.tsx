@@ -1649,11 +1649,14 @@ Logging in with Google... Restarting Gemini CLI to continue.
     [config, handleSlashCommand],
   );
 
-  const { pressCount: ctrlCPressCount, handlePress: handleCtrlCPress } =
-    useRepeatedKeyPress({
-      windowMs: WARNING_PROMPT_DURATION_MS,
-      onRepeat: handleExitRepeat,
-    });
+  const {
+    pressCount: ctrlCPressCount,
+    handlePress: handleCtrlCPress,
+    resetCount: resetCtrlCPress,
+  } = useRepeatedKeyPress({
+    windowMs: WARNING_PROMPT_DURATION_MS,
+    onRepeat: handleExitRepeat,
+  });
 
   const { pressCount: ctrlDPressCount, handlePress: handleCtrlDPress } =
     useRepeatedKeyPress({
@@ -1828,6 +1831,20 @@ Logging in with Google... Restarting Gemini CLI to continue.
         setCopyModeEnabled(true);
         disableMouseEvents();
         return true;
+      }
+
+      if (
+        keyMatchers[Command.QUIT](key) &&
+        keyMatchers[Command.CLEAR_INPUT](key) &&
+        isInputActive &&
+        streamingState === StreamingState.Idle &&
+        buffer.text.length > 0
+      ) {
+        // Let InputPrompt handle Ctrl+C as edit.clear when there is text.
+        // This preserves documented behavior and allows prompt-level state
+        // (completions/history) to reset correctly.
+        resetCtrlCPress();
+        return false;
       }
 
       if (keyMatchers[Command.QUIT](key)) {
@@ -2062,6 +2079,10 @@ Logging in with Google... Restarting Gemini CLI to continue.
       startRecording,
       stopRecording,
       mouseMode,
+      isInputActive,
+      streamingState,
+      buffer,
+      resetCtrlCPress,
     ],
   );
 
