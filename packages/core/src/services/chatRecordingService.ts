@@ -276,6 +276,7 @@ export async function loadConversationRecord(
       memoryScratchpad: metadata.memoryScratchpad,
       directories: metadata.directories,
       kind: metadata.kind,
+      contextState: metadata.contextState,
       messages: options?.metadataOnly ? [] : loadedMessages,
       messageCount: options?.metadataOnly
         ? metadataMessages.length || messageIds.length

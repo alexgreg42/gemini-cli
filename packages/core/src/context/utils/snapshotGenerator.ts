@@ -94,13 +94,36 @@ export const SnapshotStateHelper = {
       return {};
     }
 
+    // Flatten abstractsIds to ensure only pristine/replayable IDs are persisted.
+    // This prevents deep nesting of synthetic snapshot IDs which cannot be reconstructed
+    // from saved chat messages during session resume.
+    const nodeMap = new Map<string, ConcreteNode>();
+    for (const n of nodes) nodeMap.set(n.id, n);
+
+    const pristineIds = new Set<string>();
+    const toExpand = [...baseline.abstractsIds];
+    const seen = new Set<string>();
+
+    while (toExpand.length > 0) {
+      const id = toExpand.pop()!;
+      if (seen.has(id)) continue;
+      seen.add(id);
+
+      const node = nodeMap.get(id);
+      if (node?.abstractsIds && node.abstractsIds.length > 0) {
+        toExpand.push(...node.abstractsIds);
+      } else {
+        pristineIds.add(id);
+      }
+    }
+
     debugLogger.log(
-      `[SnapshotStateHelper] exportState: Exporting snapshot ID ${baseline.id} representing ${baseline.abstractsIds.length} consumed nodes.`,
+      `[SnapshotStateHelper] exportState: Exporting snapshot ID ${baseline.id} representing ${pristineIds.size} pristine nodes.`,
     );
     return {
       snapshot: {
         text: baseline.text,
-        consumedIds: baseline.abstractsIds,
+        consumedIds: Array.from(pristineIds),
         timestamp: baseline.timestamp,
       },
     };
@@ -124,7 +147,7 @@ export const SnapshotStateHelper = {
       inbox.publish('PROPOSED_SNAPSHOT', {
         newText: state.snapshot.text,
         consumedIds: state.snapshot.consumedIds,
-        type: 'accumulate',
+        type: 'restored',
         timestamp: state.snapshot.timestamp ?? Date.now(),
       });
     } else {

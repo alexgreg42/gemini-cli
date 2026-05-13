@@ -31,6 +31,7 @@ export async function render(
   history: Content[];
   didApplyManagement: boolean;
   baseUnits: number;
+  processedNodes: readonly ConcreteNode[];
 }> {
   let headerTokens = 0;
   let headerBaseUnits = 0;
@@ -52,7 +53,12 @@ export async function render(
     const baseUnits =
       advancedTokenCalculator.getRawBaseUnits(nodes) + headerBaseUnits;
 
-    return { history: contents, didApplyManagement: false, baseUnits };
+    return {
+      history: contents,
+      didApplyManagement: false,
+      baseUnits,
+      processedNodes: nodes,
+    };
   }
 
   const maxTokens = sidecar.config.budget.maxTokens;
@@ -97,6 +103,7 @@ export async function render(
       history: contents,
       didApplyManagement: false,
       baseUnits: graphBaseUnits + headerBaseUnits,
+      processedNodes: nodes,
     };
   }
   const targetDelta = currentTokens - sidecar.config.budget.retainedTokens;
@@ -151,5 +158,6 @@ export async function render(
     didApplyManagement: true,
     baseUnits:
       advancedTokenCalculator.getRawBaseUnits(visibleNodes) + headerBaseUnits,
+    processedNodes,
   };
 }

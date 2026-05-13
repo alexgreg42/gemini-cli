@@ -64,11 +64,12 @@ function isFunctionResponsePart(
 
 function isExecutableCodePart(
   part: Part,
-): part is Part & { executableCode: { code: string } } {
+): part is Part & { executableCode: { code: string; language: string } } {
   return (
     typeof part.executableCode === 'object' &&
     part.executableCode !== null &&
-    typeof part.executableCode.code === 'string'
+    typeof part.executableCode.code === 'string' &&
+    typeof part.executableCode.language === 'string'
   );
 }
 
@@ -78,7 +79,8 @@ function isCodeExecutionResultPart(
   return (
     typeof part.codeExecutionResult === 'object' &&
     part.codeExecutionResult !== null &&
-    typeof part.codeExecutionResult.output === 'string'
+    typeof part.codeExecutionResult.output === 'string' &&
+    typeof part.codeExecutionResult.outcome === 'string'
   );
 }
 
@@ -138,12 +140,16 @@ export function getStableId(
     id = `resp_h_${contentHash}_${turnSalt}_${partIdx}`;
   } else if (isExecutableCodePart(part)) {
     contentHash = createHash('sha256')
-      .update(`exec:${part.executableCode.code}`)
+      .update(
+        `exec:${part.executableCode.language}:${part.executableCode.code}`,
+      )
       .digest('hex');
     id = `exec_${contentHash}_${turnSalt}_${partIdx}`;
   } else if (isCodeExecutionResultPart(part)) {
     contentHash = createHash('sha256')
-      .update(`result:${part.codeExecutionResult.output}`)
+      .update(
+        `result:${part.codeExecutionResult.outcome}:${part.codeExecutionResult.output}`,
+      )
       .digest('hex');
     id = `result_${contentHash}_${turnSalt}_${partIdx}`;
   }

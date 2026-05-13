@@ -43,8 +43,11 @@ export class ContextManager {
       history: Content[];
       didApplyManagement: boolean;
       baseUnits: number;
+      processedNodes: readonly ConcreteNode[];
     };
   };
+
+  private lastAppliedNodes?: readonly ConcreteNode[];
 
   private hasPerformedHotStart = false;
 
@@ -287,6 +290,7 @@ export class ContextManager {
     history: Content[];
     didApplyManagement: boolean;
     baseUnits: number;
+    processedNodes: readonly ConcreteNode[];
   }> {
     this.tracer.logEvent('ContextManager', 'Starting rendering of LLM context');
 
@@ -348,11 +352,7 @@ export class ContextManager {
     const protectionReasons = this.getProtectedNodeIds(nodes, activeTaskIds);
 
     // Apply final GC Backstop pressure barrier synchronously before mapping
-    const {
-      history: renderedHistory,
-      didApplyManagement,
-      baseUnits,
-    } = await render(
+    const renderResult = await render(
       nodes,
       this.orchestrator,
       this.sidecar,
@@ -363,6 +363,15 @@ export class ContextManager {
       header,
       previewNodeIds,
     );
+
+    const {
+      history: renderedHistory,
+      didApplyManagement,
+      baseUnits,
+      processedNodes,
+    } = renderResult;
+
+    this.lastAppliedNodes = processedNodes;
 
     // Structural validation in debug mode
     checkContextInvariants(this.buffer.nodes, 'RenderHistory');
@@ -379,6 +388,7 @@ export class ContextManager {
       }),
       didApplyManagement,
       baseUnits,
+      processedNodes,
     };
 
     // Update cache
@@ -434,7 +444,9 @@ export class ContextManager {
   }
 
   exportState(): ContextEngineState {
-    return SnapshotStateHelper.exportState(this.buffer.nodes);
+    return SnapshotStateHelper.exportState(
+      this.lastAppliedNodes || this.buffer.nodes,
+    );
   }
 
   restoreState(state: ContextEngineState): void {

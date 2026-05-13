@@ -58,10 +58,14 @@ export class FakeContentGenerator implements ContentGenerator {
   userTierName?: string;
   paidTier?: GeminiUserTier;
 
+  private readonly responses: FakeResponse[];
+
   constructor(
-    private readonly responses: FakeResponse[],
+    responses: FakeResponse[],
     private readonly options: FakeContentGeneratorOptions = {},
-  ) {}
+  ) {
+    this.responses = structuredClone(responses);
+  }
 
   static async fromFile(
     filePath: string,
