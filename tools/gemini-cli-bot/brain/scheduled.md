@@ -83,6 +83,10 @@ For any detected bugs, bottlenecks, or opportunities:
 - **Delegation Guidelines**: Do NOT delegate to the 'generalist' agent. Delegate
   data-intensive tasks (like repository metrics collection) to the 'worker'
   agent.
+- **Verification vs. Discovery**: Local commands (e.g. `npm run lint`,
+  `npm run typecheck`) are for VERIFYING fixes to explicitly assigned tasks
+  only. They must NEVER be used for unprompted "fishing expeditions" to find new
+  work.
 - **Monorepo Build Order**: When verifying the workspace or diagnosing errors,
   you MUST run `npm run build` BEFORE running `npm run typecheck`. In a clean
   state, `tsc` will report widespread errors (TS6305) if the project's build
