@@ -8,6 +8,8 @@ decision = "allow"
 priority = 999
 # Explicitly target the headless environment to match the specificity of default denial rules.
 interactive = false
+# Capture output without triggering a policy downgrade to ASK_USER.
+allowRedirection = true
 
 [[rule]]
 toolName = "invoke_agent"
