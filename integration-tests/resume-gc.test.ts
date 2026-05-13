@@ -8,6 +8,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestRig } from './test-helper.js';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
+import { FinishReason, GenerateContentResponse } from '@google/genai';
+import type { FakeResponse } from '@google/gemini-cli-core';
 
 describe('Context Management Resume E2E', () => {
   let rig: TestRig;
@@ -19,7 +21,7 @@ describe('Context Management Resume E2E', () => {
   afterEach(async () => await rig.cleanup());
 
   it('should preserve and utilize GC snapshot boundaries when resuming a session', async () => {
-    const snapshotResponse = {
+    const snapshotResponse: FakeResponse = {
       method: 'generateContent',
       response: {
         candidates: [
@@ -40,34 +42,34 @@ describe('Context Management Resume E2E', () => {
               ],
               role: 'model',
             },
-            finishReason: 'STOP',
+            finishReason: FinishReason.STOP,
             index: 0,
           },
         ],
-      },
+      } as unknown as GenerateContentResponse,
     };
 
-    const countTokensResponse = {
+    const countTokensResponse: FakeResponse = {
       method: 'countTokens',
       response: { totalTokens: 50000 },
     };
 
-    const streamResponse = (text: string) => ({
+    const streamResponse = (text: string): FakeResponse => ({
       method: 'generateContentStream',
       response: [
         {
           candidates: [
             {
               content: { parts: [{ text }], role: 'model' },
-              finishReason: 'STOP',
+              finishReason: FinishReason.STOP,
               index: 0,
             },
           ],
         },
-      ],
+      ] as unknown as GenerateContentResponse[],
     });
 
-    const setupResponses = (fileName: string, mocks: unknown[]) => {
+    const setupResponses = (fileName: string, mocks: FakeResponse[]) => {
       const filePath = path.join(rig.testDir!, fileName);
       fs.writeFileSync(
         filePath,
@@ -97,19 +99,20 @@ describe('Context Management Resume E2E', () => {
     };
 
     // Provide a massive pool of responses to prevent exhaustion
-    const runMocks = [streamResponse('Acknowledged block.')];
+    const runMocks: FakeResponse[] = [streamResponse('Acknowledged block.')];
     for (let i = 0; i < 50; i++) {
       runMocks.push(snapshotResponse);
       runMocks.push(countTokensResponse);
     }
 
+    // Use stdin for the massive payload to avoid ENAMETOOLONG on Windows
     await rig.run({
       args: [
         '--debug',
         '--fake-responses-non-strict',
         setupResponses('resp1.json', runMocks),
-        'Turn 1: ' + massivePayload,
       ],
+      stdin: 'Turn 1: ' + massivePayload,
       env: commonEnv,
     });
 
@@ -120,8 +123,8 @@ describe('Context Management Resume E2E', () => {
         'latest',
         '--fake-responses-non-strict',
         setupResponses('resp2.json', runMocks),
-        'Turn 2: ' + massivePayload,
       ],
+      stdin: 'Turn 2: ' + massivePayload,
       env: commonEnv,
     });
 
