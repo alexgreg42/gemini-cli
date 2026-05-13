@@ -141,6 +141,7 @@ jobs:
           GEMINI_TELEMETRY_LOG_PROMPTS: 'true'
           GEMINI_TELEMETRY_OUTFILE: 'brain-telemetry.json'
           GEMINI_DEBUG_LOG_FILE: 'brain-debug.log'
+          GH_PAGER: ''
         run: |
           # Determine intent and prompt
           MANDATE_INPUT="${{ github.event.inputs.mandate || 'auto' }}"
@@ -219,6 +220,7 @@ jobs:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GEMINI_MODEL: 'gemini-3-flash-preview'
           GEMINI_CLI_HOME: 'tools/gemini-cli-bot'
+          GH_PAGER: ''
         run: |
           if git diff --staged --quiet; then
              echo "No changes staged. Skipping critique."
