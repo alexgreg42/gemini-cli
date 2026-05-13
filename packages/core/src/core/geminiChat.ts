@@ -40,6 +40,7 @@ import {
   ChatRecordingService,
   type ResumedSessionData,
   type ConversationRecord,
+  type MessageRecord,
 } from '../services/chatRecordingService.js';
 import {
   ContentRetryEvent,
@@ -267,6 +268,7 @@ export class GeminiChat {
   private readonly chatRecordingService: ChatRecordingService;
   private lastPromptTokenCount: number;
   private callCounter = 0;
+  private initialMessages?: MessageRecord[];
   agentHistory: AgentChatHistory;
 
   constructor(
@@ -276,8 +278,10 @@ export class GeminiChat {
     history: Content[] = [],
     resumedSessionData?: ResumedSessionData,
     private readonly onModelChanged?: (modelId: string) => Promise<Tool[]>,
+    messages?: MessageRecord[],
   ) {
     validateHistory(history);
+    this.initialMessages = messages;
     this.agentHistory = new AgentChatHistory(history);
     this.chatRecordingService = new ChatRecordingService(context);
     this.lastPromptTokenCount = estimateTokenCountSync(
@@ -292,8 +296,13 @@ export class GeminiChat {
   async initialize(
     resumedSessionData?: ResumedSessionData,
     kind: 'main' | 'subagent' = 'main',
+    messages?: MessageRecord[],
   ) {
+    const messagesToUse = messages ?? this.initialMessages;
     await this.chatRecordingService.initialize(resumedSessionData, kind);
+    if (messagesToUse) {
+      this.chatRecordingService.resetMessages(messagesToUse);
+    }
   }
 
   setSystemInstruction(sysInstr: string) {
