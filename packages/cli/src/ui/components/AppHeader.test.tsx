@@ -11,7 +11,7 @@ import {
 import type { LoadedSettings } from '../../config/settings.js';
 import { AppHeader } from './AppHeader.js';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { makeFakeConfig } from '@google/gemini-cli-core';
+import { makeFakeConfig, type ContentGeneratorConfig } from '@google/gemini-cli-core';
 import crypto from 'node:crypto';
 import { _clearSessionBannersForTest } from '../hooks/useBanner.js';
 
@@ -252,7 +252,7 @@ describe('<AppHeader />', () => {
     const mockConfig = makeFakeConfig();
     vi.spyOn(mockConfig, 'getContentGeneratorConfig').mockReturnValue({
       authType: undefined,
-    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    } as ContentGeneratorConfig);
 
     const { lastFrame, waitUntilReady, unmount } = await renderWithProviders(
       <AppHeader version="1.0.0" />,
@@ -287,6 +287,41 @@ describe('<AppHeader />', () => {
     await waitUntilReady();
 
     expect(lastFrame()).not.toContain('Tips');
+    unmount();
+  });
+
+  it('should render compact version tags for nightly builds', async () => {
+    const { lastFrame, unmount } = await renderWithProviders(
+      <AppHeader version="0.42.0-nightly.20260428.g59b2dea0e" />,
+      {},
+    );
+
+    expect(lastFrame()).toContain('v0.42.0');
+    expect(lastFrame()).toContain('[nightly]');
+    expect(lastFrame()).not.toContain('20260428');
+    unmount();
+  });
+
+  it('should render compact version tags for alpha builds', async () => {
+    const { lastFrame, unmount } = await renderWithProviders(
+      <AppHeader version="1.0.0-alpha.1" />,
+      {},
+    );
+
+    expect(lastFrame()).toContain('v1.0.0');
+    expect(lastFrame()).toContain('[alpha]');
+    unmount();
+  });
+
+  it('should render normal versions without tags', async () => {
+    const { lastFrame, unmount } = await renderWithProviders(
+      <AppHeader version="1.2.3" />,
+      {},
+    );
+
+    expect(lastFrame()).toContain('v1.2.3');
+    expect(lastFrame()).not.toContain('[');
+    expect(lastFrame()).not.toContain(']');
     unmount();
   });
 });

@@ -90,6 +90,13 @@ export const AppHeader = ({ version, showDetails = true }: AppHeaderProps) => {
     }
   }
 
+  // Parse version string (e.g., 0.42.0-nightly.20260428.g59b2dea0e)
+  // to extract the base version and the tag.
+  const versionParts = version.split('-');
+  const baseVersion = versionParts[0];
+  const tagPart = versionParts.slice(1).join('-');
+  const tag = tagPart ? tagPart.split('.')[0] : '';
+
   // If the terminal is too narrow to fit the icon and metadata (especially long nightly versions)
   // side-by-side, we switch to column mode to prevent wrapping.
   const isNarrow = terminalWidth < NARROW_TERMINAL_BREAKPOINT;
@@ -114,7 +121,13 @@ export const AppHeader = ({ version, showDetails = true }: AppHeaderProps) => {
         <Text bold color={theme.text.primary}>
           Gemini CLI
         </Text>
-        <Text color={theme.text.secondary}> v{version}</Text>
+        <Text color={theme.text.secondary}> v{baseVersion}</Text>
+        {tag && (
+          <Text color={theme.text.secondary} dimColor>
+            {' '}
+            [{tag}]
+          </Text>
+        )}
         {updateInfo?.isUpdating && (
           <Box marginLeft={2}>
             <Text color={theme.text.secondary}>
