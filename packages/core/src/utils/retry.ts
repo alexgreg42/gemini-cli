@@ -307,8 +307,7 @@ export async function retryWithBackoff<T>(
       ) {
         if (onPersistent429) {
           try {
-            const currentContext = getAvailabilityContext?.();
-            const currentModel = currentContext?.policy.model;
+            const currentModel = getAvailabilityContext?.()?.policy.model;
 
             const fallbackModel = await onPersistent429(
               authType,
@@ -326,10 +325,11 @@ export async function retryWithBackoff<T>(
                 continue;
               } else {
                 // If it's the same model (or a boolean retry signal), wait before retrying
-                const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
-                const delayWithJitter = Math.max(0, currentDelay + jitter);
-                await delay(delayWithJitter, signal);
-                currentDelay = Math.min(maxDelayMs, currentDelay * 2);
+                currentDelay = await applyBackoffDelay(
+                  currentDelay,
+                  maxDelayMs,
+                  signal,
+                );
                 continue;
               }
             }
@@ -373,8 +373,7 @@ export async function retryWithBackoff<T>(
           );
           if (onPersistent429) {
             try {
-              const currentContext = getAvailabilityContext?.();
-              const currentModel = currentContext?.policy.model;
+              const currentModel = getAvailabilityContext?.()?.policy.model;
 
               const fallbackModel = await onPersistent429(
                 authType,
@@ -392,10 +391,11 @@ export async function retryWithBackoff<T>(
                   continue;
                 } else {
                   // If it's the same model (or a boolean retry signal), wait before retrying
-                  const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
-                  const delayWithJitter = Math.max(0, currentDelay + jitter);
-                  await delay(delayWithJitter, signal);
-                  currentDelay = Math.min(maxDelayMs, currentDelay * 2);
+                  currentDelay = await applyBackoffDelay(
+                    currentDelay,
+                    maxDelayMs,
+                    signal,
+                  );
                   continue;
                 }
               }
@@ -505,4 +505,15 @@ function logRetryAttempt(
   } else {
     debugLogger.warn(message, error); // Default to warn if error type is unknown
   }
+}
+
+async function applyBackoffDelay(
+  currentDelay: number,
+  maxDelayMs: number,
+  signal?: AbortSignal,
+): Promise<number> {
+  const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
+  const delayWithJitter = Math.max(0, currentDelay + jitter);
+  await delay(delayWithJitter, signal);
+  return Math.min(maxDelayMs, currentDelay * 2);
 }
