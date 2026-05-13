@@ -809,6 +809,18 @@ describe('fileUtils', () => {
       expect(result.error).toBeUndefined();
     });
 
+    it('should preserve backslashes in C-style macros', async () => {
+      const content =
+        '#define MY_MACRO \\\n    do { \\\n        something(); \\\n    } while (0)';
+      actualNodeFs.writeFileSync(testTextFilePath, content);
+      const result = await processSingleFileContent(
+        testTextFilePath,
+        tempRootDir,
+        new StandardFileSystemService(),
+      );
+      expect(result.llmContent).toBe(content);
+    });
+
     it('should handle file not found', async () => {
       const result = await processSingleFileContent(
         nonexistentFilePath,

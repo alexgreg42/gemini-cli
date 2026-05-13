@@ -47,10 +47,11 @@ describe('editCorrector', () => {
         '\nCorrect\t`',
       );
     });
-    it('should handle backslash followed by actual newline character', () => {
-      expect(unescapeStringForGeminiBug('\\\n')).toBe('\n');
+    it('should NOT strip backslash before actual newline character', () => {
+      // FIX FOR ISSUE #18469: This test now expects the backslash to be PRESERVED.
+      expect(unescapeStringForGeminiBug('\\\n')).toBe('\\\n');
       expect(unescapeStringForGeminiBug('First line\\\nSecond line')).toBe(
-        'First line\nSecond line',
+        'First line\\\nSecond line',
       );
     });
     it('should handle multiple backslashes before an escapable character (aggressive unescaping)', () => {
@@ -75,7 +76,7 @@ describe('editCorrector', () => {
     it('should handle complex cases with mixed slashes and characters', () => {
       expect(
         unescapeStringForGeminiBug('\\\\\\\nLine1\\\nLine2\\tTab\\\\`Tick\\"'),
-      ).toBe('\nLine1\nLine2\tTab`Tick"');
+      ).toBe('\\\nLine1\\\nLine2\tTab`Tick"');
     });
     it('should handle escaped backslashes', () => {
       expect(unescapeStringForGeminiBug('\\\\')).toBe('\\');
