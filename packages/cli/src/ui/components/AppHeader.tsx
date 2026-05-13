@@ -107,36 +107,53 @@ export const AppHeader = ({ version, showDetails = true }: AppHeaderProps) => {
     </Box>
   );
 
-  const renderMetadata = (isBelow = false) => (
-    <Box marginLeft={isBelow ? 0 : 2} flexDirection="column">
-      {/* Line 1: Gemini CLI vVersion [Updating] */}
-      <Box>
-        <Text bold color={theme.text.primary}>
-          Gemini CLI
-        </Text>
-        <Text color={theme.text.secondary}> v{version}</Text>
-        {updateInfo?.isUpdating && (
-          <Box marginLeft={2}>
-            <Text color={theme.text.secondary}>
-              <CliSpinner /> Updating
-            </Text>
-          </Box>
+  const renderMetadata = (isBelow = false) => {
+    // Parse version for a "small tag" if it's a long pre-release string (e.g. nightly)
+    // Example: 0.42.0-nightly.20260428.g59b2dea0e -> v0.42.0 [nightly]
+    let displayVersion = version;
+    let tag = '';
+
+    const tagMatch = version.match(/^(.+)-(nightly|preview|alpha|beta|rc)(\..+)?$/);
+
+    if (tagMatch) {
+      displayVersion = tagMatch[1];
+      tag = tagMatch[2];
+    }
+
+    return (
+      <Box marginLeft={isBelow ? 0 : 2} flexDirection="column">
+        {/* Line 1: Gemini CLI vVersion [tag] [Updating] */}
+        <Box>
+          <Text bold color={theme.text.primary}>
+            Gemini CLI
+          </Text>
+          <Text color={theme.text.secondary}> v{displayVersion}</Text>
+          {tag && (
+            <Text color={theme.text.secondary}> {`[${tag}]`}</Text>
+          )}
+          {updateInfo?.isUpdating && (
+            <Box marginLeft={2}>
+              <Text color={theme.text.secondary}>
+                <CliSpinner /> Updating
+              </Text>
+            </Box>
+          )}
+        </Box>
+
+        {showDetails && (
+          <>
+            {/* Line 2: Blank */}
+            <Box height={1} />
+
+            {/* Lines 3 & 4: User Identity info (Email /auth and Plan /upgrade) */}
+            {settings.merged.ui.showUserIdentity !== false && (
+              <UserIdentity config={config} />
+            )}
+          </>
         )}
       </Box>
-
-      {showDetails && (
-        <>
-          {/* Line 2: Blank */}
-          <Box height={1} />
-
-          {/* Lines 3 & 4: User Identity info (Email /auth and Plan /upgrade) */}
-          {settings.merged.ui.showUserIdentity !== false && (
-            <UserIdentity config={config} />
-          )}
-        </>
-      )}
-    </Box>
-  );
+    );
+  };
 
   const useColumnLayout = !!logoTextArt || isNarrow;
 
