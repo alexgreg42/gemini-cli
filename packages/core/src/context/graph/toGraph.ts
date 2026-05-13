@@ -62,6 +62,26 @@ function isFunctionResponsePart(
   );
 }
 
+function isExecutableCodePart(
+  part: Part,
+): part is Part & { executableCode: { code: string } } {
+  return (
+    typeof part.executableCode === 'object' &&
+    part.executableCode !== null &&
+    typeof part.executableCode.code === 'string'
+  );
+}
+
+function isCodeExecutionResultPart(
+  part: Part,
+): part is Part & { codeExecutionResult: { outcome: string; output: string } } {
+  return (
+    typeof part.codeExecutionResult === 'object' &&
+    part.codeExecutionResult !== null &&
+    typeof part.codeExecutionResult.output === 'string'
+  );
+}
+
 /**
  * Generates a stable ID for an object reference using a WeakMap.
  * Falls back to content-based hashing for Part-like objects to ensure
@@ -116,6 +136,16 @@ export function getStableId(
       )
       .digest('hex');
     id = `resp_h_${contentHash}_${turnSalt}_${partIdx}`;
+  } else if (isExecutableCodePart(part)) {
+    contentHash = createHash('sha256')
+      .update(`exec:${part.executableCode.code}`)
+      .digest('hex');
+    id = `exec_${contentHash}_${turnSalt}_${partIdx}`;
+  } else if (isCodeExecutionResultPart(part)) {
+    contentHash = createHash('sha256')
+      .update(`result:${part.codeExecutionResult.output}`)
+      .digest('hex');
+    id = `result_${contentHash}_${turnSalt}_${partIdx}`;
   }
 
   if (contentHash) {
@@ -194,7 +224,7 @@ export class ContextGraphBuilder {
             apiId || getStableId(part, this.nodeIdentityMap, turnSalt, partIdx);
           const node: ConcreteNode = {
             id,
-            timestamp: 0, // Using 0 for deterministic structural equality. Actual time is applied by orchestrator.
+            timestamp: Date.now(),
             type: isFunctionResponsePart(part)
               ? NodeType.TOOL_EXECUTION
               : NodeType.USER_PROMPT,
@@ -215,7 +245,7 @@ export class ContextGraphBuilder {
             apiId || getStableId(part, this.nodeIdentityMap, turnSalt, partIdx);
           const node: ConcreteNode = {
             id,
-            timestamp: 0, // Using 0 for deterministic structural equality. Actual time is applied by orchestrator.
+            timestamp: Date.now(),
             type: isFunctionCallPart(part)
               ? NodeType.TOOL_EXECUTION
               : NodeType.AGENT_THOUGHT,

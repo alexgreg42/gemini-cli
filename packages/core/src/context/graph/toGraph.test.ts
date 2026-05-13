@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { ContextGraphBuilder } from './toGraph.js';
 import type { Content } from '@google/genai';
 import type { BaseConcreteNode } from './types.js';
@@ -38,6 +38,8 @@ describe('ContextGraphBuilder', () => {
     });
 
     it('should generate completely deterministic graph structure and UUIDs across JSON serialization cycles', () => {
+      vi.spyOn(Date, 'now').mockReturnValue(0);
+
       const complexHistory: Content[] = [
         { role: 'user', parts: [{ text: 'Step 1: complex analysis' }] },
         {
@@ -86,11 +88,14 @@ describe('ContextGraphBuilder', () => {
       nodes1.forEach((node, index) => {
         expect(node.id).toBeDefined();
         expect(node.id).toBe(nodes2[index].id);
+        expect(node.timestamp).toBe(0);
         if ('turnId' in node) {
           expect(node.turnId).toBeDefined();
           expect(node.turnId).toBe((nodes2[index] as BaseConcreteNode).turnId);
         }
       });
+
+      vi.restoreAllMocks();
     });
   });
 });
