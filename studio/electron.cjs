@@ -46,6 +46,7 @@ const isDev = process.env.NODE_ENV === 'development';
 
 let mainWindow = null;
 let cliProcess = null;
+let cliStarting = false;
 
 // ── Window ────────────────────────────────────────────────────────────────────
 
@@ -59,7 +60,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      webSecurity: !isDev,
+      webSecurity: true,
     },
     backgroundColor: '#0a0a0c',
     show: false,
@@ -437,12 +438,11 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
 // ── IPC: CLI background process ───────────────────────────────────────────────
 
 ipcMain.handle('cli:start', async () => {
-  if (cliProcess) return { ok: true, running: true };
+  if (cliProcess || cliStarting) return { ok: true, running: true };
+  cliStarting = true;
 
   try {
-    // Find gemini CLI binary
     const geminiBin = process.platform === 'win32' ? 'gemini.cmd' : 'gemini';
-    // Interactive mode (default) — user sends prompts via stdin, --yolo skips confirmation prompts
     const cliArgs = ['--model', 'gemini-2.5-flash', '--yolo'];
 
     cliProcess = spawn(geminiBin, cliArgs, {
@@ -467,6 +467,7 @@ ipcMain.handle('cli:start', async () => {
 
     cliProcess.on('close', (code) => {
       cliProcess = null;
+      cliStarting = false;
       mainWindow?.webContents.send('cli:output', {
         type: 'exit',
         text: `CLI exited with code ${code}`,
@@ -475,19 +476,25 @@ ipcMain.handle('cli:start', async () => {
 
     cliProcess.on('error', (err) => {
       cliProcess = null;
+      cliStarting = false;
       mainWindow?.webContents.send('cli:output', {
         type: 'error',
         text: `CLI error: ${err.message}`,
       });
     });
 
+    cliStarting = false;
     return { ok: true, running: true };
   } catch (e) {
+    cliStarting = false;
     return { ok: false, error: e.message };
   }
 });
 
 ipcMain.handle('cli:send', (_event, { text }) => {
+  if (typeof text !== 'string' || text.length > 32_768) {
+    return { ok: false, error: 'Invalid input' };
+  }
   if (!cliProcess || !cliProcess.stdin.writable) {
     return { ok: false, error: 'CLI not running' };
   }
