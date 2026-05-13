@@ -10,6 +10,9 @@ import { LlmRole } from '../../telemetry/llmRole.js';
 import { formatNodesForLlm } from './formatNodesForLlm.js';
 import { randomUUID } from 'node:crypto';
 import { isRecord } from '../../utils/markdownUtils.js';
+import type { LiveInbox } from '../pipeline/inbox.js';
+import type { ContextEngineState } from '../../services/chatRecordingTypes.js';
+import { debugLogger } from '../../utils/debugLogger.js';
 
 function isStringArray(value: unknown): value is string[] {
   return (
@@ -79,10 +82,6 @@ export function findLatestSnapshotBaseline(
 
   return undefined;
 }
-
-import type { LiveInbox } from '../pipeline/inbox.js';
-import type { ContextEngineState } from '../../services/chatRecordingTypes.js';
-import { debugLogger } from '../../utils/debugLogger.js';
 
 export const SnapshotStateHelper = {
   exportState(nodes: readonly ConcreteNode[]): ContextEngineState {
