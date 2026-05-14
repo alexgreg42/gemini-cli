@@ -81,15 +81,15 @@ powerful tool for developers.
 - **Configuration Lifecycle Tracing:** When modifying state, credentials, or
   network options, thoroughly trace the data traversal pipeline from initial
   environment capture down to the target consumer option layer, ensuring
-  rigorous validation and sanitization to prevent downstream conditional
-  mapping from undermining intended states or introducing vulnerabilities.
+  rigorous validation and sanitization to prevent downstream conditional mapping
+  from undermining intended states or introducing vulnerabilities.
 - **Architectural Consistency:** Centralize shared configuration logic (such as
   auth inference) inside common configuration modules rather than isolating
   inference to specific entry points, ensuring absolute uniformity across
   interactive CLI usage, background jobs, and programmatic SDK embeddings.
 - **Partner & Client Invariants:** Treat established integration profiles and
-  edge-case workarounds as stable contracts. Ensure new validation routes
-  fall back to or preserve legacy mapping where safe to prevent behavioral
+  edge-case workarounds as stable contracts. Ensure new validation routes fall
+  back to or preserve legacy mapping where safe to prevent behavioral
   regressions for active sidecars while allowing for critical security fixes.
 
 ## Testing Conventions
