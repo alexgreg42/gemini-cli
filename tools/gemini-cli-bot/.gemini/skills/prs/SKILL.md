@@ -12,9 +12,15 @@ descriptions, and manages the lifecycle of both new and existing PRs.
 
 ## Mandatory PR Driver (Ownership)
 
-You are the "owner" of all PRs labeled `bot-fix`. You MUST proactively drive them to completion:
+You are the "owner" of all PRs labeled `bot-fix`. You MUST proactively drive them toward a resolution (either completion or informed escalation):
 1.  **Inventory**: Use `gh pr list --label "bot-fix" --json number,title,headRefName,statusCheckRollup,comments` to find your active PRs.
-2.  **Proactive Maintenance**: If a `bot-fix` PR has failing status checks or new maintainer comments, you MUST prioritize fixing the CI or responding to the feedback before starting new work.
+2.  **Resolution Priority**:
+    - **Fixable CI/Feedback**: If a `bot-fix` PR has failing status checks or new maintainer comments, you MUST prioritize fixing the CI or responding to the feedback before starting new work.
+    - **Unresolvable Roadblocks**: If you identify a persistent failure that appears to be an environment issue, a flaky test, or a fundamental architectural blocker that requires human intervention, you MUST NOT keep looping. Instead:
+        1. Summarize the blocker and your failed attempts in `pr-comment.md`.
+        2. Explicitly ask for maintainer help.
+        3. Record the learning in `lessons-learned.md`.
+        4. Move on to a different task.
 
 ## Staging & Patch Preparation (MANDATORY)
 

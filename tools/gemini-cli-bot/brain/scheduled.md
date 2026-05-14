@@ -61,16 +61,20 @@ TURN to load the instructions for your mandate.**
 3. Follow the detailed workflow and instructions provided by the activated skill
    to complete your mandate. Do NOT skip this step to perform unrelated fixes.
 
-### 2. Hypothesis Testing & Deep Dive
+### 2. Hypothesis Testing & Strategic Pivoting
 
 For any detected bugs, bottlenecks, or opportunities:
 
 - Formulate competing hypotheses.
 - Delegate high-volume or data-intensive evidence gathering (e.g., slicing logs,
   batch issue analysis) to the **'worker' agent** if necessary.
-- Select the optimal path based on the empirical evidence returned. You MUST
-  ONLY execute on a **single path** to ensure the resulting PR is focused and
-  surgical.
+- **Iterative Refinement**: Select the most likely path first. However, if your
+  initial implementation fails verification (e.g. tests still fail), you MUST
+  explicitly pivot to your second hypothesis rather than infinitely patching the
+  first one.
+- **Bail Out**: If all your formulated hypotheses fail to yield a verified fix,
+  abort the task and record the findings. Delivering NO change is better than
+  delivering a broken or "best-guess" fix.
 
 ## Execution Constraints
 
