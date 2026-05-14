@@ -22,10 +22,10 @@ export const AVAILABLE_MODELS: GeminiModel[] = [
     description: 'Rapide · Gratuit',
   },
   {
-    id: 'gemini-2.5-flash-lite-preview-06-17',
-    name: 'Gemini 2.5 Flash Lite',
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
     tier: 'free',
-    description: 'Ultra rapide · Gratuit',
+    description: 'Stable · Gratuit',
   },
   {
     id: 'gemini-2.5-pro',

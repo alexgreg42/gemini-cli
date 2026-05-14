@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill /F /IM \"GeminiCLIStudio.exe\" /T)",
+      "Bash(rm -rf \"c:/Users/KRIKOR/Desktop/GEMINI CLI ENVIRONMENT/studio/release/\")"
+    ]
+  }
+}

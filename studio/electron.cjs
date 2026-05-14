@@ -396,12 +396,12 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
     const isFlash = resolvedModel.includes('flash');
     const caRequest = {
       model: resolvedModel,
+      user_prompt_id: crypto.randomUUID(),
       request: {
         contents,
         generationConfig: {
           maxOutputTokens: 8192,
           temperature: 0.7,
-          // Flash models don't support thinking tokens — disabling avoids API 500 errors
           ...(isFlash && { thinkingConfig: { thinkingBudget: 0 } }),
         },
       },

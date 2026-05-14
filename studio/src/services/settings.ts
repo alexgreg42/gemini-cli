@@ -11,11 +11,7 @@ export interface AppSettings {
 }
 
 const KEY = 'gemini_studio_settings';
-const VALID_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite-preview-06-17',
-  'gemini-2.5-pro',
-];
+const VALID_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'];
 
 const defaults: AppSettings = {
   geminiApiKey: '',
