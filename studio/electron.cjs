@@ -56,33 +56,80 @@ let caProject = null;
 let caInitialized = false;
 let caInitPromise = null; // prevents concurrent double-init on simultaneous requests
 
+const CA_METADATA = {
+  ideType: 'IDE_UNSPECIFIED',
+  platform: 'PLATFORM_UNSPECIFIED',
+  pluginType: 'GEMINI',
+  duetProject: '',
+};
+
 async function ensureCodeAssistInit(token) {
   if (caInitialized) return;
   if (caInitPromise) return caInitPromise;
 
   caInitPromise = (async () => {
     try {
-      const res = await httpsPostJson(
+      // ── Step 1: loadCodeAssist ─────────────────────────────────────────────
+      const loadRes = await httpsPostJson(
         `${CODE_ASSIST_BASE}:loadCodeAssist`,
-        {
-          metadata: {
-            ideType: 'IDE_UNSPECIFIED',
-            platform: 'PLATFORM_UNSPECIFIED',
-            pluginType: 'GEMINI',
-            duetProject: '',
-          },
-        },
+        { metadata: CA_METADATA },
         token,
         {},
         1,
       );
-      if (res.status !== 200) {
+      if (loadRes.status !== 200) {
         throw new Error(
-          `Code Assist init failed (${res.status}): ` +
-            (res.body?.error?.message || JSON.stringify(res.body)),
+          `Code Assist init failed (${loadRes.status}): ` +
+            (loadRes.body?.error?.message || JSON.stringify(loadRes.body)),
         );
       }
-      caProject = res.body?.cloudaicompanionProject || null;
+
+      const loadBody = loadRes.body;
+
+      // ── Step 2: already onboarded (currentTier present) ───────────────────
+      if (loadBody.currentTier) {
+        caProject = loadBody.cloudaicompanionProject || null;
+        caInitialized = true;
+        return;
+      }
+
+      // ── Step 3: first-time setup — onboardUser enables the API on the GCP project ──
+      // Free tier must NOT pass cloudaicompanionProject (causes Precondition Failed).
+      const allowedTiers = loadBody.allowedTiers || [];
+      const tierId = allowedTiers[0]?.id || 'FREE';
+
+      const onboardRes = await httpsPostJson(
+        `${CODE_ASSIST_BASE}:onboardUser`,
+        { tierId, metadata: CA_METADATA },
+        token,
+        {},
+        1,
+      );
+      if (onboardRes.status !== 200) {
+        throw new Error(
+          `Code Assist onboarding failed (${onboardRes.status}): ` +
+            (onboardRes.body?.error?.message || JSON.stringify(onboardRes.body)),
+        );
+      }
+
+      // ── Step 4: poll Long Running Operation until done (max 60 s) ─────────
+      let lroBody = onboardRes.body;
+      if (!lroBody.done && lroBody.name) {
+        const opName = lroBody.name; // e.g. "operations/abc123"
+        let attempts = 0;
+        while (!lroBody.done && attempts < 12) {
+          await new Promise((r) => setTimeout(r, 5000));
+          const opRes = await httpsGetJson(`${CODE_ASSIST_BASE}/${opName}`, token);
+          lroBody = opRes.body;
+          attempts++;
+        }
+      }
+
+      // ── Step 5: extract project from LRO response ─────────────────────────
+      caProject =
+        lroBody.response?.cloudaicompanionProject?.id ||
+        lroBody.response?.cloudaicompanionProject ||
+        null;
       caInitialized = true;
     } catch (e) {
       caInitPromise = null; // allow retry on next request
@@ -176,6 +223,29 @@ function httpsPost(url, body, headers = {}) {
     });
     req.on('error', reject);
     req.write(data);
+    req.end();
+  });
+}
+
+function httpsGetJson(url, token) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const options = {
+      hostname: parsed.hostname,
+      path: parsed.pathname + parsed.search,
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    };
+    const req = https.request(options, (res) => {
+      let raw = '';
+      res.on('data', (chunk) => (raw += chunk));
+      res.on('end', () => {
+        let body;
+        try { body = JSON.parse(raw); } catch { body = raw; }
+        resolve({ status: res.statusCode, body });
+      });
+    });
+    req.on('error', reject);
     req.end();
   });
 }
