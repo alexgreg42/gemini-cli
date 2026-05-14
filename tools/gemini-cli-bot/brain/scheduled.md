@@ -94,3 +94,19 @@ For any detected bugs, bottlenecks, or opportunities:
 - **Strict Read-Only Reasoning**: You cannot push code or post comments via API.
   Your only way to effect change is by writing to specific files and explicitly
   staging file changes using the `git add` command.
+
+## Loop Prevention & Success Criteria
+
+To ensure efficiency and prevent infinite reasoning loops:
+
+1.  **Monitor Your Progress**: If you have attempted the same sequence of
+    actions (e.g., Edit -> Test -> Fail) for the same problem more than **3
+    times**, you MUST stop and re-evaluate your fundamental hypothesis.
+2.  **Failure Threshold**: If you cannot find a verified solution after **2
+    distinct hypotheses** (max 6 total edit/test cycles), you MUST abort the
+    task.
+3.  **Reporting Failure**: If you abort, summarize the roadblocks you
+    encountered in `lessons-learned.md`. It is better to deliver NO changes than
+    to burn excessive tokens on a loop.
+4.  **Verification is Key**: A task is only "complete" when all relevant tests
+    pass. Never stage a change that you know still fails tests.
