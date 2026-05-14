@@ -86,8 +86,15 @@ async function sendViaElectronOAuth(
   const api = window.electronAPI;
   if (!api) throw new Error('Electron API not available');
 
+  const images = attachedFiles.filter((f) => f.isImage);
+  if (images.length > 0) {
+    throw new Error(
+      `Les images ne sont pas supportées via Google OAuth (${images.map((f) => f.name).join(', ')}). ` +
+        'Utilisez une clé API Gemini dans les paramètres pour joindre des images.',
+    );
+  }
+
   const fileContext = attachedFiles
-    .filter((f) => !f.isImage)
     .map((f) => `[Fichier: ${f.name}]\n\`\`\`\n${f.content}\n\`\`\``)
     .join('\n\n');
 

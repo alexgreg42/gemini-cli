@@ -57,7 +57,6 @@ import {
 import { loadSettings, saveSettings } from './services/settings';
 import {
   loadAuthState,
-  saveAuthState,
   startGoogleOAuth,
   checkOAuthStatus,
   logoutGoogle,
@@ -259,13 +258,10 @@ const App: React.FC = () => {
     setOauthMessage('');
     const result = await startGoogleOAuth();
     if (result.ok) {
-      const newState: AuthState = {
-        mode: 'google_oauth',
-        isAuthenticated: true,
-      };
-      saveAuthState(newState);
-      setAuthState(newState);
-      setOauthMessage('Connecté avec Google !');
+      // startGoogleOAuth already saved the state with email — reload it
+      const saved = loadAuthState();
+      setAuthState(saved);
+      setOauthMessage(result.message ?? 'Connecté avec Google !');
     } else {
       setOauthMessage(result.message ?? 'Erreur de connexion.');
     }

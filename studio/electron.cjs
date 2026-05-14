@@ -393,7 +393,8 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
 
     // Strip 'models/' prefix if present — Code Assist API uses bare model IDs
     const resolvedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
-    const isFlash = resolvedModel.includes('flash');
+    // Only gemini-2.5+ models support thinkingConfig — 2.0 and older will 400 if sent
+    const supportsThinking = /^gemini-2\.5|^gemini-3/.test(resolvedModel);
     const caRequest = {
       model: resolvedModel,
       user_prompt_id: crypto.randomUUID(),
@@ -402,7 +403,7 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
         generationConfig: {
           maxOutputTokens: 8192,
           temperature: 0.7,
-          ...(isFlash && { thinkingConfig: { thinkingBudget: 0 } }),
+          ...(supportsThinking && { thinkingConfig: { thinkingBudget: 0 } }),
         },
       },
     };
@@ -427,6 +428,10 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
     const response = body.response || body;
     const candidate = response.candidates?.[0];
     if (!candidate) throw new Error('Aucune réponse du modèle (no candidates). Essayez un autre modèle.');
+    const finishReason = candidate.finishReason;
+    if (finishReason === 'SAFETY' || finishReason === 'RECITATION') {
+      throw new Error(`Réponse bloquée par les filtres de sécurité (${finishReason}).`);
+    }
     const text = candidate.content?.parts?.map((p) => p.text || '').join('') || '';
     if (!text) throw new Error('Le modèle a retourné une réponse vide.');
     return { ok: true, text };
