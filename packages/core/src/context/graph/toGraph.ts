@@ -6,7 +6,7 @@
 
 import type { Part } from '@google/genai';
 import { type ConcreteNode, NodeType } from './types.js';
-import { randomUUID, createHash } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { debugLogger } from '../../utils/debugLogger.js';
 import type { NodeIdService } from './nodeIdService.js';
 import type { HistoryTurn } from '../../core/agentChatHistory.js';
@@ -157,7 +157,7 @@ export function getStableId(
     if (turnSalt && partIdx === -1) {
       id = `turn_${turnSalt}`;
     } else {
-      id = randomUUID();
+      id = `${turnSalt}_f_${partIdx}`;
     }
   }
 

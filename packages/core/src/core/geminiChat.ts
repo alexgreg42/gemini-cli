@@ -323,6 +323,9 @@ export class GeminiChat {
     kind: 'main' | 'subagent' = 'main',
   ) {
     await this.chatRecordingService.initialize(resumedSessionData, kind);
+    // Sync initial history with the recorder to ensure all turns (even bootstrapped ones)
+    // are durable and coordinated.
+    this.chatRecordingService.updateMessagesFromHistory(this.agentHistory.get());
   }
 
   setSystemInstruction(sysInstr: string) {
@@ -913,7 +916,11 @@ export class GeminiChat {
     if ('id' in content && 'content' in content) {
       this.agentHistory.push(content);
     } else {
-      this.agentHistory.push({ id: randomUUID(), content });
+      const id = this.chatRecordingService.recordSyntheticMessage(
+        content.role === 'user' ? 'user' : 'gemini',
+        content.parts || [],
+      );
+      this.agentHistory.push({ id, content });
     }
   }
 
@@ -921,11 +928,16 @@ export class GeminiChat {
     history: readonly (Content | HistoryTurn)[],
     options: { silent?: boolean } = {},
   ): void {
-    const wrappedHistory: HistoryTurn[] = history.map((item) =>
-      'id' in item && 'content' in item
-        ? item
-        : { id: randomUUID(), content: item },
-    );
+    const wrappedHistory: HistoryTurn[] = history.map((item) => {
+      if ('id' in item && 'content' in item) {
+        return item;
+      }
+      const id = this.chatRecordingService.recordSyntheticMessage(
+        item.role === 'user' ? 'user' : 'gemini',
+        item.parts || [],
+      );
+      return { id, content: item };
+    });
     this.agentHistory.set(wrappedHistory, options);
     this.lastPromptTokenCount = estimateTokenCountSync(
       this.agentHistory.flatMap((c) => c.content.parts || []),

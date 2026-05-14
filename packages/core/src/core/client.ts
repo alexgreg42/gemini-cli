@@ -296,13 +296,7 @@ export class GeminiClient {
   }
 
   setHistory(history: readonly (Content | HistoryTurn)[]) {
-    const turns = history.map((item) => {
-      if ('id' in item && 'content' in item) {
-        return item as HistoryTurn;
-      }
-      return { id: randomUUID(), content: item as Content };
-    });
-    this.getChat().setHistory(turns);
+    this.getChat().setHistory(history);
     this.updateTelemetryTokenCount();
     this.forceFullIdeContext = true;
   }
@@ -651,7 +645,11 @@ export class GeminiClient {
       if (this.contextManager) {
         const rawPendingRequest = createUserContent(request);
         const pendingRequest = {
-          id: randomUUID(),
+          id:
+            this.getChatRecordingService()?.recordSyntheticMessage(
+              'user',
+              rawPendingRequest.parts || [],
+            ) || randomUUID(),
           content: rawPendingRequest,
         };
         const {
@@ -678,11 +676,7 @@ export class GeminiClient {
           signal,
         );
         if (newHistory.length !== this.getHistory().length) {
-          const turns = newHistory.map((c) => ({
-            id: randomUUID(),
-            content: c,
-          }));
-          this.getChat().setHistory(turns);
+          this.getChat().setHistory(newHistory);
         }
       }
     } else {
@@ -1242,11 +1236,7 @@ export class GeminiClient {
       if (newHistory) {
         // We truncated content to save space, but summarization is still "failed".
         // We update the chat context directly without resetting the failure flag.
-        const turns = newHistory.map((c) => ({
-          id: randomUUID(),
-          content: c,
-        }));
-        this.getChat().setHistory(turns);
+        this.getChat().setHistory(newHistory);
         this.updateTelemetryTokenCount();
         // We don't reset the chat session fully like in COMPRESSED because
         // this is a lighter-weight intervention.
@@ -1265,11 +1255,7 @@ export class GeminiClient {
       this.config,
     );
     if (result.maskedCount > 0) {
-      const turns = result.newHistory.map((c) => ({
-        id: randomUUID(),
-        content: c,
-      }));
-      this.getChat().setHistory(turns);
+      this.getChat().setHistory(result.newHistory);
     }
   }
 

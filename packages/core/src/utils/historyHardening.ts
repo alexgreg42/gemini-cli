@@ -7,7 +7,7 @@
 import { type Part } from '@google/genai';
 import { debugLogger } from './debugLogger.js';
 import { type HistoryTurn } from '../core/agentChatHistory.js';
-import { randomUUID } from 'node:crypto';
+import { deriveStableId } from './cryptoUtils.js';
 
 export const SYNTHETIC_THOUGHT_SIGNATURE = 'skip_thought_signature_validator';
 
@@ -153,7 +153,7 @@ function pairToolsAndEnforceSignatures(
             targetUserTurn = nextTurn;
           } else {
             targetUserTurn = {
-              id: randomUUID(),
+              id: deriveStableId([turn.id, 'sentinel_resp']),
               content: { role: 'user', parts: [] },
             };
             work.splice(i + 1, 0, targetUserTurn);
@@ -278,7 +278,7 @@ function enforceRoleConstraints(
       '[HistoryHardener] Final history starts with model role. Prepending sentinel user turn.',
     );
     result.unshift({
-      id: randomUUID(),
+      id: deriveStableId([result[0].id, 'sentinel_start']),
       content: {
         role: 'user',
         parts: [{ text: sentinels.continuation }],
@@ -292,7 +292,7 @@ function enforceRoleConstraints(
       '[HistoryHardener] Final history ends with model role. Appending sentinel user turn.',
     );
     result.push({
-      id: randomUUID(),
+      id: deriveStableId([result[result.length - 1].id, 'sentinel_end']),
       content: {
         role: 'user',
         parts: [{ text: 'Please continue.' }],
