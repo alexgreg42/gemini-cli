@@ -78,6 +78,18 @@ powerful tool for developers.
 - **License Headers:** For all new source code files (`.ts`, `.tsx`, `.js`),
   include the Apache-2.0 license header with the current year. (e.g.,
   `Copyright 2026 Google LLC`). This is enforced by ESLint.
+- **Configuration Lifecycle Tracing:** When modifying state, credentials, or
+  network options, thoroughly trace the data traversal pipeline from initial
+  environmental capture down to the target consumer option layer to ensure
+  downstream conditional mapping does not undermine intended states.
+- **Architectural Consistency:** Centralize shared configuration logic (such as
+  auth inference) inside common configuration modules rather than isolating
+  inference to specific entry points, ensuring absolute uniformity across
+  interactive CLI usage, background jobs, and programmatic SDK embeddings.
+- **Partner & Client Invariants:** Treat established integration profiles and
+  edge-case workarounds as immutable contracts. Ensure new validation routes
+  specifically fall back to or preserve legacy mapping to prevent behavioral
+  regressions for active sidecars.
 
 ## Testing Conventions
 
