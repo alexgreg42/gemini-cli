@@ -10,9 +10,6 @@ import { LlmRole } from '../../telemetry/llmRole.js';
 import { formatNodesForLlm } from './formatNodesForLlm.js';
 import { randomUUID } from 'node:crypto';
 import { isRecord } from '../../utils/markdownUtils.js';
-import type { LiveInbox } from '../pipeline/inbox.js';
-import type { ContextEngineState } from '../../services/chatRecordingTypes.js';
-import { debugLogger } from '../../utils/debugLogger.js';
 
 function isStringArray(value: unknown): value is string[] {
   return (
@@ -82,80 +79,6 @@ export function findLatestSnapshotBaseline(
 
   return undefined;
 }
-
-export const SnapshotStateHelper = {
-  exportState(nodes: readonly ConcreteNode[]): ContextEngineState {
-    const baseline = findLatestSnapshotBaseline(nodes);
-    if (!baseline) {
-      debugLogger.log(
-        '[SnapshotStateHelper] exportState: No snapshot baseline found in current nodes.',
-      );
-      return {};
-    }
-
-    // Flatten abstractsIds to ensure only pristine/replayable IDs are persisted.
-    // This prevents deep nesting of synthetic snapshot IDs which cannot be reconstructed
-    // from saved chat messages during session resume.
-    const nodeMap = new Map<string, ConcreteNode>();
-    for (const n of nodes) nodeMap.set(n.id, n);
-
-    const pristineIds = new Set<string>();
-    const toExpand = [...baseline.abstractsIds];
-    const seen = new Set<string>();
-
-    while (toExpand.length > 0) {
-      const id = toExpand.pop()!;
-      if (seen.has(id)) continue;
-      seen.add(id);
-
-      const node = nodeMap.get(id);
-      if (node?.abstractsIds && node.abstractsIds.length > 0) {
-        toExpand.push(...node.abstractsIds);
-      } else {
-        pristineIds.add(id);
-      }
-    }
-
-    debugLogger.log(
-      `[SnapshotStateHelper] exportState: Exporting snapshot ID ${baseline.id} representing ${pristineIds.size} pristine nodes.`,
-    );
-    return {
-      snapshot: {
-        text: baseline.text,
-        consumedIds: Array.from(pristineIds),
-        timestamp: baseline.timestamp,
-      },
-    };
-  },
-
-  restoreState(state: ContextEngineState, inbox: LiveInbox): void {
-    if (!state.snapshot) {
-      debugLogger.log(
-        '[SnapshotStateHelper] restoreState: No snapshot found in provided ContextEngineState.',
-      );
-      return;
-    }
-
-    if (
-      typeof state.snapshot.text === 'string' &&
-      Array.isArray(state.snapshot.consumedIds)
-    ) {
-      debugLogger.log(
-        `[SnapshotStateHelper] restoreState: Publishing hydrated snapshot to LiveInbox with ${state.snapshot.consumedIds.length} consumed IDs.`,
-      );
-      inbox.publish('PROPOSED_SNAPSHOT', {
-        newText: state.snapshot.text,
-        consumedIds: state.snapshot.consumedIds,
-        type: 'accumulate',
-        timestamp: state.snapshot.timestamp ?? Date.now(),
-      });
-    } else {
-      debugLogger.log(
-        '[SnapshotStateHelper] restoreState: Invalid snapshot structural format.',
-      );
-    }
-  },
-};
 
 export class SnapshotGenerator {
   constructor(private readonly env: ContextEnvironment) {}
@@ -404,5 +327,63 @@ ${formatNodesForLlm(nodes)}`;
     }
 
     return JSON.stringify(newState);
+  }
+}
+
+/**
+ * Shared logic for working with Snapshot node state.
+ */
+export class SnapshotStateHelper {
+  /**
+   * Flatten nested abstract IDs to only the "pristine" (non-snapshot) IDs.
+   */
+  static flattenAbstracts(
+    nodes: ConcreteNode[],
+    abstractsIds: readonly string[],
+  ): string[] {
+    const pristineIds: string[] = [];
+    const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+
+    const walk = (ids: readonly string[]) => {
+      for (const id of ids) {
+        const node = nodeMap.get(id);
+        if (!node) {
+          // Fallback: if node not in map, treat as pristine ID
+          pristineIds.push(id);
+          continue;
+        }
+
+        if (node.type === NodeType.SNAPSHOT && node.abstractsIds) {
+          walk(node.abstractsIds);
+        } else {
+          pristineIds.push(id);
+        }
+      }
+    };
+
+    walk(abstractsIds);
+    return Array.from(new Set(pristineIds)); // Dedupe
+  }
+
+  /**
+   * Helper to extract state from the most recent snapshot in a list of nodes.
+   */
+  static exportState(nodes: ConcreteNode[]): {
+    snapshot?: { text: string; consumedIds: string[] };
+  } {
+    const baseline = findLatestSnapshotBaseline(nodes);
+    if (!baseline) return {};
+
+    const node = nodes.find((n) => n.id === baseline.id);
+    if (!node || node.type !== NodeType.SNAPSHOT) return {};
+
+    const consumedIds = this.flattenAbstracts(nodes, node.abstractsIds || []);
+
+    return {
+      snapshot: {
+        text: baseline.text,
+        consumedIds,
+      },
+    };
   }
 }

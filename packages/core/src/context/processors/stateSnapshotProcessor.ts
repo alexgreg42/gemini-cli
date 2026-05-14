@@ -3,7 +3,7 @@
  * Copyright 2026 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import type { JSONSchemaType } from 'ajv';
 import type {
   ContextProcessor,
@@ -50,6 +50,13 @@ export function createStateSnapshotProcessor(
 ): ContextProcessor {
   const generator = new SnapshotGenerator(env);
 
+  const generateStableId = (consumedIds: string[]) => {
+    return createHash('sha256')
+      .update(consumedIds.sort().join(','))
+      .digest('hex')
+      .slice(0, 32);
+  };
+
   return {
     id,
     name: 'StateSnapshotProcessor',
@@ -94,7 +101,7 @@ export function createStateSnapshotProcessor(
               `[StateSnapshotProcessor] Successfully spliced PROPOSED_SNAPSHOT from Inbox into Graph. Consumed ${consumedIds.length} nodes.`,
             );
             // If valid, apply it!
-            const newId = randomUUID();
+            const newId = generateStableId(consumedIds);
 
             const snapshotNode: Snapshot = {
               id: newId,
@@ -186,11 +193,11 @@ export function createStateSnapshotProcessor(
             maxStateTokens: options.maxStateTokens,
           },
         );
-        const newId = randomUUID();
         const consumedIds = nodesToSummarize.map((n) => n.id);
         if (baselineIdToConsume && !consumedIds.includes(baselineIdToConsume)) {
           consumedIds.push(baselineIdToConsume);
         }
+        const newId = generateStableId(consumedIds);
 
         const snapshotNode: Snapshot = {
           id: newId,

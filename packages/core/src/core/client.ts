@@ -46,6 +46,7 @@ import { LoopDetectionService } from '../services/loopDetectionService.js';
 import { ChatCompressionService } from '../context/chatCompressionService.js';
 import { AgentHistoryProvider } from '../context/agentHistoryProvider.js';
 import type { ContextManager } from '../context/contextManager.js';
+import type { HistoryTurn } from './agentChatHistory.js';
 import { ideContextStore } from '../ide/ideContext.js';
 import { logNextSpeakerCheck } from '../telemetry/loggers.js';
 import type {
@@ -67,6 +68,7 @@ import {
 } from '../availability/policyHelpers.js';
 import { getDisplayString, resolveModel } from '../config/models.js';
 import { partToString } from '../utils/partUtils.js';
+import { randomUUID } from 'node:crypto';
 import {
   coreEvents,
   CoreEvent,
@@ -293,8 +295,14 @@ export class GeminiClient {
     this.getChat().stripThoughtsFromHistory();
   }
 
-  setHistory(history: readonly Content[]) {
-    this.getChat().setHistory(history);
+  setHistory(history: readonly (Content | HistoryTurn)[]) {
+    const turns = history.map((item) => {
+      if ('id' in item && 'content' in item) {
+        return item as HistoryTurn;
+      }
+      return { id: randomUUID(), content: item as Content };
+    });
+    this.getChat().setHistory(turns);
     this.updateTelemetryTokenCount();
     this.forceFullIdeContext = true;
   }
@@ -414,14 +422,6 @@ export class GeminiClient {
         chat,
         this.lastPromptId,
       );
-      if (
-        this.contextManager &&
-        resumedSessionData?.conversation.contextState
-      ) {
-        this.contextManager.restoreState(
-          resumedSessionData.conversation.contextState,
-        );
-      }
       return chat;
     } catch (error) {
       await reportError(
@@ -649,7 +649,11 @@ export class GeminiClient {
 
     if (this.config.getContextManagementConfig().enabled) {
       if (this.contextManager) {
-        const pendingRequest = createUserContent(request);
+        const rawPendingRequest = createUserContent(request);
+        const pendingRequest = {
+          id: randomUUID(),
+          content: rawPendingRequest,
+        };
         const {
           history: newHistory,
           didApplyManagement,
@@ -674,7 +678,11 @@ export class GeminiClient {
           signal,
         );
         if (newHistory.length !== this.getHistory().length) {
-          this.getChat().setHistory(newHistory);
+          const turns = newHistory.map((c) => ({
+            id: randomUUID(),
+            content: c,
+          }));
+          this.getChat().setHistory(turns);
         }
       }
     } else {
@@ -827,9 +835,6 @@ export class GeminiClient {
             promptBaseUnits: currentBaseUnits,
           });
         }
-        this.chat
-          ?.getChatRecordingService()
-          ?.saveContextState(this.contextManager.exportState());
       }
       this.updateTelemetryTokenCount();
       if (event.type === GeminiEventType.Error) {
@@ -1237,7 +1242,11 @@ export class GeminiClient {
       if (newHistory) {
         // We truncated content to save space, but summarization is still "failed".
         // We update the chat context directly without resetting the failure flag.
-        this.getChat().setHistory(newHistory);
+        const turns = newHistory.map((c) => ({
+          id: randomUUID(),
+          content: c,
+        }));
+        this.getChat().setHistory(turns);
         this.updateTelemetryTokenCount();
         // We don't reset the chat session fully like in COMPRESSED because
         // this is a lighter-weight intervention.
@@ -1256,7 +1265,11 @@ export class GeminiClient {
       this.config,
     );
     if (result.maskedCount > 0) {
-      this.getChat().setHistory(result.newHistory);
+      const turns = result.newHistory.map((c) => ({
+        id: randomUUID(),
+        content: c,
+      }));
+      this.getChat().setHistory(turns);
     }
   }
 

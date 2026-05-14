@@ -86,17 +86,6 @@ export type ConversationRecordExtra =
  */
 export type MessageRecord = BaseMessageRecord & ConversationRecordExtra;
 
-/**
- * Complete conversation record stored in session files.
- */
-export interface ContextEngineState {
-  snapshot?: {
-    text: string;
-    consumedIds: string[];
-    timestamp?: number;
-  };
-}
-
 export interface ConversationRecord {
   sessionId: string;
   projectHash: string;
@@ -109,8 +98,6 @@ export interface ConversationRecord {
   directories?: string[];
   /** The kind of conversation (main agent or subagent) */
   kind?: 'main' | 'subagent';
-  /** Opaque state object representing Context Engine state (e.g. snapshots) */
-  contextState?: ContextEngineState;
 }
 /**
  * Data structure for resuming an existing session.
@@ -146,5 +133,4 @@ export interface PartialMetadataRecord {
   memoryScratchpad?: MemoryScratchpad;
   directories?: string[];
   kind?: 'main' | 'subagent';
-  contextState?: ContextEngineState;
 }

@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content, Part } from '@google/genai';
+import { type Part } from '@google/genai';
 import { debugLogger } from './debugLogger.js';
-import type { NodeIdService } from '../context/graph/nodeIdService.js';
+import { type HistoryTurn } from '../core/agentChatHistory.js';
+import { randomUUID } from 'node:crypto';
 
 export const SYNTHETIC_THOUGHT_SIGNATURE = 'skip_thought_signature_validator';
 
@@ -36,10 +37,9 @@ const DEFAULT_SENTINELS = {
  * 5. Signatures: The first functionCall in a model turn must have a thoughtSignature.
  */
 export function hardenHistory(
-  history: Content[],
+  history: HistoryTurn[],
   options: HardeningOptions = {},
-  idService?: NodeIdService,
-): Content[] {
+): HistoryTurn[] {
   if (history.length === 0) return history;
 
   const sentinels = { ...DEFAULT_SENTINELS, ...options.sentinels };
@@ -57,7 +57,7 @@ export function hardenHistory(
   let final = enforceRoleConstraints(coalesced, sentinels);
 
   // Pass 5: Final Scrubbing (Remove custom/non-standard properties for API compatibility)
-  final = scrubHistory(final, idService);
+  final = scrubHistory(final);
 
   return final;
 }
@@ -65,17 +65,20 @@ export function hardenHistory(
 /**
  * Combines adjacent turns with the same role and removes empty turns.
  */
-function coalesce(history: Content[]): Content[] {
-  const result: Content[] = [];
+function coalesce(history: HistoryTurn[]): HistoryTurn[] {
+  const result: HistoryTurn[] = [];
   for (const turn of history) {
-    if (!turn.parts || turn.parts.length === 0) continue;
+    if (!turn.content.parts || turn.content.parts.length === 0) continue;
 
     const last = result[result.length - 1];
-    if (last && last.role === turn.role) {
-      last.parts = [...(last.parts || []), ...(turn.parts || [])];
+    if (last && last.content.role === turn.content.role) {
+      last.content.parts = [
+        ...(last.content.parts || []),
+        ...(turn.content.parts || []),
+      ];
     } else {
-      // Shallow clone the turn so we don't mutate the original history array structure
-      result.push({ ...turn });
+      // Shallow clone the turn and content so we don't mutate the original history array structure
+      result.push({ id: turn.id, content: { ...turn.content } });
     }
   }
   return result;
@@ -85,10 +88,10 @@ function coalesce(history: Content[]): Content[] {
  * Ensures tool calls have matching responses and model turns have required signatures.
  */
 function pairToolsAndEnforceSignatures(
-  history: Content[],
+  history: HistoryTurn[],
   sentinels: Required<NonNullable<HardeningOptions['sentinels']>>,
-): Content[] {
-  const result: Content[] = [];
+): HistoryTurn[] {
+  const result: HistoryTurn[] = [];
 
   // We work on a copy to allow splicing in sentinel turns
   const work = [...history];
@@ -96,8 +99,8 @@ function pairToolsAndEnforceSignatures(
   for (let i = 0; i < work.length; i++) {
     const turn = work[i];
 
-    if (turn.role === 'model') {
-      const parts = turn.parts || [];
+    if (turn.content.role === 'model') {
+      const parts = turn.content.parts || [];
 
       // A. Signatures
       let foundCall = false;
@@ -125,8 +128,8 @@ function pairToolsAndEnforceSignatures(
           const name = call.functionCall!.name || 'unknown';
 
           const hasResponse =
-            nextTurn?.role === 'user' &&
-            nextTurn.parts?.some(
+            nextTurn?.content.role === 'user' &&
+            nextTurn.content.parts?.some(
               (p) =>
                 p.functionResponse?.id === id &&
                 p.functionResponse?.name === name,
@@ -145,17 +148,20 @@ function pairToolsAndEnforceSignatures(
             `[HistoryHardener] Detected ${missing.length} tool calls without responses. Injecting sentinel responses.`,
           );
 
-          let targetUserTurn: Content;
-          if (nextTurn?.role === 'user') {
+          let targetUserTurn: HistoryTurn;
+          if (nextTurn?.content.role === 'user') {
             targetUserTurn = nextTurn;
           } else {
-            targetUserTurn = { role: 'user', parts: [] };
+            targetUserTurn = {
+              id: randomUUID(),
+              content: { role: 'user', parts: [] },
+            };
             work.splice(i + 1, 0, targetUserTurn);
           }
 
           for (const m of missing) {
-            targetUserTurn.parts = targetUserTurn.parts || [];
-            targetUserTurn.parts.push({
+            targetUserTurn.content.parts = targetUserTurn.content.parts || [];
+            targetUserTurn.content.parts.push({
               functionResponse: {
                 name: m.name,
                 id: m.id,
@@ -167,11 +173,11 @@ function pairToolsAndEnforceSignatures(
           }
         }
       }
-    } else if (turn.role === 'user') {
+    } else if (turn.content.role === 'user') {
       // C. Orphaned Responses
       // A user response MUST follow a model call.
       const prevTurn = result[result.length - 1];
-      const parts = turn.parts || [];
+      const parts = turn.content.parts || [];
       const validParts: Part[] = [];
 
       for (const p of parts) {
@@ -179,8 +185,8 @@ function pairToolsAndEnforceSignatures(
           const id = p.functionResponse.id;
           const name = p.functionResponse.name;
           const hasCall =
-            prevTurn?.role === 'model' &&
-            prevTurn.parts?.some(
+            prevTurn?.content.role === 'model' &&
+            prevTurn.content.parts?.some(
               (cp) =>
                 cp.functionCall?.id === id && cp.functionCall?.name === name,
             );
@@ -196,10 +202,10 @@ function pairToolsAndEnforceSignatures(
           validParts.push(p);
         }
       }
-      turn.parts = validParts;
+      turn.content.parts = validParts;
     }
 
-    if (turn.parts && turn.parts.length > 0) {
+    if (turn.content.parts && turn.content.parts.length > 0) {
       result.push(turn);
     }
   }
@@ -210,21 +216,22 @@ function pairToolsAndEnforceSignatures(
 /**
  * Hoists and re-orders tool responses within user turns to match preceding model turns.
  */
-function refineToolResponses(history: Content[]): Content[] {
+function refineToolResponses(history: HistoryTurn[]): HistoryTurn[] {
   for (let i = 1; i < history.length; i++) {
     const turn = history[i];
     const prev = history[i - 1];
 
-    if (turn.role === 'user' && prev.role === 'model') {
+    if (turn.content.role === 'user' && prev.content.role === 'model') {
       const callOrder =
-        prev.parts
+        prev.content.parts
           ?.filter((p) => !!p.functionCall)
           .map((p) => p.functionCall!.id) || [];
 
       if (callOrder.length > 0) {
         const responseParts =
-          turn.parts?.filter((p) => !!p.functionResponse) || [];
-        const otherParts = turn.parts?.filter((p) => !p.functionResponse) || [];
+          turn.content.parts?.filter((p) => !!p.functionResponse) || [];
+        const otherParts =
+          turn.content.parts?.filter((p) => !p.functionResponse) || [];
 
         if (responseParts.length > 0) {
           // 1. Re-order: Sort responses to match the model's call order
@@ -242,7 +249,7 @@ function refineToolResponses(history: Content[]): Content[] {
           });
 
           // 2. Hoisting: Place all sorted responses BEFORE text or other parts
-          turn.parts = [...responseParts, ...otherParts];
+          turn.content.parts = [...responseParts, ...otherParts];
         }
       }
     }
@@ -254,36 +261,42 @@ function refineToolResponses(history: Content[]): Content[] {
  * Final pass to ensure start/end roles and alternation are correct.
  */
 function enforceRoleConstraints(
-  history: Content[],
+  history: HistoryTurn[],
   sentinels: Required<NonNullable<HardeningOptions['sentinels']>>,
-): Content[] {
+): HistoryTurn[] {
   if (history.length === 0) return [];
 
   // Re-coalesce first to catch any empty turns or adjacent roles introduced by pairing
   const base = coalesce(history);
   if (base.length === 0) return [];
 
-  const result: Content[] = [...base];
+  const result: HistoryTurn[] = [...base];
 
   // 1. Ensure starts with user
-  if (result[0].role === 'model') {
+  if (result[0].content.role === 'model') {
     debugLogger.log(
       '[HistoryHardener] Final history starts with model role. Prepending sentinel user turn.',
     );
     result.unshift({
-      role: 'user',
-      parts: [{ text: sentinels.continuation }],
+      id: randomUUID(),
+      content: {
+        role: 'user',
+        parts: [{ text: sentinels.continuation }],
+      },
     });
   }
 
   // 2. Ensure ends with user
-  if (result[result.length - 1].role === 'model') {
+  if (result[result.length - 1].content.role === 'model') {
     debugLogger.log(
       '[HistoryHardener] Final history ends with model role. Appending sentinel user turn.',
     );
     result.push({
-      role: 'user',
-      parts: [{ text: 'Please continue.' }],
+      id: randomUUID(),
+      content: {
+        role: 'user',
+        parts: [{ text: 'Please continue.' }],
+      },
     });
   }
 
@@ -296,12 +309,14 @@ function enforceRoleConstraints(
  * This ensures compatibility with strict APIs (like Vertex AI) that reject unknown fields.
  */
 export function scrubHistory(
-  history: Content[],
-  idService?: NodeIdService,
-): Content[] {
-  return history.map((content) => ({
-    role: content.role,
-    parts: (content.parts || []).map((p) => scrubPart(p, idService)),
+  history: HistoryTurn[],
+): HistoryTurn[] {
+  return history.map((turn) => ({
+    id: turn.id,
+    content: {
+      role: turn.content.role,
+      parts: (turn.content.parts || []).map((p) => scrubPart(p)),
+    },
   }));
 }
 
@@ -313,7 +328,7 @@ function isThoughtPart(part: Part): part is ThoughtPart {
   return 'thoughtSignature' in part;
 }
 
-function scrubPart(part: Part, idService?: NodeIdService): Part {
+function scrubPart(part: Part): Part {
   const scrubbed: Record<string, unknown> = {};
 
   if ('text' in part && typeof part.text === 'string') {
@@ -356,17 +371,5 @@ function scrubPart(part: Part, idService?: NodeIdService): Part {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-  const result = scrubbed as unknown as Part;
-
-  // Propagate durable identity to the scrubbed object.
-  // This allows the HistoryObserver to recognize nodes even after they've been
-  // projected into multiple history formats, without polluting the API JSON.
-  if (idService) {
-    const id = idService.get(part);
-    if (id) {
-      idService.set(result, id);
-    }
-  }
-
-  return result;
+  return scrubbed as unknown as Part;
 }

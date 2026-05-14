@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content, Part } from '@google/genai';
+import type { Part } from '@google/genai';
 import { type ConcreteNode, NodeType } from './types.js';
 import { randomUUID, createHash } from 'node:crypto';
 import { debugLogger } from '../../utils/debugLogger.js';
 import type { NodeIdService } from './nodeIdService.js';
+import type { HistoryTurn } from '../../core/agentChatHistory.js';
 
 // Global WeakMap to cache hashes for Part objects.
 // This optimizes getStableId by avoiding redundant stringify/hash operations
@@ -82,7 +83,7 @@ function isCodeExecutionResultPart(
 }
 
 /**
- * Generates a stable ID for an object reference using a WeakMap.
+ * Generates a stable ID for an object reference using a NodeIdService.
  * Falls back to content-based hashing for Part-like objects to ensure
  * stability across object re-creations (e.g. during history mapping).
  */
@@ -154,7 +155,6 @@ export function getStableId(
 
   if (!id) {
     if (turnSalt && partIdx === -1) {
-      // Fallback for Turn objects (msg) since they don't have parts or content to hash directly here
       id = `turn_${turnSalt}`;
     } else {
       id = randomUUID();
@@ -172,14 +172,12 @@ export function getStableId(
 export class ContextGraphBuilder {
   constructor(private readonly idService: NodeIdService) {}
 
-  processHistory(history: readonly Content[]): ConcreteNode[] {
+  processHistory(history: readonly HistoryTurn[]): ConcreteNode[] {
     const nodes: ConcreteNode[] = [];
 
-    // Tracks occurrences of identical turn content to ensure unique stable IDs
-    const seenHashes = new Map<string, number>();
-
     for (let turnIdx = 0; turnIdx < history.length; turnIdx++) {
-      const msg = history[turnIdx];
+      const turn = history[turnIdx];
+      const msg = turn.content;
       if (!msg.parts) continue;
 
       // Defensive: Skip legacy environment header regardless of where it appears.
@@ -197,15 +195,8 @@ export class ContextGraphBuilder {
         }
       }
 
-      // Generate a stable salt for this turn based on its role and content
-      const turnContent = JSON.stringify(msg.parts);
-      const h = createHash('md5')
-        .update(`${msg.role}:${turnContent}`)
-        .digest('hex');
-      const occurrence = (seenHashes.get(h) || 0) + 1;
-      seenHashes.set(h, occurrence);
-      const turnSalt = `${h}_${occurrence}`;
-      const turnId = getStableId(msg, this.idService, turnSalt, -1);
+      const turnSalt = turn.id;
+      const turnId = `turn_${turnSalt}`;
 
       if (msg.role === 'user') {
         for (let partIdx = 0; partIdx < msg.parts.length; partIdx++) {
@@ -213,13 +204,17 @@ export class ContextGraphBuilder {
           const apiId =
             isFunctionResponsePart(part) &&
             typeof part.functionResponse.id === 'string'
-              ? `resp_${part.functionResponse.id}`
+              ? part.functionResponse.id
               : isFunctionCallPart(part) &&
                   typeof part.functionCall.id === 'string'
-                ? `call_${part.functionCall.id}`
+                ? part.functionCall.id
                 : undefined;
-          const id =
-            apiId || getStableId(part, this.idService, turnSalt, partIdx);
+          
+          // Use stable API ID if available, otherwise anchor to the turn and index.
+          const id = apiId 
+            ? `${apiId}_${turnSalt}_${partIdx}`
+            : `${turnSalt}_${partIdx}`;
+
           const node: ConcreteNode = {
             id,
             timestamp: Date.now(),
@@ -231,16 +226,20 @@ export class ContextGraphBuilder {
             turnId,
           };
           nodes.push(node);
+          this.idService.set(part, id);
         }
       } else if (msg.role === 'model') {
         for (let partIdx = 0; partIdx < msg.parts.length; partIdx++) {
           const part = msg.parts[partIdx];
           const apiId =
             isFunctionCallPart(part) && typeof part.functionCall.id === 'string'
-              ? `call_${part.functionCall.id}`
+              ? part.functionCall.id
               : undefined;
-          const id =
-            apiId || getStableId(part, this.idService, turnSalt, partIdx);
+          
+          const id = apiId 
+            ? `${apiId}_${turnSalt}_${partIdx}`
+            : `${turnSalt}_${partIdx}`;
+
           const node: ConcreteNode = {
             id,
             timestamp: Date.now(),
@@ -252,6 +251,7 @@ export class ContextGraphBuilder {
             turnId,
           };
           nodes.push(node);
+          this.idService.set(part, id);
         }
       }
     }

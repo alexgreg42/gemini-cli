@@ -19,6 +19,7 @@ import {
   SYNTHETIC_THOUGHT_SIGNATURE,
   type StreamEvent,
   stripToolCallIdPrefixes,
+  type HistoryTurn,
 } from './geminiChat.js';
 import {
   type CompletedToolCall,
@@ -234,9 +235,9 @@ describe('GeminiChat', () => {
 
   describe('constructor', () => {
     it('should initialize lastPromptTokenCount based on history size', () => {
-      const history: Content[] = [
-        { role: 'user', parts: [{ text: 'Hello' }] },
-        { role: 'model', parts: [{ text: 'Hi there' }] },
+      const history: HistoryTurn[] = [
+        { id: '1', content: { role: 'user', parts: [{ text: 'Hello' }] } },
+        { id: '2', content: { role: 'model', parts: [{ text: 'Hi there' }] } },
       ];
       const chatWithHistory = new GeminiChat(mockConfig, '', [], history);
       // 'Hello': 5 chars * 0.25 = 1.25
@@ -253,8 +254,8 @@ describe('GeminiChat', () => {
 
   describe('setHistory', () => {
     it('should recalculate lastPromptTokenCount when history is updated', () => {
-      const initialHistory: Content[] = [
-        { role: 'user', parts: [{ text: 'Hello' }] },
+      const initialHistory: HistoryTurn[] = [
+        { id: '1', content: { role: 'user', parts: [{ text: 'Hello' }] } },
       ];
       const chatWithHistory = new GeminiChat(
         mockConfig,
@@ -264,14 +265,17 @@ describe('GeminiChat', () => {
       );
       const initialCount = chatWithHistory.getLastPromptTokenCount();
 
-      const newHistory: Content[] = [
+      const newHistory: HistoryTurn[] = [
         {
-          role: 'user',
-          parts: [
-            {
-              text: 'This is a much longer history item that should result in more tokens than just hello.',
-            },
-          ],
+          id: '2',
+          content: {
+            role: 'user',
+            parts: [
+              {
+                text: 'This is a much longer history item that should result in more tokens than just hello.',
+              },
+            ],
+          },
         },
       ];
       chatWithHistory.setHistory(newHistory);
@@ -331,9 +335,9 @@ describe('GeminiChat', () => {
       ).resolves.not.toThrow();
 
       // 3. Verify history was recorded correctly
-      const history = chat.getHistory();
+      const history = chat.getHistoryTurns();
       expect(history.length).toBe(2); // user turn + model turn
-      const modelTurn = history[1];
+      const modelTurn = history[1].content;
       expect(modelTurn?.parts?.length).toBe(1); // The empty part is discarded
       expect(modelTurn?.parts![0].functionCall).toBeDefined();
     });
@@ -433,9 +437,9 @@ describe('GeminiChat', () => {
       ).resolves.not.toThrow();
 
       // 3. Verify history was recorded correctly with only the valid part.
-      const history = chat.getHistory();
+      const history = chat.getHistoryTurns();
       expect(history.length).toBe(2); // user turn + model turn
-      const modelTurn = history[1];
+      const modelTurn = history[1].content;
       expect(modelTurn?.parts?.length).toBe(1);
       expect(modelTurn?.parts![0].text).toBe('Initial valid content...');
     });
@@ -478,9 +482,9 @@ describe('GeminiChat', () => {
       }
 
       // 3. Assert: Check that the final history was correctly consolidated.
-      const history = chat.getHistory();
+      const history = chat.getHistoryTurns();
       expect(history.length).toBe(2);
-      const modelTurn = history[1];
+      const modelTurn = history[1].content;
       expect(modelTurn?.parts?.length).toBe(1);
       expect(modelTurn?.parts![0].text).toBe('Hello World!');
     });
@@ -538,12 +542,12 @@ describe('GeminiChat', () => {
       }
 
       // 3. Assert: Check that the final history was correctly consolidated.
-      const history = chat.getHistory();
+      const history = chat.getHistoryTurns();
 
       // The history should contain the user's turn and ONE consolidated model turn.
       expect(history.length).toBe(2);
 
-      const modelTurn = history[1];
+      const modelTurn = history[1].content;
       expect(modelTurn.role).toBe('model');
 
       // The model turn should have 3 distinct parts: the merged text, the function call, and the final text.
@@ -599,10 +603,10 @@ describe('GeminiChat', () => {
       }
 
       // 3. Assert: Check that the final history contains both function calls.
-      const history = chat.getHistory();
+      const history = chat.getHistoryTurns();
       expect(history.length).toBe(2);
 
-      const modelTurn = history[1];
+      const modelTurn = history[1].content;
       expect(modelTurn.role).toBe('model');
       expect(modelTurn.parts?.length).toBe(2);
       expect(modelTurn.parts![0].functionCall?.name).toBe('tool_A');
@@ -647,8 +651,8 @@ describe('GeminiChat', () => {
         // Consume the stream to trigger history recording
       }
 
-      const history = chat.getHistory();
-      const modelTurn = history[1];
+      const history = chat.getHistoryTurns();
+      const modelTurn = history[1].content;
       expect(modelTurn.parts?.length).toBe(2);
       expect(modelTurn.parts![0].functionCall?.name).toBe('tool_X');
       expect(modelTurn.parts![0].functionCall?.args).toEqual({ id: 1 });
@@ -694,12 +698,12 @@ describe('GeminiChat', () => {
       }
 
       // 3. Assert: Check the final state of the history.
-      const history = chat.getHistory();
+      const history = chat.getHistoryTurns();
 
       // The history should contain two turns: the user's message and the model's response.
       expect(history.length).toBe(2);
 
-      const modelTurn = history[1];
+      const modelTurn = history[1].content;
       expect(modelTurn.role).toBe('model');
 
       // CRUCIAL ASSERTION:
@@ -713,21 +717,27 @@ describe('GeminiChat', () => {
 
     it('should throw an error when a tool call is followed by an empty stream response', async () => {
       // 1. Setup: A history where the model has just made a function call.
-      const initialHistory: Content[] = [
+      const initialHistory: HistoryTurn[] = [
         {
-          role: 'user',
-          parts: [{ text: 'Find a good Italian restaurant for me.' }],
+          id: '1',
+          content: {
+            role: 'user',
+            parts: [{ text: 'Find a good Italian restaurant for me.' }],
+          },
         },
         {
-          role: 'model',
-          parts: [
-            {
-              functionCall: {
-                name: 'find_restaurant',
-                args: { cuisine: 'Italian' },
+          id: '2',
+          content: {
+            role: 'model',
+            parts: [
+              {
+                functionCall: {
+                  name: 'find_restaurant',
+                  args: { cuisine: 'Italian' },
+                },
               },
-            },
-          ],
+            ],
+          },
         },
       ];
       chat.setHistory(initialHistory);
@@ -1251,31 +1261,40 @@ describe('GeminiChat', () => {
 
   describe('addHistory', () => {
     it('should add a new content item to the history', () => {
-      const newContent: Content = {
-        role: 'user',
-        parts: [{ text: 'A new message' }],
+      const newTurn: HistoryTurn = {
+        id: '1',
+        content: {
+          role: 'user',
+          parts: [{ text: 'A new message' }],
+        },
       };
-      chat.addHistory(newContent);
-      const history = chat.getHistory();
+      chat.addHistory(newTurn);
+      const history = chat.getHistoryTurns();
       expect(history.length).toBe(1);
-      expect(history[0]).toEqual(newContent);
+      expect(history[0]).toEqual(newTurn);
     });
 
     it('should add multiple items correctly', () => {
-      const content1: Content = {
-        role: 'user',
-        parts: [{ text: 'Message 1' }],
+      const turn1: HistoryTurn = {
+        id: '1',
+        content: {
+          role: 'user',
+          parts: [{ text: 'Message 1' }],
+        },
       };
-      const content2: Content = {
-        role: 'model',
-        parts: [{ text: 'Message 2' }],
+      const turn2: HistoryTurn = {
+        id: '2',
+        content: {
+          role: 'model',
+          parts: [{ text: 'Message 2' }],
+        },
       };
-      chat.addHistory(content1);
-      chat.addHistory(content2);
-      const history = chat.getHistory();
+      chat.addHistory(turn1);
+      chat.addHistory(turn2);
+      const history = chat.getHistoryTurns();
       expect(history.length).toBe(2);
-      expect(history[0]).toEqual(content1);
-      expect(history[1]).toEqual(content2);
+      expect(history[0]).toEqual(turn1);
+      expect(history[1]).toEqual(turn2);
     });
   });
 

@@ -5,7 +5,7 @@
  */
 
 import type { Content } from '@google/genai';
-import type { AgentChatHistory } from '../core/agentChatHistory.js';
+import type { AgentChatHistory, HistoryTurn } from '../core/agentChatHistory.js';
 import { isToolExecution, type ConcreteNode } from './graph/types.js';
 import type { ContextEventBus } from './eventBus.js';
 import type { ContextTracer } from './tracer.js';
@@ -16,8 +16,6 @@ import { HistoryObserver } from './historyObserver.js';
 import { render } from './graph/render.js';
 import { ContextWorkingBufferImpl } from './pipeline/contextWorkingBuffer.js';
 import { debugLogger } from '../utils/debugLogger.js';
-import { SnapshotStateHelper } from './utils/snapshotGenerator.js';
-import type { ContextEngineState } from '../services/chatRecordingTypes.js';
 import { hardenHistory } from '../utils/historyHardening.js';
 import { checkContextInvariants } from './utils/invariantChecker.js';
 import type { AdvancedTokenCalculator } from './utils/contextTokenCalculator.js';
@@ -40,7 +38,8 @@ export class ContextManager {
   private lastRenderCache?: {
     nodesHash: string;
     result: {
-      history: Content[];
+      history: HistoryTurn[];
+      apiHistory: Content[];
       didApplyManagement: boolean;
       baseUnits: number;
       processedNodes: readonly ConcreteNode[];
@@ -296,11 +295,12 @@ export class ContextManager {
    * This is the primary method called by the agent framework before sending a request.
    */
   async renderHistory(
-    pendingRequest?: Content,
+    pendingRequest?: HistoryTurn,
     activeTaskIds: Set<string> = new Set(),
     abortSignal?: AbortSignal,
   ): Promise<{
-    history: Content[];
+    history: HistoryTurn[];
+    apiHistory: Content[];
     didApplyManagement: boolean;
     baseUnits: number;
     processedNodes: readonly ConcreteNode[];
@@ -400,18 +400,21 @@ export class ContextManager {
 
     this.tracer.logEvent('ContextManager', 'Finished rendering');
 
-    const combinedHistory = header
-      ? [header, ...renderedHistory]
-      : renderedHistory;
+    const hardenedHistory = hardenHistory(
+      renderedHistory,
+      {
+        sentinels: this.sidecar.sentinels,
+      },
+    );
+
+    const apiHistory = hardenedHistory.map((h) => h.content);
+    if (header) {
+      apiHistory.unshift(header);
+    }
 
     const result = {
-      history: hardenHistory(
-        combinedHistory,
-        {
-          sentinels: this.sidecar.sentinels,
-        },
-        this.env.graphMapper.getIdService(),
-      ),
+      history: hardenedHistory,
+      apiHistory,
       didApplyManagement,
       baseUnits,
       processedNodes,
@@ -433,10 +436,11 @@ export class ContextManager {
       );
 
       const contents = this.env.graphMapper.fromGraph(nodes);
+      const rawContents = contents.map((h) => h.content);
       const header = this.headerProvider
         ? await this.headerProvider()
         : undefined;
-      const combinedHistory = header ? [header, ...contents] : contents;
+      const combinedHistory = header ? [header, ...rawContents] : rawContents;
 
       const baseUnits =
         this.advancedTokenCalculator.getRawBaseUnits(nodes) +
@@ -467,14 +471,5 @@ export class ContextManager {
         { error },
       );
     }
-  }
-
-  exportState(): ContextEngineState {
-    return SnapshotStateHelper.exportState(this.buffer.nodes);
-  }
-
-  restoreState(state: ContextEngineState): void {
-    if (!state) return;
-    SnapshotStateHelper.restoreState(state, this.env.inbox);
   }
 }
