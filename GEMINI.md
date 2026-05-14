@@ -88,9 +88,9 @@ powerful tool for developers.
   inference to specific entry points, ensuring absolute uniformity across
   interactive CLI usage, background jobs, and programmatic SDK embeddings.
 - **Partner & Client Invariants:** Treat established integration profiles and
-  edge-case workarounds as immutable contracts. Ensure new validation routes
-  specifically fall back to or preserve legacy mapping to prevent behavioral
-  regressions for active sidecars.
+  edge-case workarounds as stable contracts. Ensure new validation routes
+  fall back to or preserve legacy mapping where safe to prevent behavioral
+  regressions for active sidecars while allowing for critical security fixes.
 
 ## Testing Conventions
 
