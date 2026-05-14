@@ -80,8 +80,9 @@ powerful tool for developers.
   `Copyright 2026 Google LLC`). This is enforced by ESLint.
 - **Configuration Lifecycle Tracing:** When modifying state, credentials, or
   network options, thoroughly trace the data traversal pipeline from initial
-  environmental capture down to the target consumer option layer to ensure
-  downstream conditional mapping does not undermine intended states.
+  environment capture down to the target consumer option layer, ensuring
+  rigorous validation and sanitization to prevent downstream conditional
+  mapping from undermining intended states or introducing vulnerabilities.
 - **Architectural Consistency:** Centralize shared configuration logic (such as
   auth inference) inside common configuration modules rather than isolating
   inference to specific entry points, ensuring absolute uniformity across
