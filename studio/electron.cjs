@@ -49,35 +49,41 @@ let cliProcess = null;
 let cliStarting = false;
 
 // ── Code Assist session init ───────────────────────────────────────────────
-// loadCodeAssist must be called before generateContent — it registers the
-// user's session on the server side. Without it the API returns 500.
+// loadCodeAssist must be called before generateContent — it returns the
+// cloudaicompanionProject needed for X-Goog-User-Project header routing.
+// Without this header the API cannot associate the request with a project → 500.
 let caProject = null;
 let caInitialized = false;
 
 async function ensureCodeAssistInit(token) {
   if (caInitialized) return;
-  try {
-    const res = await httpsPostJson(
-      `${CODE_ASSIST_BASE}:loadCodeAssist`,
-      {
-        metadata: {
-          ideType: 'IDE_UNSPECIFIED',
-          platform: 'PLATFORM_UNSPECIFIED',
-          pluginType: 'GEMINI',
-          duetProject: '',
-        },
+  const res = await httpsPostJson(
+    `${CODE_ASSIST_BASE}:loadCodeAssist`,
+    {
+      metadata: {
+        ideType: 'IDE_UNSPECIFIED',
+        platform: 'PLATFORM_UNSPECIFIED',
+        pluginType: 'GEMINI',
+        duetProject: '',
       },
-      token,
+    },
+    token,
+    {},
+    1,
+  );
+  if (res.status !== 200) {
+    throw new Error(
+      `Code Assist init failed (${res.status}): ` +
+        (res.body?.error?.message || JSON.stringify(res.body)),
     );
-    if (res.status === 200) {
-      caProject = res.body?.cloudaicompanionProject || null;
-      caInitialized = true;
-    } else {
-      console.error('[CA] loadCodeAssist failed', res.status, JSON.stringify(res.body));
-    }
-  } catch (e) {
-    console.error('[CA] loadCodeAssist error:', e.message);
   }
+  caProject = res.body?.cloudaicompanionProject || null;
+  caInitialized = true;
+}
+
+function resetCodeAssistInit() {
+  caProject = null;
+  caInitialized = false;
 }
 
 // ── Window ────────────────────────────────────────────────────────────────────
@@ -161,7 +167,7 @@ function httpsPost(url, body, headers = {}) {
   });
 }
 
-function httpsPostJson(url, body, token) {
+function httpsPostJson(url, body, token, extraHeaders = {}, retries = 2) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
     const data = JSON.stringify(body);
@@ -173,22 +179,32 @@ function httpsPostJson(url, body, token) {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(data),
         Authorization: `Bearer ${token}`,
+        ...extraHeaders,
       },
     };
-    const req = https.request(options, (res) => {
-      let raw = '';
-      res.on('data', (chunk) => (raw += chunk));
-      res.on('end', () => {
-        try {
-          resolve({ status: res.statusCode, body: JSON.parse(raw) });
-        } catch {
-          resolve({ status: res.statusCode, body: raw });
-        }
+
+    function attempt(remaining) {
+      const req = https.request(options, (res) => {
+        let raw = '';
+        res.on('data', (chunk) => (raw += chunk));
+        res.on('end', () => {
+          let parsed;
+          try { parsed = JSON.parse(raw); } catch { parsed = raw; }
+          const result = { status: res.statusCode, body: parsed };
+          // Retry once on transient 5xx (matches native CLI retry behaviour)
+          if (res.statusCode >= 500 && remaining > 0) {
+            setTimeout(() => attempt(remaining - 1), 1000);
+          } else {
+            resolve(result);
+          }
+        });
       });
-    });
-    req.on('error', reject);
-    req.write(data);
-    req.end();
+      req.on('error', reject);
+      req.write(data);
+      req.end();
+    }
+
+    attempt(retries);
   });
 }
 
@@ -405,6 +421,7 @@ ipcMain.handle('oauth:logout', async () => {
       ).on('error', () => {});
     }
     if (fs.existsSync(OAUTH_CREDS_PATH)) fs.unlinkSync(OAUTH_CREDS_PATH);
+    resetCodeAssistInit();
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e.message };
@@ -428,28 +445,35 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
 
     // Strip 'models/' prefix if present — Code Assist API uses bare model IDs
     const resolvedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
-    // Only gemini-2.5+ models support thinkingConfig — 2.0 and older will 400 if sent
-    // temperature must NOT be set when thinkingConfig is present (API rejects it)
+
+    // Match the native CLI generationConfig exactly (from defaultModelConfigs.ts):
+    // 2.5+ / 3+ models: temperature=1, topP=0.95, topK=64 + thinkingConfig
+    // 2.0 and older:    temperature=1, topP=0.95, topK=64 (no thinkingConfig)
     const supportsThinking = /^gemini-2\.5|^gemini-3/.test(resolvedModel);
+    const generationConfig = {
+      temperature: 1,
+      topP: 0.95,
+      topK: 64,
+      ...(supportsThinking && {
+        thinkingConfig: { includeThoughts: true, thinkingBudget: 8192 },
+      }),
+    };
+
     const caRequest = {
       model: resolvedModel,
       ...(caProject && { project: caProject }),
       user_prompt_id: crypto.randomUUID(),
-      request: {
-        contents,
-        generationConfig: {
-          maxOutputTokens: 8192,
-          ...(supportsThinking
-            ? { thinkingConfig: { thinkingBudget: 0 } }
-            : { temperature: 0.7 }),
-        },
-      },
+      request: { contents, generationConfig },
     };
 
+    // X-Goog-User-Project routes the request to the correct GCP project —
+    // google-auth-library adds this automatically; we must do it manually.
+    const caHeaders = caProject ? { 'X-Goog-User-Project': caProject } : {};
     const result = await httpsPostJson(
       `${CODE_ASSIST_BASE}:generateContent`,
       caRequest,
       token,
+      caHeaders,
     );
 
     if (result.status !== 200) {
@@ -470,7 +494,12 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
     if (finishReason === 'SAFETY' || finishReason === 'RECITATION') {
       throw new Error(`Réponse bloquée par les filtres de sécurité (${finishReason}).`);
     }
-    const text = candidate.content?.parts?.map((p) => p.text || '').join('') || '';
+    // Filter out thinking tokens (thought:true) — only keep visible response parts
+    const text =
+      candidate.content?.parts
+        ?.filter((p) => !p.thought)
+        .map((p) => p.text || '')
+        .join('') || '';
     if (!text) throw new Error('Le modèle a retourné une réponse vide.');
     return { ok: true, text };
   } catch (e) {
