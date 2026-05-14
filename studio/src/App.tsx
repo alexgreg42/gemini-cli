@@ -137,6 +137,110 @@ const TierLabel: Record<string, string> = {
   limited: 'Limité',
 };
 
+// ─── Markdown renderer ────────────────────────────────────────────────────────
+
+function renderInline(text: string, baseKey: string): React.ReactNode {
+  const segments: React.ReactNode[] = [];
+  // Match **bold**, *italic*, `inline-code` — in that order of precedence
+  const regex = /(\*\*(?:[^*]|\*(?!\*))+\*\*|\*[^*\n]+\*|`[^`\n]+`)/g;
+  let last = 0;
+  let ki = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) segments.push(text.slice(last, match.index));
+    const m = match[0];
+    if (m.startsWith('**')) {
+      segments.push(
+        <strong key={`${baseKey}-b${ki++}`}>{m.slice(2, -2)}</strong>,
+      );
+    } else if (m.startsWith('*')) {
+      segments.push(<em key={`${baseKey}-e${ki++}`}>{m.slice(1, -1)}</em>);
+    } else {
+      segments.push(
+        <code key={`${baseKey}-c${ki++}`} className="inline-code">
+          {m.slice(1, -1)}
+        </code>,
+      );
+    }
+    last = match.index + m.length;
+  }
+  if (last < text.length) segments.push(text.slice(last));
+  return <React.Fragment key={baseKey}>{segments}</React.Fragment>;
+}
+
+function renderMarkdownBlock(text: string, bk: number): React.ReactNode {
+  const lines = text.split('\n');
+  const nodes: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const k = `${bk}-${i}`;
+    if (line.startsWith('### ')) {
+      nodes.push(
+        <div key={k} className="md-h3">
+          {renderInline(line.slice(4), k)}
+        </div>,
+      );
+    } else if (line.startsWith('## ')) {
+      nodes.push(
+        <div key={k} className="md-h2">
+          {renderInline(line.slice(3), k)}
+        </div>,
+      );
+    } else if (line.startsWith('# ')) {
+      nodes.push(
+        <div key={k} className="md-h1">
+          {renderInline(line.slice(2), k)}
+        </div>,
+      );
+    } else if (line.startsWith('> ')) {
+      nodes.push(
+        <div key={k} className="md-bq">
+          {renderInline(line.slice(2), k)}
+        </div>,
+      );
+    } else if (/^[-*] /.test(line)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^[-*] /.test(lines[i])) {
+        const ik = `${bk}-${i}`;
+        items.push(<li key={ik}>{renderInline(lines[i].slice(2), ik)}</li>);
+        i++;
+      }
+      nodes.push(
+        <ul key={`${bk}-ul${i}`} className="md-list">
+          {items}
+        </ul>,
+      );
+      continue;
+    } else if (/^\d+\. /.test(line)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        const ik = `${bk}-${i}`;
+        items.push(
+          <li key={ik}>{renderInline(lines[i].replace(/^\d+\. /, ''), ik)}</li>,
+        );
+        i++;
+      }
+      nodes.push(
+        <ol key={`${bk}-ol${i}`} className="md-list">
+          {items}
+        </ol>,
+      );
+      continue;
+    } else if (line.trim() === '') {
+      nodes.push(<div key={k} style={{ height: 6 }} />);
+    } else {
+      nodes.push(
+        <div key={k} className="md-p">
+          {renderInline(line, k)}
+        </div>,
+      );
+    }
+    i++;
+  }
+  return <React.Fragment key={bk}>{nodes}</React.Fragment>;
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 const App: React.FC = () => {
@@ -154,6 +258,7 @@ const App: React.FC = () => {
   const [cliRunning, setCliRunning] = useState(false);
   const [cliLog, setCliLog] = useState<string[]>([]);
   const [cliInput, setCliInput] = useState('');
+  const cliUnsubRef = useRef<(() => void) | null>(null);
 
   // Session / history
   const [session, setSession] = useState<ChatSession>(newSession);
@@ -224,6 +329,14 @@ const App: React.FC = () => {
     if (githubToken && repos.length === 0) loadRepos(githubToken);
   }, [githubToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Cleanup CLI listener on component unmount
+  useEffect(
+    () => () => {
+      if (cliUnsubRef.current) cliUnsubRef.current();
+    },
+    [],
+  );
+
   // ── GitHub ─────────────────────────────────────────────────────────────────
 
   const loadRepos = useCallback(async (token: string) => {
@@ -292,9 +405,14 @@ const App: React.FC = () => {
     if (!window.electronAPI) return;
     const result = await window.electronAPI.cliStart();
     if (result.ok) {
+      // Remove previous listener before registering a new one (stop+restart safety)
+      if (cliUnsubRef.current) {
+        cliUnsubRef.current();
+        cliUnsubRef.current = null;
+      }
       setCliRunning(true);
       setCliLog((l) => [...l, '▶ CLI démarré']);
-      window.electronAPI.onCliOutput((data) => {
+      cliUnsubRef.current = window.electronAPI.onCliOutput((data) => {
         setCliLog((l) => [...l.slice(-200), data.text.trimEnd()]);
         if (data.type === 'exit') setCliRunning(false);
       });
@@ -699,7 +817,22 @@ const App: React.FC = () => {
                 )}
               </AnimatePresence>
             </div>
-            <div className="status-dot" />
+            <div
+              className="status-dot"
+              style={{
+                background:
+                  authState.isAuthenticated || settings.geminiApiKey
+                    ? '#10b981'
+                    : '#f59e0b',
+              }}
+              title={
+                authState.isAuthenticated
+                  ? `Connecté · ${authState.email ?? 'Google OAuth'}`
+                  : settings.geminiApiKey
+                    ? 'Connecté · Clé API'
+                    : 'Non authentifié — ouvrez les Paramètres'
+              }
+            />
           </div>
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -798,11 +931,7 @@ const App: React.FC = () => {
                         </pre>
                       );
                     }
-                    return (
-                      <div key={index} style={{ whiteSpace: 'pre-wrap' }}>
-                        {part}
-                      </div>
-                    );
+                    return renderMarkdownBlock(part, index);
                   })}
                 </div>
               </motion.div>
@@ -1640,6 +1769,16 @@ const App: React.FC = () => {
         .cli-log { flex: 1; min-height: 120px; max-height: 340px; overflow-y: auto; background: #0a0a0c; border: 1px solid var(--glass-border); border-radius: 8px; padding: 10px; font-family: var(--font-mono); font-size: .72rem; }
         .cli-line { color: #a3e635; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
         .cli-placeholder { color: var(--text-secondary); font-size: .78rem; font-family: inherit; }
+
+        /* ── Markdown rendering ── */
+        .md-h1 { font-size: 1.15rem; font-weight: 700; margin: 10px 0 4px; color: var(--text-primary); line-height: 1.4; }
+        .md-h2 { font-size: 1.0rem; font-weight: 600; margin: 8px 0 3px; color: var(--text-primary); line-height: 1.4; }
+        .md-h3 { font-size: .9rem; font-weight: 600; margin: 6px 0 2px; color: var(--text-primary); line-height: 1.4; }
+        .md-p { line-height: 1.75; margin-bottom: 1px; }
+        .md-list { margin: 4px 0 4px 18px; display: flex; flex-direction: column; gap: 2px; }
+        .md-list li { line-height: 1.65; }
+        .md-bq { border-left: 3px solid var(--accent-blue); padding-left: 12px; color: var(--text-secondary); font-style: italic; margin: 4px 0; }
+        .inline-code { background: rgba(255,255,255,.12); padding: 1px 5px; border-radius: 4px; font-family: var(--font-mono); font-size: .83em; color: #a5f3fc; white-space: nowrap; }
 
         /* ── Auth card ── */
         .auth-card { background: rgba(255,255,255,.03); border: 1px solid var(--glass-border); border-radius: 10px; padding: 14px; }

@@ -54,36 +54,49 @@ let cliStarting = false;
 // Without this header the API cannot associate the request with a project → 500.
 let caProject = null;
 let caInitialized = false;
+let caInitPromise = null; // prevents concurrent double-init on simultaneous requests
 
 async function ensureCodeAssistInit(token) {
   if (caInitialized) return;
-  const res = await httpsPostJson(
-    `${CODE_ASSIST_BASE}:loadCodeAssist`,
-    {
-      metadata: {
-        ideType: 'IDE_UNSPECIFIED',
-        platform: 'PLATFORM_UNSPECIFIED',
-        pluginType: 'GEMINI',
-        duetProject: '',
-      },
-    },
-    token,
-    {},
-    1,
-  );
-  if (res.status !== 200) {
-    throw new Error(
-      `Code Assist init failed (${res.status}): ` +
-        (res.body?.error?.message || JSON.stringify(res.body)),
-    );
-  }
-  caProject = res.body?.cloudaicompanionProject || null;
-  caInitialized = true;
+  if (caInitPromise) return caInitPromise;
+
+  caInitPromise = (async () => {
+    try {
+      const res = await httpsPostJson(
+        `${CODE_ASSIST_BASE}:loadCodeAssist`,
+        {
+          metadata: {
+            ideType: 'IDE_UNSPECIFIED',
+            platform: 'PLATFORM_UNSPECIFIED',
+            pluginType: 'GEMINI',
+            duetProject: '',
+          },
+        },
+        token,
+        {},
+        1,
+      );
+      if (res.status !== 200) {
+        throw new Error(
+          `Code Assist init failed (${res.status}): ` +
+            (res.body?.error?.message || JSON.stringify(res.body)),
+        );
+      }
+      caProject = res.body?.cloudaicompanionProject || null;
+      caInitialized = true;
+    } catch (e) {
+      caInitPromise = null; // allow retry on next request
+      throw e;
+    }
+  })();
+
+  return caInitPromise;
 }
 
 function resetCodeAssistInit() {
   caProject = null;
   caInitialized = false;
+  caInitPromise = null;
 }
 
 // ── Window ────────────────────────────────────────────────────────────────────
