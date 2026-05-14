@@ -762,13 +762,13 @@ describe('LocalAgentExecutor', () => {
       const firstPart =
         'content' in history[0]
           ? history[0].content.parts?.[0]
-          : (history[0] as Content).parts?.[0];
+          : history[0].parts?.[0];
       expect(firstPart?.text).toBe('Goal: TestGoal');
 
       const secondPart =
         'content' in history[1]
           ? history[1].content.parts?.[0]
-          : (history[1] as Content).parts?.[0];
+          : history[1].parts?.[0];
       expect(secondPart?.text).toBe('OK, starting on TestGoal.');
     });
 

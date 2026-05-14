@@ -27,9 +27,13 @@ describe('Context Manager Hysteresis Tests', () => {
     },
   });
 
-  const getProjectionTokens = (proj: HistoryTurn[], harness: SimulationHarness) =>
+  const getProjectionTokens = (
+    proj: HistoryTurn[],
+    harness: SimulationHarness,
+  ) =>
     proj.reduce(
-      (sum, c) => sum + harness.env.tokenCalculator.calculateContentTokens(c.content),
+      (sum, c) =>
+        sum + harness.env.tokenCalculator.calculateContentTokens(c.content),
       0,
     );
 

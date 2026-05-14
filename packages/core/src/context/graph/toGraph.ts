@@ -209,9 +209,9 @@ export class ContextGraphBuilder {
                   typeof part.functionCall.id === 'string'
                 ? part.functionCall.id
                 : undefined;
-          
+
           // Use stable API ID if available, otherwise anchor to the turn and index.
-          const id = apiId 
+          const id = apiId
             ? `${apiId}_${turnSalt}_${partIdx}`
             : `${turnSalt}_${partIdx}`;
 
@@ -235,8 +235,8 @@ export class ContextGraphBuilder {
             isFunctionCallPart(part) && typeof part.functionCall.id === 'string'
               ? part.functionCall.id
               : undefined;
-          
-          const id = apiId 
+
+          const id = apiId
             ? `${apiId}_${turnSalt}_${partIdx}`
             : `${turnSalt}_${partIdx}`;
 

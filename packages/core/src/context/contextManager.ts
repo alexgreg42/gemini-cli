@@ -5,7 +5,10 @@
  */
 
 import type { Content } from '@google/genai';
-import type { AgentChatHistory, HistoryTurn } from '../core/agentChatHistory.js';
+import type {
+  AgentChatHistory,
+  HistoryTurn,
+} from '../core/agentChatHistory.js';
 import { isToolExecution, type ConcreteNode } from './graph/types.js';
 import type { ContextEventBus } from './eventBus.js';
 import type { ContextTracer } from './tracer.js';
@@ -400,12 +403,9 @@ export class ContextManager {
 
     this.tracer.logEvent('ContextManager', 'Finished rendering');
 
-    const hardenedHistory = hardenHistory(
-      renderedHistory,
-      {
-        sentinels: this.sidecar.sentinels,
-      },
-    );
+    const hardenedHistory = hardenHistory(renderedHistory, {
+      sentinels: this.sidecar.sentinels,
+    });
 
     const apiHistory = hardenedHistory.map((h) => h.content);
     if (header) {

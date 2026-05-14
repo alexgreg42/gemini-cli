@@ -295,7 +295,7 @@ export class GeminiClient {
     this.getChat().stripThoughtsFromHistory();
   }
 
-  setHistory(history: readonly (Content | HistoryTurn)[]) {
+  setHistory(history: ReadonlyArray<Content | HistoryTurn>) {
     this.getChat().setHistory(history);
     this.updateTelemetryTokenCount();
     this.forceFullIdeContext = true;

@@ -86,6 +86,9 @@ export type ConversationRecordExtra =
  */
 export type MessageRecord = BaseMessageRecord & ConversationRecordExtra;
 
+/**
+ * Complete conversation record stored in session files.
+ */
 export interface ConversationRecord {
   sessionId: string;
   projectHash: string;
@@ -99,6 +102,7 @@ export interface ConversationRecord {
   /** The kind of conversation (main agent or subagent) */
   kind?: 'main' | 'subagent';
 }
+
 /**
  * Data structure for resuming an existing session.
  */

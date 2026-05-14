@@ -99,7 +99,11 @@ export async function render(
     tracer.logEvent('Render', 'Render Context for LLM', {
       renderedContext: contents,
     });
-    performCalibration(env, visibleNodes, contents.map(h => h.content));
+    performCalibration(
+      env,
+      visibleNodes,
+      contents.map((h) => h.content),
+    );
     return {
       history: contents,
       didApplyManagement: false,
@@ -153,7 +157,11 @@ export async function render(
   tracer.logEvent('Render', 'Render Sanitized Context for LLM', {
     renderedContextSanitized: contents,
   });
-  performCalibration(env, visibleNodes, contents.map(h => h.content));
+  performCalibration(
+    env,
+    visibleNodes,
+    contents.map((h) => h.content),
+  );
   return {
     history: contents,
     didApplyManagement: true,

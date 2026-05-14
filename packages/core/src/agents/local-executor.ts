@@ -15,7 +15,6 @@ import {
   type FunctionCall,
   type FunctionDeclaration,
 } from '@google/genai';
-import { randomUUID } from 'node:crypto';
 import { ToolRegistry } from '../tools/tool-registry.js';
 import { PromptRegistry } from '../prompts/prompt-registry.js';
 import { ResourceRegistry } from '../resources/resource-registry.js';

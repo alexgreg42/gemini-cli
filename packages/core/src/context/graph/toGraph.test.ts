@@ -56,7 +56,10 @@ describe('ContextGraphBuilder', () => {
       const complexHistory: HistoryTurn[] = [
         {
           id: 'turn-1',
-          content: { role: 'user', parts: [{ text: 'Step 1: complex analysis' }] },
+          content: {
+            role: 'user',
+            parts: [{ text: 'Step 1: complex analysis' }],
+          },
         },
         {
           id: 'turn-2',

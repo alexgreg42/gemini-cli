@@ -33,8 +33,14 @@ describe('ContextManager Sync Pressure Barrier Tests', () => {
 
     // 2. Add System Prompt (Episode 0 - Protected)
     chatHistory.set([
-      { id: 'h1', content: { role: 'user', parts: [{ text: 'System prompt' }] } },
-      { id: 'h2', content: { role: 'model', parts: [{ text: 'Understood.' }] } },
+      {
+        id: 'h1',
+        content: { role: 'user', parts: [{ text: 'System prompt' }] },
+      },
+      {
+        id: 'h2',
+        content: { role: 'model', parts: [{ text: 'Understood.' }] },
+      },
     ]);
 
     // 3. Add massive history that blows past the 150k maxTokens limit

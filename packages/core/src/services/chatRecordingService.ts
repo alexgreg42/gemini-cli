@@ -514,7 +514,8 @@ export class ChatRecordingService {
     displayContent?: PartListUnion;
     id?: string;
   }): string {
-    if (!this.conversationFile || !this.cachedConversation) return message.id || randomUUID();
+    if (!this.conversationFile || !this.cachedConversation)
+      return message.id || randomUUID();
 
     try {
       const msg = this.newMessage(
@@ -938,13 +939,16 @@ export class ChatRecordingService {
               (m) =>
                 m.type === 'gemini' &&
                 m.toolCalls?.some((tc) => tc.id === callId),
-            ) as MessageRecord & { type: 'gemini' };
-            if (geminiMsg) {
+            );
+            if (geminiMsg && geminiMsg.type === 'gemini') {
               const tc = geminiMsg.toolCalls!.find((tc) => tc.id === callId);
               if (tc) {
                 // If the history version is different (e.g. masked), sync it into the record
                 // We sync the entire parts array of the user turn to ensure sibling parts are preserved
-                if (JSON.stringify(tc.result) !== JSON.stringify(turn.content.parts)) {
+                if (
+                  JSON.stringify(tc.result) !==
+                  JSON.stringify(turn.content.parts)
+                ) {
                   tc.result = turn.content.parts || [];
                   updated = true;
                 }
@@ -954,7 +958,10 @@ export class ChatRecordingService {
         }
       }
 
-      if (updated || newMessages.length !== this.cachedConversation.messages.length) {
+      if (
+        updated ||
+        newMessages.length !== this.cachedConversation.messages.length
+      ) {
         this.cachedConversation.messages = newMessages;
         this.updateMetadata({
           messages: newMessages,

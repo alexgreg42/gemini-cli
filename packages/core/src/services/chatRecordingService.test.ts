@@ -1342,4 +1342,69 @@ describe('ChatRecordingService', () => {
       mkdirSyncSpy.mockRestore();
     });
   });
+
+  describe('recordSyntheticMessage and history sync', () => {
+    it('should correctly record synthetic messages with durable IDs', async () => {
+      await chatRecordingService.initialize(undefined, 'main');
+      const parts = [{ text: 'Synthetic Turn' }];
+
+      // Implicit ID generation
+      const id1 = chatRecordingService.recordSyntheticMessage('user', parts);
+      expect(id1).toBeDefined();
+      expect(id1).toMatch(/test-uuid-/);
+
+      // Explicit ID registration (e.g. from context processor)
+      const customId = 'stable-hash-123';
+      const id2 = chatRecordingService.recordSyntheticMessage(
+        'gemini',
+        parts,
+        customId,
+      );
+      expect(id2).toBe(customId);
+
+      const record = await loadConversationRecord(
+        chatRecordingService.getConversationFilePath()!,
+      );
+      expect(record!.messages).toHaveLength(2);
+      expect(record!.messages[0].id).toBe(id1);
+      expect(record!.messages[0].type).toBe('user');
+      expect(record!.messages[1].id).toBe(customId);
+      expect(record!.messages[1].type).toBe('gemini');
+    });
+
+    it('should synchronize history turns and maintain their durable identity', async () => {
+      await chatRecordingService.initialize(undefined, 'main');
+      const history: HistoryTurn[] = [
+        { id: 'h1', content: { role: 'user', parts: [{ text: 'msg1' }] } },
+        { id: 'h2', content: { role: 'model', parts: [{ text: 'msg2' }] } },
+      ];
+
+      chatRecordingService.updateMessagesFromHistory(history);
+
+      const record = await loadConversationRecord(
+        chatRecordingService.getConversationFilePath()!,
+      );
+      expect(record!.messages).toHaveLength(2);
+      expect(record!.messages[0].id).toBe('h1');
+      expect(record!.messages[1].id).toBe('h2');
+
+      // Update with a summary
+      const summaryId = 'summary-123';
+      const updatedHistory: HistoryTurn[] = [
+        {
+          id: summaryId,
+          content: { role: 'user', parts: [{ text: 'summary' }] },
+        },
+        ...history.slice(1),
+      ];
+
+      chatRecordingService.updateMessagesFromHistory(updatedHistory);
+      const record2 = await loadConversationRecord(
+        chatRecordingService.getConversationFilePath()!,
+      );
+      expect(record2!.messages).toHaveLength(2);
+      expect(record2!.messages[0].id).toBe(summaryId);
+      expect(record2!.messages[1].id).toBe('h2');
+    });
+  });
 });

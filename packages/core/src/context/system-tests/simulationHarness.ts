@@ -94,9 +94,9 @@ export class SimulationHarness {
       this.chatHistory,
       calculator,
     );
-    }
+  }
 
-    async simulateTurn(messages: Content[]) {
+  async simulateTurn(messages: Content[]) {
     // 1. Append the new messages
     const currentHistory = this.chatHistory.get();
     const turns = messages.map((m) => ({ id: randomUUID(), content: m }));

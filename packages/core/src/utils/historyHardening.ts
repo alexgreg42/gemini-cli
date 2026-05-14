@@ -308,9 +308,7 @@ function enforceRoleConstraints(
  * Deep-scrubs the history to remove any non-standard properties from Content and Part objects.
  * This ensures compatibility with strict APIs (like Vertex AI) that reject unknown fields.
  */
-export function scrubHistory(
-  history: HistoryTurn[],
-): HistoryTurn[] {
+export function scrubHistory(history: HistoryTurn[]): HistoryTurn[] {
   return history.map((turn) => ({
     id: turn.id,
     content: {

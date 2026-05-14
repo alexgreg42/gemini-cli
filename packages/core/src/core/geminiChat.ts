@@ -162,7 +162,7 @@ function isValidContent(content: Content): boolean {
  * @throws Error if the history does not start with a user turn.
  * @throws Error if the history contains an invalid role.
  */
-function validateHistory(history: (Content | HistoryTurn)[]) {
+function validateHistory(history: Array<Content | HistoryTurn>) {
   for (const item of history) {
     const content = 'content' in item ? item.content : item;
     if (content.role !== 'user' && content.role !== 'model') {
@@ -182,10 +182,7 @@ function validateHistory(history: (Content | HistoryTurn)[]) {
 function extractCuratedHistory(
   comprehensiveHistory: readonly HistoryTurn[],
 ): HistoryTurn[] {
-  if (
-    comprehensiveHistory === undefined ||
-    comprehensiveHistory.length === 0
-  ) {
+  if (comprehensiveHistory === undefined || comprehensiveHistory.length === 0) {
     return [];
   }
   const curatedHistory: HistoryTurn[] = [];
@@ -198,10 +195,7 @@ function extractCuratedHistory(
     } else {
       const modelOutput: HistoryTurn[] = [];
       let isValid = true;
-      while (
-        i < length &&
-        comprehensiveHistory[i].content.role === 'model'
-      ) {
+      while (i < length && comprehensiveHistory[i].content.role === 'model') {
         modelOutput.push(comprehensiveHistory[i]);
         if (isValid && !isValidContent(comprehensiveHistory[i].content)) {
           isValid = false;
@@ -284,7 +278,7 @@ export class GeminiChat {
     readonly context: AgentLoopContext,
     private systemInstruction: string = '',
     private tools: Tool[] = [],
-    history: (Content | HistoryTurn)[] = [],
+    history: Array<Content | HistoryTurn> = [],
     resumedSessionData?: ResumedSessionData,
     private readonly onModelChanged?: (modelId: string) => Promise<Tool[]>,
   ) {
@@ -297,8 +291,9 @@ export class GeminiChat {
             content: {
               role: m.type === 'user' ? 'user' : 'model',
               parts: Array.isArray(m.content)
-                ? (m.content as Part[])
-                : [{ text: m.content as string }],
+                ? // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+                  (m.content as Part[])
+                : [{ text: String(m.content) }],
             },
           }))
       : history.map((item) =>
@@ -325,7 +320,9 @@ export class GeminiChat {
     await this.chatRecordingService.initialize(resumedSessionData, kind);
     // Sync initial history with the recorder to ensure all turns (even bootstrapped ones)
     // are durable and coordinated.
-    this.chatRecordingService.updateMessagesFromHistory(this.agentHistory.get());
+    this.chatRecordingService.updateMessagesFromHistory(
+      this.agentHistory.get(),
+    );
   }
 
   setSystemInstruction(sysInstr: string) {
@@ -598,7 +595,9 @@ export class GeminiChat {
     return streamWithRetries.call(this);
   }
 
-  private extractBinaryInjections(parts: Part[] | undefined): Part[] | undefined {
+  private extractBinaryInjections(
+    parts: Part[] | undefined,
+  ): Part[] | undefined {
     const binaryParts: Part[] = [];
     if (parts) {
       for (const part of parts) {
@@ -925,7 +924,7 @@ export class GeminiChat {
   }
 
   setHistory(
-    history: readonly (Content | HistoryTurn)[],
+    history: ReadonlyArray<Content | HistoryTurn>,
     options: { silent?: boolean } = {},
   ): void {
     const wrappedHistory: HistoryTurn[] = history.map((item) => {
@@ -942,7 +941,9 @@ export class GeminiChat {
     this.lastPromptTokenCount = estimateTokenCountSync(
       this.agentHistory.flatMap((c) => c.content.parts || []),
     );
-    this.chatRecordingService.updateMessagesFromHistory(this.agentHistory.get());
+    this.chatRecordingService.updateMessagesFromHistory(
+      this.agentHistory.get(),
+    );
   }
 
   stripThoughtsFromHistory(): void {

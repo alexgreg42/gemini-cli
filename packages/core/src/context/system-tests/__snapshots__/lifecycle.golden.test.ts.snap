@@ -2,7 +2,7 @@
 
 exports[`System Lifecycle Golden Tests > Scenario 1: Organic Growth with Huge Tool Output & Images 1`] = `
 {
-  "baseUnits": 787,
+  "baseUnits": 765,
   "finalProjection": [
     {
       "content": {
@@ -176,18 +176,18 @@ exports[`System Lifecycle Golden Tests > Scenario 1: Organic Growth with Huge To
       "turnIndex": 1,
     },
     {
-      "tokensAfterBackground": 497,
+      "tokensAfterBackground": 493,
       "tokensBeforeBackground": 20232,
       "turnIndex": 2,
     },
     {
-      "tokensAfterBackground": 750,
-      "tokensBeforeBackground": 3554,
+      "tokensAfterBackground": 728,
+      "tokensBeforeBackground": 3550,
       "turnIndex": 3,
     },
     {
-      "tokensAfterBackground": 787,
-      "tokensBeforeBackground": 787,
+      "tokensAfterBackground": 765,
+      "tokensBeforeBackground": 765,
       "turnIndex": 4,
     },
   ],
@@ -387,7 +387,7 @@ exports[`System Lifecycle Golden Tests > Scenario 4: Async-Driven Background GC 
         ],
         "role": "user",
       },
-      "id": "2371dc698715d731086209ad329ea7c9",
+      "id": "<UUID>",
     },
     {
       "content": {
