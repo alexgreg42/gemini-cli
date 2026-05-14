@@ -47,6 +47,17 @@ export interface Message {
   timestamp: number;
 }
 
+export interface TokenUsage {
+  promptTokens: number;
+  responseTokens: number;
+  totalTokens: number;
+}
+
+export interface GeminiResult {
+  text: string;
+  usage?: TokenUsage;
+}
+
 export interface AttachedFile {
   name: string;
   mimeType: string;
@@ -88,7 +99,7 @@ async function sendViaElectronOAuth(
   history: Message[],
   attachedFiles: AttachedFile[],
   modelId: string,
-): Promise<string> {
+): Promise<GeminiResult> {
   const api = window.electronAPI;
   if (!api) throw new Error('Electron API not available');
 
@@ -118,7 +129,7 @@ async function sendViaElectronOAuth(
   }
   const text = result.text ?? '';
   if (!text) throw new Error('Le modèle a retourné une réponse vide.');
-  return text;
+  return { text, usage: result.usage };
 }
 
 // ── Route: API key (standard Gemini SDK) ─────────────────────────────────────
@@ -129,7 +140,7 @@ async function sendViaApiKey(
   attachedFiles: AttachedFile[],
   modelId: string,
   apiKey: string,
-): Promise<string> {
+): Promise<GeminiResult> {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: modelId });
 
@@ -159,7 +170,7 @@ async function sendViaApiKey(
   const result = await chat.sendMessage(parts);
   const text = result.response.text();
   if (!text) throw new Error('Le modèle a retourné une réponse vide.');
-  return text;
+  return { text };
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -169,7 +180,7 @@ export const sendMessageToGemini = async (
   history: Message[],
   attachedFiles: AttachedFile[] = [],
   modelId?: string,
-): Promise<string> => {
+): Promise<GeminiResult> => {
   validateAttachedFiles(attachedFiles);
 
   const settings = loadSettings();

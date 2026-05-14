@@ -50,7 +50,16 @@ declare global {
       geminiGenerate: (params: {
         messages: Array<{ role: string; content: string }>;
         model: string;
-      }) => Promise<{ ok: boolean; text?: string; error?: string }>;
+      }) => Promise<{
+        ok: boolean;
+        text?: string;
+        error?: string;
+        usage?: {
+          promptTokens: number;
+          responseTokens: number;
+          totalTokens: number;
+        };
+      }>;
       // CLI background process
       cliStart: () => Promise<{
         ok: boolean;

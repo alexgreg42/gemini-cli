@@ -113,6 +113,73 @@ export const getFileSha = async (
   return data.sha;
 };
 
+export interface GitHubTreeItem {
+  name: string;
+  path: string;
+  type: 'file' | 'dir';
+  sha: string;
+  size?: number;
+}
+
+export const fetchRepoContents = async (
+  token: string,
+  fullName: string,
+  path: string = '',
+): Promise<GitHubTreeItem[]> => {
+  const encodedPath = path
+    ? path
+        .split('/')
+        .map((s) => encodeURIComponent(s))
+        .join('/')
+    : '';
+  const url = `https://api.github.com/repos/${fullName}/contents/${encodedPath}`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+    },
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    throw githubError(response.status, body);
+  }
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+};
+
+export const fetchFileContent = async (
+  token: string,
+  fullName: string,
+  path: string,
+): Promise<{ content: string; sha: string }> => {
+  const encodedPath = path
+    .split('/')
+    .map((s) => encodeURIComponent(s))
+    .join('/');
+  const url = `https://api.github.com/repos/${fullName}/contents/${encodedPath}`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+    },
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    throw githubError(response.status, body);
+  }
+  const data = (await response.json()) as {
+    content: string;
+    sha: string;
+    encoding: string;
+  };
+  const decoded = atob(data.content.replace(/\n/g, ''));
+  return { content: decoded, sha: data.sha };
+};
+
 export const LANG_COLORS: Record<string, string> = {
   TypeScript: '#3178c6',
   JavaScript: '#f1e05a',

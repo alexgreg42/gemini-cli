@@ -639,7 +639,16 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
         .map((p) => p.text || '')
         .join('') || '';
     if (!text) throw new Error('Le modèle a retourné une réponse vide.');
-    return { ok: true, text };
+    const usageMeta = response.usageMetadata || {};
+    return {
+      ok: true,
+      text,
+      usage: {
+        promptTokens: usageMeta.promptTokenCount || 0,
+        responseTokens: usageMeta.candidatesTokenCount || 0,
+        totalTokens: usageMeta.totalTokenCount || 0,
+      },
+    };
   } catch (e) {
     return { ok: false, error: e.message };
   }

@@ -36,6 +36,8 @@ import {
   LogIn,
   LogOut,
   UserCheck,
+  Folder,
+  FolderOpen,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Prism from 'prismjs';
@@ -49,11 +51,15 @@ import {
 } from './services/gemini';
 import {
   fetchGitHubRepos,
+  fetchRepoContents,
+  fetchFileContent,
   commitFileToGitHub,
   getFileSha,
   type GitHubRepo,
+  type GitHubTreeItem,
   LANG_COLORS,
 } from './services/github';
+import type { TokenUsage } from './services/gemini';
 import { loadSettings, saveSettings } from './services/settings';
 import {
   loadAuthState,
@@ -319,6 +325,24 @@ const App: React.FC = () => {
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [showFullPreview, setShowFullPreview] = useState(false);
 
+  // Token counter
+  const [sessionTokens, setSessionTokens] = useState<TokenUsage>({
+    promptTokens: 0,
+    responseTokens: 0,
+    totalTokens: 0,
+  });
+  const [lastTokens, setLastTokens] = useState<TokenUsage | null>(null);
+
+  // GitHub file browser
+  const [treeCache, setTreeCache] = useState<Record<string, GitHubTreeItem[]>>(
+    {},
+  );
+  const [treeNodeLoading, setTreeNodeLoading] = useState<Set<string>>(
+    new Set(),
+  );
+  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
+  const [fileLoading, setFileLoading] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -349,6 +373,13 @@ const App: React.FC = () => {
   useEffect(() => {
     if (githubToken && repos.length === 0) loadRepos(githubToken);
   }, [githubToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (selectedRepo && githubToken) {
+      loadTreePath(selectedRepo.full_name, '');
+      setExpandedDirs(new Set());
+    }
+  }, [selectedRepo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cleanup CLI listener on component unmount
   useEffect(
@@ -385,6 +416,31 @@ const App: React.FC = () => {
       setReposLoading(false);
     }
   }, []);
+
+  const loadTreePath = useCallback(
+    async (repoFullName: string, dirPath: string) => {
+      const key = `${repoFullName}::${dirPath}`;
+      if (treeCache[key] !== undefined) return;
+      setTreeNodeLoading((prev) => new Set([...prev, key]));
+      try {
+        const items = await fetchRepoContents(
+          githubToken,
+          repoFullName,
+          dirPath,
+        );
+        setTreeCache((prev) => ({ ...prev, [key]: items }));
+      } catch {
+        setTreeCache((prev) => ({ ...prev, [key]: [] }));
+      } finally {
+        setTreeNodeLoading((prev) => {
+          const n = new Set(prev);
+          n.delete(key);
+          return n;
+        });
+      }
+    },
+    [treeCache, githubToken],
+  );
 
   const handleConnectGitHub = () => {
     const t = tokenInput.trim();
@@ -566,15 +622,24 @@ const App: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await sendMessageToGemini(
+      const geminiResult = await sendMessageToGemini(
         currentInput,
         session.messages,
         currentFiles,
         settings.selectedModel,
       );
+      if (geminiResult.usage) {
+        setLastTokens(geminiResult.usage);
+        setSessionTokens((prev) => ({
+          promptTokens: prev.promptTokens + geminiResult.usage!.promptTokens,
+          responseTokens:
+            prev.responseTokens + geminiResult.usage!.responseTokens,
+          totalTokens: prev.totalTokens + geminiResult.usage!.totalTokens,
+        }));
+      }
       const modelMsg: Message = {
         role: 'model',
-        content: response,
+        content: geminiResult.text,
         timestamp: Date.now(),
       };
       const finalMessages = [...updatedMessages, modelMsg];
@@ -621,6 +686,8 @@ const App: React.FC = () => {
     setSession(s);
     setInput('');
     setAttachedFiles([]);
+    setSessionTokens({ promptTokens: 0, responseTokens: 0, totalTokens: 0 });
+    setLastTokens(null);
   };
 
   const loadChatSession = (s: ChatSession) => {
@@ -700,6 +767,100 @@ const App: React.FC = () => {
       loadRepos(saved.githubToken);
     }
     setShowSettings(false);
+  };
+
+  // ── File tree renderer ─────────────────────────────────────────────────────
+
+  const renderTree = (
+    repoFullName: string,
+    dirPath: string,
+    depth: number,
+  ): React.ReactNode => {
+    const key = `${repoFullName}::${dirPath}`;
+    const items = treeCache[key];
+    if (treeNodeLoading.has(key)) {
+      return (
+        <div
+          key={key + '-loading'}
+          style={{
+            paddingLeft: `${8 + depth * 14}px`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            color: 'var(--text-secondary)',
+            fontSize: '.72rem',
+            padding: `3px 0 3px ${8 + depth * 14}px`,
+          }}
+        >
+          <RefreshCw size={10} className="spin" /> Chargement…
+        </div>
+      );
+    }
+    if (!items || items.length === 0) return null;
+    const sorted = [...items].sort((a, b) => {
+      if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+    return sorted.map((item) => {
+      const isDir = item.type === 'dir';
+      const isExpanded = expandedDirs.has(item.path);
+      return (
+        <React.Fragment key={item.path}>
+          <div
+            className="tree-node"
+            style={{ paddingLeft: `${8 + depth * 14}px` }}
+            onClick={async () => {
+              if (isDir) {
+                setExpandedDirs((prev) => {
+                  const n = new Set(prev);
+                  if (isExpanded) n.delete(item.path);
+                  else {
+                    n.add(item.path);
+                    loadTreePath(repoFullName, item.path);
+                  }
+                  return n;
+                });
+              } else {
+                setFileLoading(true);
+                try {
+                  const { content } = await fetchFileContent(
+                    githubToken,
+                    repoFullName,
+                    item.path,
+                  );
+                  setCommitPath(item.path);
+                  setCommitContent(content);
+                  setCommitMessage(`Update ${item.name}`);
+                  setShowCommit(true);
+                } catch (err) {
+                  alert(
+                    err instanceof Error
+                      ? err.message
+                      : 'Impossible de lire le fichier',
+                  );
+                } finally {
+                  setFileLoading(false);
+                }
+              }
+            }}
+          >
+            {isDir ? (
+              isExpanded ? (
+                <FolderOpen size={12} color="#f59e0b" />
+              ) : (
+                <Folder size={12} color="#f59e0b" />
+              )
+            ) : (
+              <FileText size={12} color="var(--text-secondary)" />
+            )}
+            <span className="tree-node-name">{item.name}</span>
+          </div>
+          {isDir &&
+            isExpanded &&
+            renderTree(repoFullName, item.path, depth + 1)}
+        </React.Fragment>
+      );
+    });
   };
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -868,6 +1029,24 @@ const App: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {sessionTokens.totalTokens > 0 && (
+              <div
+                className="token-counter"
+                title={`Session : ${sessionTokens.totalTokens.toLocaleString()} tokens\nPrompt : ${sessionTokens.promptTokens.toLocaleString()} · Réponse : ${sessionTokens.responseTokens.toLocaleString()}\nDernier échange : ${lastTokens?.totalTokens.toLocaleString() ?? 0} tokens`}
+              >
+                <Zap size={11} color="#10b981" />
+                <span>
+                  {sessionTokens.totalTokens >= 1000
+                    ? `${(sessionTokens.totalTokens / 1000).toFixed(1)}k`
+                    : sessionTokens.totalTokens}
+                </span>
+                <span
+                  style={{ color: 'var(--text-secondary)', fontSize: '.65rem' }}
+                >
+                  tokens
+                </span>
+              </div>
+            )}
             <button className="action-btn" title="Rechercher">
               <Search size={20} />
             </button>
@@ -1087,17 +1266,17 @@ const App: React.FC = () => {
           <button
             className={`right-tab${rightTab === 'github' ? ' active' : ''}`}
             onClick={() => setRightTab('github')}
+            title="GitHub"
           >
             <GitBranch size={15} />
-            <span>GitHub</span>
             {repos.length > 0 && <span className="badge">{repos.length}</span>}
           </button>
           <button
             className={`right-tab${rightTab === 'files' ? ' active' : ''}`}
             onClick={() => setRightTab('files')}
+            title="Fichiers joints"
           >
             <Upload size={15} />
-            <span>Fichiers</span>
             {attachedFiles.length > 0 && (
               <span className="badge">{attachedFiles.length}</span>
             )}
@@ -1106,12 +1285,12 @@ const App: React.FC = () => {
             <button
               className={`right-tab${rightTab === 'cli' ? ' active' : ''}`}
               onClick={() => setRightTab('cli')}
+              title="CLI Terminal"
             >
               <Terminal size={15} />
-              <span>CLI</span>
               {cliRunning && (
                 <span className="badge" style={{ background: '#10b981' }}>
-                  ON
+                  ●
                 </span>
               )}
             </button>
@@ -1119,9 +1298,9 @@ const App: React.FC = () => {
           <button
             className={`right-tab${rightTab === 'preview' ? ' active' : ''}`}
             onClick={() => setRightTab('preview')}
+            title="Aperçu app"
           >
             <Eye size={15} />
-            <span>Preview</span>
             {previewHtml && (
               <span className="badge" style={{ background: '#10b981' }}>
                 ●
@@ -1256,6 +1435,26 @@ const App: React.FC = () => {
                     {filteredRepos.length === 0 && (
                       <div className="panel-empty">Aucun dépôt trouvé</div>
                     )}
+                  </div>
+                )}
+
+                {/* File browser */}
+                {selectedRepo && (
+                  <div className="file-browser">
+                    <div className="file-browser-header">
+                      <Folder size={13} color="#f59e0b" />
+                      <span>{selectedRepo.name}</span>
+                      {fileLoading && (
+                        <RefreshCw
+                          size={11}
+                          className="spin"
+                          style={{ marginLeft: 'auto' }}
+                        />
+                      )}
+                    </div>
+                    <div className="tree-container">
+                      {renderTree(selectedRepo.full_name, '', 0)}
+                    </div>
                   </div>
                 )}
 
@@ -1982,6 +2181,20 @@ const App: React.FC = () => {
         .preview-msg-btn:hover { background: rgba(16,185,129,.22); }
         .preview-toolbar { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: var(--bg-secondary); border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
         .preview-label { flex: 1; display: flex; align-items: center; gap: 5px; font-size: .75rem; color: var(--text-secondary); }
+
+        /* ── Token counter ── */
+        .token-counter { display: flex; align-items: center; gap: 4px; background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); border-radius: 20px; padding: 3px 10px; font-size: .75rem; color: #10b981; cursor: default; }
+
+        /* ── Right tabs icon-only ── */
+        .right-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 14px 4px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); cursor: pointer; font-size: .82rem; font-family: inherit; transition: all .2s; }
+
+        /* ── File browser ── */
+        .file-browser { border: 1px solid var(--glass-border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+        .file-browser-header { display: flex; align-items: center; gap: 7px; padding: 7px 10px; background: rgba(245,158,11,.07); border-bottom: 1px solid var(--glass-border); font-size: .78rem; font-weight: 500; color: var(--text-primary); }
+        .tree-container { max-height: 220px; overflow-y: auto; }
+        .tree-node { display: flex; align-items: center; gap: 6px; padding: 4px 8px; cursor: pointer; font-size: .75rem; color: var(--text-secondary); transition: background .12s; user-select: none; }
+        .tree-node:hover { background: rgba(255,255,255,.05); color: var(--text-primary); }
+        .tree-node-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
       `,
         }}
       />
