@@ -394,6 +394,7 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
     // Strip 'models/' prefix if present — Code Assist API uses bare model IDs
     const resolvedModel = (model || 'gemini-2.5-flash').replace(/^models\//, '');
     // Only gemini-2.5+ models support thinkingConfig — 2.0 and older will 400 if sent
+    // temperature must NOT be set when thinkingConfig is present (API rejects it)
     const supportsThinking = /^gemini-2\.5|^gemini-3/.test(resolvedModel);
     const caRequest = {
       model: resolvedModel,
@@ -402,8 +403,9 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
         contents,
         generationConfig: {
           maxOutputTokens: 8192,
-          temperature: 0.7,
-          ...(supportsThinking && { thinkingConfig: { thinkingBudget: 0 } }),
+          ...(supportsThinking
+            ? { thinkingConfig: { thinkingBudget: 0 } }
+            : { temperature: 0.7 }),
         },
       },
     };
