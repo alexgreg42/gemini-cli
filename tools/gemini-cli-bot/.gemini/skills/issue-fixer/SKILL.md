@@ -28,5 +28,6 @@ maintain existing PRs to reduce the repository backlog.
 2.  **Search for Candidates**: If no PRs need attention, search for `effort/small` issues: `gh issue list --label "effort/small" --limit 10 --json number,title,url`.
     - **CRITICAL**: `gh issue list` is your ONLY source for new tasks. If `gh` fails, you MUST diagnose the environment or abort the discovery phase. You are STRICTLY FORBIDDEN from using `google_web_search` to query GitHub, as it indexes closed issues. Do NOT run local discovery commands (e.g., `npm run lint`, `npm run typecheck`) to look for "easy fixes".
 3.  **Select ONE Issue** and implement a fix on a new branch.
+    -   **Efficient Searching**: When searching the codebase with `grep_search`, you MUST search one top-level folder at a time (e.g. `packages/core`, `packages/cli`) to avoid timeouts. Avoid searching problematic directories with large data files like `memory-tests` and `last_brain_data` unless absolutely necessary.
 4.  **Verify**: You MUST run `timeout 10m npm run preflight` to verify. Wrapping test commands in `timeout` is mandatory to prevent hanging the CI environment if your changes introduce an infinite loop.
 5.  **Use the `prs` Skill** to stage changes and prepare the draft PR (labels: `bot-fix`, `issue-fixer`).
