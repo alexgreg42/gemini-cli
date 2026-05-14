@@ -49,12 +49,9 @@ let cliProcess = null;
 let cliStarting = false;
 
 // ── Code Assist session init ───────────────────────────────────────────────
-// loadCodeAssist must be called before generateContent — it returns the
-// cloudaicompanionProject needed for X-Goog-User-Project header routing.
-// Without this header the API cannot associate the request with a project → 500.
 let caProject = null;
 let caInitialized = false;
-let caInitPromise = null; // prevents concurrent double-init on simultaneous requests
+let caInitPromise = null;
 
 const CA_METADATA = {
   ideType: 'IDE_UNSPECIFIED',
@@ -63,76 +60,81 @@ const CA_METADATA = {
   duetProject: '',
 };
 
+async function pollLro(lroBody, token) {
+  if (lroBody.done || !lroBody.name) return lroBody;
+  const opName = lroBody.name;
+  let attempts = 0;
+  while (!lroBody.done && attempts < 12) {
+    await new Promise((r) => setTimeout(r, 5000));
+    const res = await httpsGetJson(`${CODE_ASSIST_BASE}/${opName}`, token);
+    lroBody = res.body;
+    attempts++;
+  }
+  return lroBody;
+}
+
 async function ensureCodeAssistInit(token) {
   if (caInitialized) return;
   if (caInitPromise) return caInitPromise;
 
   caInitPromise = (async () => {
     try {
-      // ── Step 1: loadCodeAssist ─────────────────────────────────────────────
+      // ── 1. loadCodeAssist ──────────────────────────────────────────────────
       const loadRes = await httpsPostJson(
         `${CODE_ASSIST_BASE}:loadCodeAssist`,
         { metadata: CA_METADATA },
-        token,
-        {},
-        1,
+        token, {}, 1,
       );
       if (loadRes.status !== 200) {
         throw new Error(
           `Code Assist init failed (${loadRes.status}): ` +
-            (loadRes.body?.error?.message || JSON.stringify(loadRes.body)),
+          (loadRes.body?.error?.message || JSON.stringify(loadRes.body)),
         );
       }
-
       const loadBody = loadRes.body;
+      const existingProject = loadBody.cloudaicompanionProject || null;
 
-      // ── Step 2: already onboarded (currentTier present) ───────────────────
-      if (loadBody.currentTier) {
-        caProject = loadBody.cloudaicompanionProject || null;
-        caInitialized = true;
-        return;
+      // ── 2. Determine onboarding tier ──────────────────────────────────────
+      // currentTier = already in system; allowedTiers = first-time
+      const tierId =
+        loadBody.currentTier?.id ||
+        (loadBody.allowedTiers || [])[0]?.id ||
+        'FREE';
+
+      // ── 3. onboardUser — activates the Cloud Code API on the GCP project ──
+      // Must be called even when currentTier is present; the project may exist
+      // in Google's registry but have the API disabled (fresh credential / new
+      // project).  Errors are swallowed and we fall back to existingProject.
+      let onboardProject = null;
+      try {
+        const onboardRes = await httpsPostJson(
+          `${CODE_ASSIST_BASE}:onboardUser`,
+          { tierId, metadata: CA_METADATA },
+          token, {}, 1,
+        );
+        if (onboardRes.status === 200) {
+          const lro = await pollLro(onboardRes.body, token);
+          onboardProject =
+            lro.response?.cloudaicompanionProject?.id ||
+            lro.response?.cloudaicompanionProject ||
+            null;
+        }
+      } catch (_) {
+        // onboardUser unavailable — proceed with existingProject
       }
 
-      // ── Step 3: first-time setup — onboardUser enables the API on the GCP project ──
-      // Free tier must NOT pass cloudaicompanionProject (causes Precondition Failed).
-      const allowedTiers = loadBody.allowedTiers || [];
-      const tierId = allowedTiers[0]?.id || 'FREE';
+      caProject = onboardProject || existingProject;
 
-      const onboardRes = await httpsPostJson(
-        `${CODE_ASSIST_BASE}:onboardUser`,
-        { tierId, metadata: CA_METADATA },
-        token,
-        {},
-        1,
-      );
-      if (onboardRes.status !== 200) {
+      if (!caProject) {
         throw new Error(
-          `Code Assist onboarding failed (${onboardRes.status}): ` +
-            (onboardRes.body?.error?.message || JSON.stringify(onboardRes.body)),
+          "Code Assist: impossible d'obtenir le projet GCP.\n" +
+          "Reconnectez-vous via Google OAuth ou utilisez une clé API Gemini.",
         );
       }
 
-      // ── Step 4: poll Long Running Operation until done (max 60 s) ─────────
-      let lroBody = onboardRes.body;
-      if (!lroBody.done && lroBody.name) {
-        const opName = lroBody.name; // e.g. "operations/abc123"
-        let attempts = 0;
-        while (!lroBody.done && attempts < 12) {
-          await new Promise((r) => setTimeout(r, 5000));
-          const opRes = await httpsGetJson(`${CODE_ASSIST_BASE}/${opName}`, token);
-          lroBody = opRes.body;
-          attempts++;
-        }
-      }
-
-      // ── Step 5: extract project from LRO response ─────────────────────────
-      caProject =
-        lroBody.response?.cloudaicompanionProject?.id ||
-        lroBody.response?.cloudaicompanionProject ||
-        null;
       caInitialized = true;
     } catch (e) {
-      caInitPromise = null; // allow retry on next request
+      caInitPromise = null;
       throw e;
     }
   })();
@@ -562,6 +564,27 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
     if (result.status !== 200) {
       const errBody = result.body;
       const errMsg = errBody?.error?.message || JSON.stringify(errBody);
+
+      // 403 "API not enabled on project" — open the activation URL automatically
+      if (
+        result.status === 403 &&
+        errMsg.includes('has not been used in project')
+      ) {
+        const urlMatch = errMsg.match(/https:\/\/console\.developers\.google\.com\/[^\s]+/);
+        if (urlMatch) {
+          shell.openExternal(urlMatch[0]).catch(() => {});
+        }
+        resetCodeAssistInit();
+        throw new Error(
+          "L'API Google Cloud Code Assist n'est pas encore activée sur votre projet.\n\n" +
+          "✅ La page d'activation vient de s'ouvrir dans votre navigateur.\n" +
+          "   → Cliquez sur « Activer l'API » dans la page qui s'est ouverte.\n" +
+          "   → Attendez 1-2 minutes que Google propage le changement.\n" +
+          "   → Puis réessayez ici.\n\n" +
+          "Ou ajoutez une clé API Gemini dans les Paramètres pour contourner."
+        );
+      }
+
       throw new Error(`Code Assist API error ${result.status}: ${errMsg}`);
     }
 
