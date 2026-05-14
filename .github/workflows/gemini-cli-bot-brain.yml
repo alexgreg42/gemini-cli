@@ -46,6 +46,7 @@ jobs:
   reasoning:
     name: 'Brain (Reasoning Layer)'
     runs-on: 'ubuntu-latest'
+    timeout-minutes: 60
     if: |
       github.repository == 'google-gemini/gemini-cli' && (
         github.event_name == 'schedule' ||
