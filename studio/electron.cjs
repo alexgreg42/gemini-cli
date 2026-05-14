@@ -48,6 +48,38 @@ let mainWindow = null;
 let cliProcess = null;
 let cliStarting = false;
 
+// ── Code Assist session init ───────────────────────────────────────────────
+// loadCodeAssist must be called before generateContent — it registers the
+// user's session on the server side. Without it the API returns 500.
+let caProject = null;
+let caInitialized = false;
+
+async function ensureCodeAssistInit(token) {
+  if (caInitialized) return;
+  try {
+    const res = await httpsPostJson(
+      `${CODE_ASSIST_BASE}:loadCodeAssist`,
+      {
+        metadata: {
+          ideType: 'IDE_UNSPECIFIED',
+          platform: 'PLATFORM_UNSPECIFIED',
+          pluginType: 'GEMINI',
+          duetProject: '',
+        },
+      },
+      token,
+    );
+    if (res.status === 200) {
+      caProject = res.body?.cloudaicompanionProject || null;
+      caInitialized = true;
+    } else {
+      console.error('[CA] loadCodeAssist failed', res.status, JSON.stringify(res.body));
+    }
+  } catch (e) {
+    console.error('[CA] loadCodeAssist error:', e.message);
+  }
+}
+
 // ── Window ────────────────────────────────────────────────────────────────────
 
 function createWindow() {
@@ -385,6 +417,9 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
   try {
     const token = await getValidAccessToken();
 
+    // Initialize Code Assist session (required before first generateContent)
+    await ensureCodeAssistInit(token);
+
     // Build Code Assist request format
     const contents = messages.map((msg) => ({
       role: msg.role === 'model' ? 'model' : 'user',
@@ -398,6 +433,7 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
     const supportsThinking = /^gemini-2\.5|^gemini-3/.test(resolvedModel);
     const caRequest = {
       model: resolvedModel,
+      ...(caProject && { project: caProject }),
       user_prompt_id: crypto.randomUUID(),
       request: {
         contents,
