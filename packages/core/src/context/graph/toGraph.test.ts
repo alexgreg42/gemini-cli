@@ -8,6 +8,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { ContextGraphBuilder } from './toGraph.js';
 import type { Content } from '@google/genai';
 import type { BaseConcreteNode } from './types.js';
+import { NodeIdService } from './nodeIdService.js';
 
 describe('ContextGraphBuilder', () => {
   describe('toGraph', () => {
@@ -26,7 +27,7 @@ describe('ContextGraphBuilder', () => {
         { role: 'user', parts: [{ text: 'Message 2' }] },
       ];
 
-      const builder = new ContextGraphBuilder();
+      const builder = new ContextGraphBuilder(new NodeIdService());
       const nodes = builder.processHistory(history);
 
       // We expect the first two messages and the last one to be present
@@ -69,7 +70,7 @@ describe('ContextGraphBuilder', () => {
       ];
 
       // 1. Initial Graph Generation
-      const builder1 = new ContextGraphBuilder();
+      const builder1 = new ContextGraphBuilder(new NodeIdService());
       const nodes1 = builder1.processHistory(complexHistory);
 
       // 2. Serialize and Deserialize (Simulating saving and loading from disk)
@@ -77,7 +78,7 @@ describe('ContextGraphBuilder', () => {
       const parsedHistory = JSON.parse(serializedHistory) as Content[];
 
       // 3. Second Graph Generation from parsed JSON
-      const builder2 = new ContextGraphBuilder();
+      const builder2 = new ContextGraphBuilder(new NodeIdService());
       const nodes2 = builder2.processHistory(parsedHistory);
 
       // Assertion: The arrays must be completely identical, including all generated UUIDs

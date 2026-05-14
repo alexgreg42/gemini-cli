@@ -405,9 +405,13 @@ export class ContextManager {
       : renderedHistory;
 
     const result = {
-      history: hardenHistory(combinedHistory, {
-        sentinels: this.sidecar.sentinels,
-      }),
+      history: hardenHistory(
+        combinedHistory,
+        {
+          sentinels: this.sidecar.sentinels,
+        },
+        this.env.graphMapper.getIdService(),
+      ),
       didApplyManagement,
       baseUnits,
       processedNodes,

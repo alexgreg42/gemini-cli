@@ -6,6 +6,7 @@
 
 import type { Content, Part } from '@google/genai';
 import { debugLogger } from './debugLogger.js';
+import type { NodeIdService } from '../context/graph/nodeIdService.js';
 
 export const SYNTHETIC_THOUGHT_SIGNATURE = 'skip_thought_signature_validator';
 
@@ -37,6 +38,7 @@ const DEFAULT_SENTINELS = {
 export function hardenHistory(
   history: Content[],
   options: HardeningOptions = {},
+  idService?: NodeIdService,
 ): Content[] {
   if (history.length === 0) return history;
 
@@ -55,7 +57,7 @@ export function hardenHistory(
   let final = enforceRoleConstraints(coalesced, sentinels);
 
   // Pass 5: Final Scrubbing (Remove custom/non-standard properties for API compatibility)
-  final = scrubHistory(final);
+  final = scrubHistory(final, idService);
 
   return final;
 }
@@ -293,10 +295,13 @@ function enforceRoleConstraints(
  * Deep-scrubs the history to remove any non-standard properties from Content and Part objects.
  * This ensures compatibility with strict APIs (like Vertex AI) that reject unknown fields.
  */
-export function scrubHistory(history: Content[]): Content[] {
+export function scrubHistory(
+  history: Content[],
+  idService?: NodeIdService,
+): Content[] {
   return history.map((content) => ({
     role: content.role,
-    parts: (content.parts || []).map(scrubPart),
+    parts: (content.parts || []).map((p) => scrubPart(p, idService)),
   }));
 }
 
@@ -308,7 +313,7 @@ function isThoughtPart(part: Part): part is ThoughtPart {
   return 'thoughtSignature' in part;
 }
 
-function scrubPart(part: Part): Part {
+function scrubPart(part: Part, idService?: NodeIdService): Part {
   const scrubbed: Record<string, unknown> = {};
 
   if ('text' in part && typeof part.text === 'string') {
@@ -351,5 +356,17 @@ function scrubPart(part: Part): Part {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-  return scrubbed as unknown as Part;
+  const result = scrubbed as unknown as Part;
+
+  // Propagate durable identity to the scrubbed object.
+  // This allows the HistoryObserver to recognize nodes even after they've been
+  // projected into multiple history formats, without polluting the API JSON.
+  if (idService) {
+    const id = idService.get(part);
+    if (id) {
+      idService.set(result, id);
+    }
+  }
+
+  return result;
 }

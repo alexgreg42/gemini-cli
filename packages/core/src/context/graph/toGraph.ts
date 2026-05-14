@@ -8,10 +8,7 @@ import type { Content, Part } from '@google/genai';
 import { type ConcreteNode, NodeType } from './types.js';
 import { randomUUID, createHash } from 'node:crypto';
 import { debugLogger } from '../../utils/debugLogger.js';
-
-interface PartWithSynthId extends Part {
-  _synthId?: string;
-}
+import type { NodeIdService } from './nodeIdService.js';
 
 // Global WeakMap to cache hashes for Part objects.
 // This optimizes getStableId by avoiding redundant stringify/hash operations
@@ -91,27 +88,24 @@ function isCodeExecutionResultPart(
  */
 export function getStableId(
   obj: object,
-  nodeIdentityMap: WeakMap<object, string>,
+  idService: NodeIdService,
   turnSalt: string = '',
   partIdx: number = 0,
 ): string {
-  let id = nodeIdentityMap.get(obj);
+  let id = idService.get(obj);
   if (id) return id;
 
   const cachedHash = PART_HASH_CACHE.get(obj);
   if (cachedHash) {
     id = `${cachedHash}_${turnSalt}_${partIdx}`;
-    nodeIdentityMap.set(obj, id);
+    idService.set(obj, id);
     return id;
   }
 
-  const part = obj as PartWithSynthId;
+  const part = obj as Part;
   let contentHash: string | undefined;
 
-  // If the object already has a synthetic ID property, use it.
-  if (typeof part._synthId === 'string') {
-    id = part._synthId;
-  } else if (isTextPart(part)) {
+  if (isTextPart(part)) {
     contentHash = createHash('sha256').update(part.text).digest('hex');
     id = `text_${contentHash}_${turnSalt}_${partIdx}`;
   } else if (isInlineDataPart(part)) {
@@ -167,7 +161,7 @@ export function getStableId(
     }
   }
 
-  nodeIdentityMap.set(obj, id);
+  idService.set(obj, id);
   return id;
 }
 
@@ -176,9 +170,7 @@ export function getStableId(
  * Every Part in history is mapped to exactly one ConcreteNode.
  */
 export class ContextGraphBuilder {
-  constructor(
-    private readonly nodeIdentityMap: WeakMap<object, string> = new WeakMap(),
-  ) {}
+  constructor(private readonly idService: NodeIdService) {}
 
   processHistory(history: readonly Content[]): ConcreteNode[] {
     const nodes: ConcreteNode[] = [];
@@ -213,7 +205,7 @@ export class ContextGraphBuilder {
       const occurrence = (seenHashes.get(h) || 0) + 1;
       seenHashes.set(h, occurrence);
       const turnSalt = `${h}_${occurrence}`;
-      const turnId = getStableId(msg, this.nodeIdentityMap, turnSalt, -1);
+      const turnId = getStableId(msg, this.idService, turnSalt, -1);
 
       if (msg.role === 'user') {
         for (let partIdx = 0; partIdx < msg.parts.length; partIdx++) {
@@ -221,13 +213,13 @@ export class ContextGraphBuilder {
           const apiId =
             isFunctionResponsePart(part) &&
             typeof part.functionResponse.id === 'string'
-              ? `resp_${part.functionResponse.id}_${turnSalt}_${partIdx}`
+              ? `resp_${part.functionResponse.id}`
               : isFunctionCallPart(part) &&
                   typeof part.functionCall.id === 'string'
-                ? `call_${part.functionCall.id}_${turnSalt}_${partIdx}`
+                ? `call_${part.functionCall.id}`
                 : undefined;
           const id =
-            apiId || getStableId(part, this.nodeIdentityMap, turnSalt, partIdx);
+            apiId || getStableId(part, this.idService, turnSalt, partIdx);
           const node: ConcreteNode = {
             id,
             timestamp: Date.now(),
@@ -245,10 +237,10 @@ export class ContextGraphBuilder {
           const part = msg.parts[partIdx];
           const apiId =
             isFunctionCallPart(part) && typeof part.functionCall.id === 'string'
-              ? `call_${part.functionCall.id}_${turnSalt}_${partIdx}`
+              ? `call_${part.functionCall.id}`
               : undefined;
           const id =
-            apiId || getStableId(part, this.nodeIdentityMap, turnSalt, partIdx);
+            apiId || getStableId(part, this.idService, turnSalt, partIdx);
           const node: ConcreteNode = {
             id,
             timestamp: Date.now(),
