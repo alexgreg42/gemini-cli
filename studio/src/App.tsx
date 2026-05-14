@@ -120,7 +120,7 @@ const newSession = (): ChatSession => ({
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type RightTab = 'github' | 'files' | 'cli';
+type RightTab = 'github' | 'files' | 'cli' | 'preview';
 type CommitStatus = 'idle' | 'loading' | 'success' | 'error';
 
 // ─── Tier badge ──────────────────────────────────────────────────────────────
@@ -241,6 +241,23 @@ function renderMarkdownBlock(text: string, bk: number): React.ReactNode {
   return <React.Fragment key={bk}>{nodes}</React.Fragment>;
 }
 
+// ─── HTML extractor (for preview) ────────────────────────────────────────────
+
+function extractHtml(content: string): string | null {
+  // ```html code block
+  const fenced = content.match(/```html\s*\n([\s\S]*?)```/i);
+  if (fenced) return fenced[1].trim();
+  // any code block that contains an HTML document
+  const anyFenced = content.match(/```[^\n]*\n([\s\S]*?)```/);
+  if (anyFenced) {
+    const c = anyFenced[1].trim();
+    if (/<!DOCTYPE|<html|<body|<head/i.test(c)) return c;
+  }
+  // raw HTML doc in message text
+  const rawDoc = content.match(/(<!DOCTYPE\s+html[\s\S]*?<\/html>)/i);
+  return rawDoc ? rawDoc[1] : null;
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 const App: React.FC = () => {
@@ -298,6 +315,10 @@ const App: React.FC = () => {
   // Right panel
   const [rightTab, setRightTab] = useState<RightTab>('github');
 
+  // Preview
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [showFullPreview, setShowFullPreview] = useState(false);
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -336,6 +357,17 @@ const App: React.FC = () => {
     },
     [],
   );
+
+  // Auto-update preview when the latest model message has HTML
+  useEffect(() => {
+    const last = [...session.messages]
+      .reverse()
+      .find((m) => m.role === 'model');
+    if (last) {
+      const html = extractHtml(last.content);
+      if (html) setPreviewHtml(html);
+    }
+  }, [session.messages]);
 
   // ── GitHub ─────────────────────────────────────────────────────────────────
 
@@ -933,6 +965,22 @@ const App: React.FC = () => {
                     }
                     return renderMarkdownBlock(part, index);
                   })}
+                  {msg.role === 'model' &&
+                    (() => {
+                      const html = extractHtml(msg.content);
+                      if (!html) return null;
+                      return (
+                        <button
+                          className="preview-msg-btn"
+                          onClick={() => {
+                            setPreviewHtml(html);
+                            setRightTab('preview');
+                          }}
+                        >
+                          <Eye size={13} /> Prévisualiser l&apos;app
+                        </button>
+                      );
+                    })()}
                 </div>
               </motion.div>
             ))}
@@ -1068,6 +1116,18 @@ const App: React.FC = () => {
               )}
             </button>
           )}
+          <button
+            className={`right-tab${rightTab === 'preview' ? ' active' : ''}`}
+            onClick={() => setRightTab('preview')}
+          >
+            <Eye size={15} />
+            <span>Preview</span>
+            {previewHtml && (
+              <span className="badge" style={{ background: '#10b981' }}>
+                ●
+              </span>
+            )}
+          </button>
         </div>
 
         {/* GitHub Tab */}
@@ -1385,7 +1445,134 @@ const App: React.FC = () => {
             )}
           </div>
         )}
+        {/* Preview Tab */}
+        {rightTab === 'preview' && (
+          <div
+            className="panel-body"
+            style={{ padding: 0, gap: 0, overflow: 'hidden' }}
+          >
+            {previewHtml ? (
+              <>
+                <div className="preview-toolbar">
+                  <span className="preview-label">
+                    <Eye size={12} /> Aperçu live
+                  </span>
+                  <button
+                    className="icon-btn"
+                    title="Plein écran"
+                    onClick={() => setShowFullPreview(true)}
+                  >
+                    <Layers size={13} />
+                  </button>
+                  <button
+                    className="icon-btn danger"
+                    title="Fermer le preview"
+                    onClick={() => setPreviewHtml(null)}
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+                <iframe
+                  srcDoc={previewHtml}
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    border: 'none',
+                    background: '#fff',
+                  }}
+                  title="App Preview"
+                />
+              </>
+            ) : (
+              <div className="panel-empty" style={{ padding: '24px 16px' }}>
+                <Eye size={28} style={{ opacity: 0.3, marginBottom: 12 }} />
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>
+                  Aperçu de l&apos;app
+                </div>
+                <div style={{ fontSize: '.75rem', lineHeight: 1.6 }}>
+                  Demande à Gemini de créer un fichier HTML/CSS/JS et clique sur{' '}
+                  <strong>Prévisualiser l&apos;app</strong> pour voir le rendu
+                  ici.
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </aside>
+
+      {/* ── Full Preview Modal ── */}
+      <AnimatePresence>
+        {showFullPreview && previewHtml && (
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowFullPreview(false);
+            }}
+            style={{ padding: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.97, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.97, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              style={{
+                width: '92vw',
+                height: '90vh',
+                background: '#fff',
+                borderRadius: 12,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                border: '1px solid var(--glass-border)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 16px',
+                  background: 'var(--bg-secondary)',
+                  borderBottom: '1px solid var(--glass-border)',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '.85rem',
+                    color: 'var(--text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Eye size={14} /> Aperçu — plein écran
+                </span>
+                <button
+                  className="icon-btn"
+                  onClick={() => setShowFullPreview(false)}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <iframe
+                srcDoc={previewHtml}
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  border: 'none',
+                  background: '#fff',
+                }}
+                title="App Preview Full"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Settings Modal ── */}
       <AnimatePresence>
@@ -1681,7 +1868,7 @@ const App: React.FC = () => {
         .disclaimer { text-align: center; margin-top: 10px; font-size: .68rem; color: var(--text-secondary); }
 
         /* ── Right panel ── */
-        .right-panel { width: 300px; background: var(--bg-secondary); border-left: 1px solid var(--glass-border); display: flex; flex-direction: column; }
+        .right-panel { width: 300px; flex-shrink: 0; background: var(--bg-secondary); border-left: 1px solid var(--glass-border); display: flex; flex-direction: column; }
         .right-tabs { display: flex; border-bottom: 1px solid var(--glass-border); }
         .right-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 13px 8px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-secondary); cursor: pointer; font-size: .82rem; font-family: inherit; transition: all .2s; }
         .right-tab:hover { color: var(--text-primary); }
@@ -1789,6 +1976,12 @@ const App: React.FC = () => {
         .setting-divider { text-align: center; color: var(--text-secondary); font-size: .72rem; position: relative; margin: 4px 0; }
         .setting-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--glass-border); z-index: 0; }
         .setting-divider span { position: relative; background: var(--bg-secondary); padding: 0 10px; z-index: 1; }
+
+        /* ── Preview ── */
+        .preview-msg-btn { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; padding: 5px 12px; background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3); border-radius: 20px; color: #10b981; font-size: .78rem; font-family: inherit; cursor: pointer; transition: all .2s; }
+        .preview-msg-btn:hover { background: rgba(16,185,129,.22); }
+        .preview-toolbar { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: var(--bg-secondary); border-bottom: 1px solid var(--glass-border); flex-shrink: 0; }
+        .preview-label { flex: 1; display: flex; align-items: center; gap: 5px; font-size: .75rem; color: var(--text-secondary); }
       `,
         }}
       />

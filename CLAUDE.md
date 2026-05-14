@@ -76,7 +76,8 @@ imports cli. The Code Assist API client lives entirely in
   `toGenerateContentRequest` / `fromGenerateContentResponse` converters
 - `types.ts` — request/response types
 - Auth: `google-auth-library` `AuthClient` automatically injects
-  `Authorization: Bearer` **and** `X-Goog-User-Project` headers
+  `Authorization: Bearer`; `X-Goog-User-Project` is only injected if
+  `quota_project_id` is present in the saved credentials (set from env vars)
 - `loadCodeAssist` must be called before `generateContent` to initialise the
   user session server-side
 
@@ -104,7 +105,15 @@ A standalone Electron + React + TypeScript app. Does **not** import from
 
 - Call `ensureCodeAssistInit` (→ `loadCodeAssist`) before first
   `generateContent` to get `cloudaicompanionProject`
-- Always set `X-Goog-User-Project: caProject` header — missing this causes 500
+- `ensureCodeAssistInit` logic (mirrors `setup.ts`):
+  - If `loadCodeAssist` returns `currentTier` → already registered, use
+    `cloudaicompanionProject` directly, **do NOT call `onboardUser`**
+  - If no `currentTier` → call `onboardUser` with `tierId` from default
+    `allowedTier` (never pass `cloudaicompanionProject` for FREE tier)
+- **Do NOT send `X-Goog-User-Project` header** for free-tier users — the native
+  CLI doesn't send it; sending the Google-managed project ID as
+  `X-Goog-User-Project` triggers a 403 (API-not-enabled check on a project the
+  user can't control). Use `project` field in the request body instead.
 - `gemini-2.5+` / `gemini-3+` models:
   `generationConfig = { temperature:1, topP:0.95, topK:64, thinkingConfig:{ includeThoughts:true, thinkingBudget:8192 } }`
 - `gemini-2.0-flash` and older: same base config **without** `thinkingConfig`

@@ -92,43 +92,49 @@ async function ensureCodeAssistInit(token) {
         );
       }
       const loadBody = loadRes.body;
-      const existingProject = loadBody.cloudaicompanionProject || null;
 
-      // ── 2. Determine onboarding tier ──────────────────────────────────────
-      // currentTier = already in system; allowedTiers = first-time
-      const tierId =
-        loadBody.currentTier?.id ||
-        (loadBody.allowedTiers || [])[0]?.id ||
-        'FREE';
-
-      // ── 3. onboardUser — activates the Cloud Code API on the GCP project ──
-      // Must be called even when currentTier is present; the project may exist
-      // in Google's registry but have the API disabled (fresh credential / new
-      // project).  Errors are swallowed and we fall back to existingProject.
-      let onboardProject = null;
-      try {
-        const onboardRes = await httpsPostJson(
-          `${CODE_ASSIST_BASE}:onboardUser`,
-          { tierId, metadata: CA_METADATA },
-          token, {}, 1,
-        );
-        if (onboardRes.status === 200) {
-          const lro = await pollLro(onboardRes.body, token);
-          onboardProject =
-            lro.response?.cloudaicompanionProject?.id ||
-            lro.response?.cloudaicompanionProject ||
-            null;
+      // ── 2. Already registered — use project directly, skip onboardUser ────
+      // Matches native CLI setup.ts: if currentTier is present, the user is
+      // already onboarded. onboardUser must NOT be called again.
+      if (loadBody.currentTier) {
+        caProject = loadBody.cloudaicompanionProject || null;
+        if (!caProject) {
+          throw new Error(
+            "Code Assist: utilisateur enregistré mais aucun projet GCP retourné.\n" +
+            "Reconnectez-vous via Google OAuth.",
+          );
         }
-      } catch (_) {
-        // onboardUser unavailable — proceed with existingProject
+        caInitialized = true;
+        return;
       }
 
-      caProject = onboardProject || existingProject;
+      // ── 3. First-time user — onboard (LRO) ────────────────────────────────
+      // Use the default allowed tier. FREE tier = 'free-tier', do NOT pass
+      // cloudaicompanionProject (causes Precondition Failed on server side).
+      const allowedTiers = loadBody.allowedTiers || [];
+      const defaultTier =
+        allowedTiers.find((t) => t.isDefault) || allowedTiers[0];
+      const tierId = defaultTier?.id || 'free-tier';
+
+      const onboardRes = await httpsPostJson(
+        `${CODE_ASSIST_BASE}:onboardUser`,
+        { tierId, metadata: CA_METADATA },
+        token, {}, 1,
+      );
+      if (onboardRes.status !== 200) {
+        throw new Error(
+          `Code Assist onboarding failed (${onboardRes.status}): ` +
+          (onboardRes.body?.error?.message || JSON.stringify(onboardRes.body)),
+        );
+      }
+
+      const lro = await pollLro(onboardRes.body, token);
+      caProject = lro.response?.cloudaicompanionProject?.id || null;
 
       if (!caProject) {
         throw new Error(
-          "Code Assist: impossible d'obtenir le projet GCP.\n" +
-          "Reconnectez-vous via Google OAuth ou utilisez une clé API Gemini.",
+          "Code Assist: impossible d'obtenir le projet GCP après onboarding.\n" +
+          "Reconnectez-vous via Google OAuth et réessayez.",
         );
       }
 
@@ -551,19 +557,46 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
       request: { contents, generationConfig },
     };
 
-    // X-Goog-User-Project routes the request to the correct GCP project —
-    // google-auth-library adds this automatically; we must do it manually.
-    const caHeaders = caProject ? { 'X-Goog-User-Project': caProject } : {};
-    const result = await httpsPostJson(
-      `${CODE_ASSIST_BASE}:generateContent`,
-      caRequest,
-      token,
-      caHeaders,
-    );
+    // The 'project' field in the request body is enough to route the request.
+    // The native CLI (google-auth-library) does NOT send X-Goog-User-Project for
+    // free-tier users — sending it with a Google-managed project ID causes 403.
+
+    // Auto-retry on 429 — parse "reset after Xs" from the error message if present,
+    // otherwise use exponential backoff (15s, 30s, 60s).
+    let result;
+    const MAX_RETRIES = 3;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      result = await httpsPostJson(
+        `${CODE_ASSIST_BASE}:generateContent`,
+        caRequest,
+        token,
+      );
+      if (result.status !== 429) break;
+      if (attempt === MAX_RETRIES) break;
+      const errMsg429 = result.body?.error?.message || '';
+      const secondsMatch = errMsg429.match(/reset after\s+(\d+)s/i);
+      const waitMs = secondsMatch
+        ? (parseInt(secondsMatch[1], 10) + 2) * 1000
+        : [15000, 30000, 60000][attempt];
+      await new Promise((r) => setTimeout(r, waitMs));
+      // Refresh token before retry in case it expired during the wait
+      const freshCreds = loadCreds();
+      if (freshCreds && isTokenExpired(freshCreds)) {
+        await refreshToken(freshCreds);
+      }
+    }
 
     if (result.status !== 200) {
       const errBody = result.body;
       const errMsg = errBody?.error?.message || JSON.stringify(errBody);
+
+      // 429 still failing after retries
+      if (result.status === 429) {
+        throw new Error(
+          `Quota épuisé sur Gemini 3 Flash.\n` +
+          `Essayez de passer sur Gemini 2.5 Flash (quota plus large) ou attendez quelques minutes.`
+        );
+      }
 
       // 403 "API not enabled on project" — open the activation URL automatically
       if (
@@ -580,8 +613,7 @@ ipcMain.handle('gemini:generate', async (_event, { messages, model }) => {
           "✅ La page d'activation vient de s'ouvrir dans votre navigateur.\n" +
           "   → Cliquez sur « Activer l'API » dans la page qui s'est ouverte.\n" +
           "   → Attendez 1-2 minutes que Google propage le changement.\n" +
-          "   → Puis réessayez ici.\n\n" +
-          "Ou ajoutez une clé API Gemini dans les Paramètres pour contourner."
+          "   → Puis réessayez ici."
         );
       }
 
