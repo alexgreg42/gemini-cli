@@ -197,7 +197,16 @@ export const sendMessageToGemini = async (
     return sendViaElectronOAuth(prompt, history, attachedFiles, resolvedModel);
   }
 
-  // Fallback: API key mode
+  // In Electron: never fall through to the paid API key path — require OAuth
+  if (typeof window !== 'undefined' && window.electronAPI?.isElectron) {
+    throw new Error(
+      'Connexion Google requise.\n' +
+        'Connectez-vous via Google OAuth dans ⚙ Paramètres pour utiliser Gemini gratuitement.\n' +
+        "L'API payante est bloquée — quota gratuit uniquement.",
+    );
+  }
+
+  // Browser fallback: API key mode (non-Electron only)
   const apiKey = settings.geminiApiKey;
   if (!apiKey) {
     throw new Error(

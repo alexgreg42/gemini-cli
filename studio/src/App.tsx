@@ -831,7 +831,16 @@ const App: React.FC = () => {
                   setCommitPath(item.path);
                   setCommitContent(content);
                   setCommitMessage(`Update ${item.name}`);
-                  setShowCommit(true);
+                  setAttachedFiles((prev) => [
+                    ...prev.filter((f) => f.name !== item.name),
+                    {
+                      name: item.name,
+                      mimeType: 'text/plain',
+                      content,
+                      isImage: false,
+                      size: content.length,
+                    },
+                  ]);
                 } catch (err) {
                   alert(
                     err instanceof Error
@@ -918,6 +927,17 @@ const App: React.FC = () => {
           )}
           <div
             className="nav-item"
+            onClick={() => {
+              if (!githubToken) openSettings();
+              else setRightTab('github');
+            }}
+            title="Projets GitHub"
+          >
+            <GitBranch size={18} />
+            <span>Projets</span>
+          </div>
+          <div
+            className="nav-item"
             onClick={() => setRightTab('files')}
             title="Fichiers joints"
           >
@@ -946,6 +966,37 @@ const App: React.FC = () => {
                 </div>
               ))}
             </>
+          )}
+
+          {selectedRepo && githubToken && (
+            <div className="active-project-card">
+              <div className="active-project-name">
+                <FolderOpen size={14} color="var(--accent-blue)" />
+                <span>{selectedRepo.name}</span>
+              </div>
+              {selectedRepo.language && (
+                <div className="repo-lang" style={{ marginBottom: '4px' }}>
+                  <span
+                    className="lang-dot"
+                    style={{
+                      background:
+                        LANG_COLORS[selectedRepo.language] ?? '#8b949e',
+                    }}
+                  />
+                  {selectedRepo.language}
+                </div>
+              )}
+              <button
+                className="panel-btn primary"
+                style={{ fontSize: '.76rem', padding: '6px 10px' }}
+                onClick={() => {
+                  setRightTab('github');
+                  setShowCommit(true);
+                }}
+              >
+                <GitCommit size={13} /> Commit &amp; Push
+              </button>
+            </div>
           )}
         </div>
 
@@ -2195,6 +2246,10 @@ const App: React.FC = () => {
         .tree-node { display: flex; align-items: center; gap: 6px; padding: 4px 8px; cursor: pointer; font-size: .75rem; color: var(--text-secondary); transition: background .12s; user-select: none; }
         .tree-node:hover { background: rgba(255,255,255,.05); color: var(--text-primary); }
         .tree-node-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+        /* ── Active project card ── */
+        .active-project-card { margin: 12px 8px 0; background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.25); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+        .active-project-name { display: flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; color: var(--text-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
       `,
         }}
       />
