@@ -1088,118 +1088,9 @@ const App: React.FC = () => {
                     : 'Non authentifié — ouvrez les Paramètres'
               }
             />
-
-            {/* ── Repo picker dropdown ── */}
-            {githubToken && repos.length > 0 && (
-              <div className="repo-selector" ref={repoRef}>
-                <button
-                  className="repo-trigger"
-                  onClick={() => setRepoDropdownOpen((o) => !o)}
-                  title={
-                    selectedRepo
-                      ? selectedRepo.full_name
-                      : 'Sélectionner un dépôt'
-                  }
-                >
-                  <GitBranch
-                    size={14}
-                    color={selectedRepo ? '#10b981' : 'var(--text-secondary)'}
-                  />
-                  <span className="repo-trigger-name">
-                    {selectedRepo ? selectedRepo.name : 'Dépôt'}
-                  </span>
-                  <ChevronDown
-                    size={12}
-                    className={repoDropdownOpen ? 'rotated' : ''}
-                  />
-                </button>
-                <AnimatePresence>
-                  {repoDropdownOpen && (
-                    <motion.div
-                      className="repo-picker-dropdown"
-                      initial={{ opacity: 0, y: -8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      <div className="repo-picker-header">
-                        <span className="repo-picker-title">REPOSITORIES</span>
-                      </div>
-                      <input
-                        className="repo-picker-search"
-                        placeholder="Rechercher…"
-                        value={repoDropdownSearch}
-                        onChange={(e) => setRepoDropdownSearch(e.target.value)}
-                        autoFocus
-                      />
-                      <div className="repo-picker-count">
-                        <CheckCircle size={12} color="#10b981" />
-                        {repos.length} repositories trouvés.
-                      </div>
-                      <div className="repo-picker-list">
-                        {repos
-                          .filter(
-                            (r) =>
-                              !repoDropdownSearch ||
-                              r.full_name
-                                .toLowerCase()
-                                .includes(repoDropdownSearch.toLowerCase()),
-                          )
-                          .map((repo) => (
-                            <button
-                              key={repo.id}
-                              className={`repo-picker-item${selectedRepo?.id === repo.id ? ' selected' : ''}`}
-                              onClick={() => {
-                                setSelectedRepo(repo);
-                                setRepoDropdownOpen(false);
-                                setRepoDropdownSearch('');
-                                setRightTab('github');
-                              }}
-                            >
-                              {repo.private ? (
-                                <Lock size={11} color="#f59e0b" />
-                              ) : (
-                                <Globe
-                                  size={11}
-                                  color="var(--text-secondary)"
-                                />
-                              )}
-                              <span>{repo.full_name}</span>
-                            </button>
-                          ))}
-                      </div>
-                      <div className="repo-picker-footer">
-                        <button
-                          className="repo-picker-github-btn"
-                          onClick={() => {
-                            setRepoDropdownOpen(false);
-                            setRightTab('github');
-                          }}
-                        >
-                          <GitBranch size={13} /> GitHub
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
           </div>
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            {selectedRepo && (
-              <button
-                className="push-header-btn"
-                onClick={() => {
-                  setRightTab('github');
-                  setShowCommit(true);
-                }}
-                title={`Git Push → ${selectedRepo.full_name}`}
-              >
-                <Upload size={14} />
-                <span>Push</span>
-              </button>
-            )}
             {sessionTokens.totalTokens > 0 && (
               <div
                 className="token-counter"
@@ -1403,6 +1294,213 @@ const App: React.FC = () => {
             >
               <Paperclip size={20} />
             </button>
+
+            {/* ── Repo picker — barre d'input ── */}
+            <div className="repo-selector" ref={repoRef}>
+              <button
+                className="repo-trigger"
+                onClick={() => setRepoDropdownOpen((o) => !o)}
+                title={
+                  selectedRepo
+                    ? selectedRepo.full_name
+                    : githubToken
+                      ? 'Sélectionner un dépôt'
+                      : 'Connecter GitHub'
+                }
+              >
+                <GitBranch
+                  size={16}
+                  color={
+                    selectedRepo
+                      ? '#10b981'
+                      : githubToken
+                        ? 'var(--accent-blue)'
+                        : 'var(--text-secondary)'
+                  }
+                />
+                <span className="repo-trigger-name">
+                  {selectedRepo
+                    ? selectedRepo.name
+                    : githubToken
+                      ? 'Dépôt'
+                      : 'GitHub'}
+                </span>
+                <ChevronDown
+                  size={11}
+                  className={repoDropdownOpen ? 'rotated' : ''}
+                />
+              </button>
+              <AnimatePresence>
+                {repoDropdownOpen && (
+                  <motion.div
+                    className="repo-picker-dropdown"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <div className="repo-picker-header">
+                      <span className="repo-picker-title">REPOSITORIES</span>
+                    </div>
+
+                    {!githubToken ? (
+                      <div className="repo-picker-connect">
+                        <p className="repo-picker-connect-hint">
+                          Entrez votre token GitHub pour accéder à vos dépôts.
+                        </p>
+                        <input
+                          className="repo-picker-search"
+                          type="password"
+                          placeholder="ghp_…"
+                          value={tokenInput}
+                          onChange={(e) => setTokenInput(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === 'Enter' && handleConnectGitHub()
+                          }
+                          autoFocus
+                        />
+                        <div className="repo-picker-connect-actions">
+                          <button
+                            className="repo-picker-connect-btn"
+                            onClick={handleConnectGitHub}
+                            disabled={!tokenInput.trim()}
+                          >
+                            <LogIn size={13} /> Connecter
+                          </button>
+                          <a
+                            className="repo-picker-token-link"
+                            href="https://github.com/settings/tokens/new"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Créer un token →
+                          </a>
+                        </div>
+                      </div>
+                    ) : reposLoading ? (
+                      <div className="repo-picker-loading">
+                        <RefreshCw size={16} className="spin" />
+                        <span>Chargement des dépôts…</span>
+                      </div>
+                    ) : reposError ? (
+                      <div className="repo-picker-error">
+                        <AlertCircle size={14} color="#f87171" />
+                        <span>{reposError}</span>
+                        <button
+                          className="repo-picker-connect-btn"
+                          onClick={() => loadRepos(githubToken)}
+                        >
+                          <RefreshCw size={12} /> Réessayer
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          className="repo-picker-search"
+                          placeholder="Rechercher…"
+                          value={repoDropdownSearch}
+                          onChange={(e) =>
+                            setRepoDropdownSearch(e.target.value)
+                          }
+                          autoFocus
+                        />
+                        <div className="repo-picker-count">
+                          <CheckCircle size={12} color="#10b981" />
+                          {repos.length} repositories trouvés.
+                        </div>
+                        <div className="repo-picker-list">
+                          {repos
+                            .filter(
+                              (r) =>
+                                !repoDropdownSearch ||
+                                r.full_name
+                                  .toLowerCase()
+                                  .includes(repoDropdownSearch.toLowerCase()),
+                            )
+                            .map((repo) => (
+                              <button
+                                key={repo.id}
+                                className={`repo-picker-item${selectedRepo?.id === repo.id ? ' selected' : ''}`}
+                                onClick={() => {
+                                  setSelectedRepo(repo);
+                                  setRepoDropdownOpen(false);
+                                  setRepoDropdownSearch('');
+                                  setRightTab('github');
+                                }}
+                              >
+                                {repo.private ? (
+                                  <Lock size={11} color="#f59e0b" />
+                                ) : (
+                                  <Globe
+                                    size={11}
+                                    color="var(--text-secondary)"
+                                  />
+                                )}
+                                <span>{repo.full_name}</span>
+                              </button>
+                            ))}
+                          {repos.filter(
+                            (r) =>
+                              !repoDropdownSearch ||
+                              r.full_name
+                                .toLowerCase()
+                                .includes(repoDropdownSearch.toLowerCase()),
+                          ).length === 0 && (
+                            <div className="repo-picker-empty">
+                              Aucun dépôt trouvé
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    <div className="repo-picker-footer">
+                      <button
+                        className="repo-picker-github-btn"
+                        onClick={() => {
+                          setRepoDropdownOpen(false);
+                          setRightTab('github');
+                        }}
+                      >
+                        <GitBranch size={13} /> GitHub
+                      </button>
+                      {githubToken && (
+                        <button
+                          className="repo-picker-disconnect-btn"
+                          onClick={() => {
+                            setGithubToken('');
+                            saveSettings({ githubToken: '' });
+                            setSettings(loadSettings());
+                            setRepos([]);
+                            setSelectedRepo(null);
+                            setRepoDropdownOpen(false);
+                          }}
+                          title="Déconnecter GitHub"
+                        >
+                          <LogOut size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── Push button ── */}
+            {selectedRepo && (
+              <button
+                className="push-chat-btn"
+                onClick={() => {
+                  setRightTab('github');
+                  setShowCommit(true);
+                }}
+                title={`Git Push → ${selectedRepo.full_name}`}
+              >
+                <Upload size={15} />
+                <span>Push</span>
+              </button>
+            )}
+
             <textarea
               ref={textareaRef}
               placeholder="Message Gemini… (Shift+Entrée pour nouvelle ligne)"
@@ -2371,29 +2469,42 @@ const App: React.FC = () => {
         .active-project-card { margin: 12px 8px 0; background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.25); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
         .active-project-name { display: flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; color: var(--text-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
-        /* ── Repo picker dropdown (header) ── */
+        /* ── Repo picker dropdown ── */
         .repo-selector { position: relative; }
-        .repo-trigger { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.05); border: 1px solid var(--glass-border); border-radius: 8px; padding: 5px 10px; color: var(--text-primary); cursor: pointer; font-size: .82rem; font-family: inherit; transition: all .2s; max-width: 160px; }
-        .repo-trigger:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); }
-        .repo-trigger-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
-        .repo-picker-dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--bg-secondary); border: 1px solid var(--glass-border); border-radius: 12px; min-width: 280px; z-index: 300; box-shadow: 0 20px 48px rgba(0,0,0,.6); overflow: hidden; }
+        .repo-trigger { display: flex; align-items: center; gap: 5px; background: transparent; border: none; border-radius: 8px; padding: 6px 8px; color: var(--text-secondary); cursor: pointer; font-size: .82rem; font-family: inherit; transition: all .2s; }
+        .repo-trigger:hover { background: rgba(255,255,255,.07); color: var(--text-primary); }
+        .repo-trigger-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }
+        .repo-picker-dropdown { position: absolute; bottom: calc(100% + 10px); left: 0; background: var(--bg-secondary); border: 1px solid var(--glass-border); border-radius: 12px; min-width: 290px; z-index: 300; box-shadow: 0 20px 48px rgba(0,0,0,.65); overflow: hidden; }
         .repo-picker-header { padding: 12px 14px 6px; }
         .repo-picker-title { font-size: .68rem; font-weight: 700; letter-spacing: .08em; color: var(--text-secondary); text-transform: uppercase; }
-        .repo-picker-search { display: block; width: 100%; background: rgba(255,255,255,.05); border: none; border-bottom: 1px solid var(--glass-border); padding: 8px 14px; color: var(--text-primary); font-size: .82rem; font-family: inherit; outline: none; }
+        .repo-picker-search { display: block; width: 100%; background: rgba(255,255,255,.05); border: none; border-bottom: 1px solid var(--glass-border); padding: 8px 14px; color: var(--text-primary); font-size: .82rem; font-family: inherit; outline: none; box-sizing: border-box; }
         .repo-picker-search:focus { background: rgba(255,255,255,.07); }
         .repo-picker-count { display: flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: .75rem; color: var(--text-secondary); border-bottom: 1px solid var(--glass-border); }
-        .repo-picker-list { max-height: 260px; overflow-y: auto; padding: 4px; }
+        .repo-picker-list { max-height: 240px; overflow-y: auto; padding: 4px; }
         .repo-picker-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 7px; background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: .82rem; font-family: inherit; text-align: left; transition: background .12s; }
         .repo-picker-item:hover { background: rgba(255,255,255,.06); }
         .repo-picker-item.selected { background: rgba(59,130,246,.12); color: var(--accent-blue); }
         .repo-picker-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .repo-picker-footer { padding: 8px; border-top: 1px solid var(--glass-border); }
-        .repo-picker-github-btn { display: flex; align-items: center; gap: 6px; width: 100%; padding: 7px 10px; border-radius: 7px; background: rgba(255,255,255,.04); border: 1px solid var(--glass-border); color: var(--text-secondary); cursor: pointer; font-size: .8rem; font-family: inherit; transition: all .2s; }
+        .repo-picker-empty { padding: 12px 14px; font-size: .8rem; color: var(--text-secondary); text-align: center; }
+        .repo-picker-footer { padding: 8px; border-top: 1px solid var(--glass-border); display: flex; align-items: center; gap: 6px; }
+        .repo-picker-github-btn { display: flex; align-items: center; gap: 6px; flex: 1; padding: 7px 10px; border-radius: 7px; background: rgba(255,255,255,.04); border: 1px solid var(--glass-border); color: var(--text-secondary); cursor: pointer; font-size: .8rem; font-family: inherit; transition: all .2s; }
         .repo-picker-github-btn:hover { color: var(--text-primary); background: rgba(255,255,255,.08); }
+        .repo-picker-disconnect-btn { display: flex; align-items: center; padding: 7px 9px; border-radius: 7px; background: transparent; border: 1px solid rgba(248,113,113,.25); color: #f87171; cursor: pointer; transition: all .2s; }
+        .repo-picker-disconnect-btn:hover { background: rgba(248,113,113,.1); }
+        .repo-picker-connect { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+        .repo-picker-connect-hint { font-size: .78rem; color: var(--text-secondary); line-height: 1.5; margin: 0; }
+        .repo-picker-connect-actions { display: flex; align-items: center; gap: 8px; }
+        .repo-picker-connect-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 7px; background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.3); color: var(--accent-blue); cursor: pointer; font-size: .8rem; font-family: inherit; font-weight: 600; transition: all .2s; white-space: nowrap; }
+        .repo-picker-connect-btn:hover:not(:disabled) { background: rgba(59,130,246,.25); }
+        .repo-picker-connect-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .repo-picker-token-link { font-size: .75rem; color: var(--text-secondary); text-decoration: none; white-space: nowrap; }
+        .repo-picker-token-link:hover { color: var(--accent-blue); }
+        .repo-picker-loading { display: flex; align-items: center; gap: 10px; padding: 16px 14px; font-size: .82rem; color: var(--text-secondary); }
+        .repo-picker-error { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; font-size: .8rem; color: #f87171; }
 
-        /* ── Push button (header) ── */
-        .push-header-btn { display: flex; align-items: center; gap: 6px; background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3); border-radius: 8px; padding: 5px 12px; color: #10b981; cursor: pointer; font-size: .82rem; font-family: inherit; font-weight: 600; transition: all .2s; white-space: nowrap; }
-        .push-header-btn:hover { background: rgba(16,185,129,.22); transform: translateY(-1px); }
+        /* ── Push button (barre d'input) ── */
+        .push-chat-btn { display: flex; align-items: center; gap: 5px; background: transparent; border: none; border-radius: 8px; padding: 6px 8px; color: #10b981; cursor: pointer; font-size: .82rem; font-family: inherit; font-weight: 600; transition: all .2s; white-space: nowrap; }
+        .push-chat-btn:hover { background: rgba(16,185,129,.12); }
       `,
         }}
       />
