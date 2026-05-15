@@ -65,9 +65,12 @@ export const commitFileToGitHub = async (
   message: string,
   sha?: string,
 ): Promise<void> => {
-  // Use TextEncoder for proper Unicode → base64 conversion
+  // Chunk to avoid call stack overflow on large files (String.fromCharCode spread limit)
   const bytes = new TextEncoder().encode(content);
-  const binary = String.fromCharCode(...bytes);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 8192) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  }
   const encoded = btoa(binary);
 
   const body: Record<string, string> = { message, content: encoded };

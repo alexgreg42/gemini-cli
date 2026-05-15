@@ -1,7 +1,6 @@
 /**
  * Electron preload — secure IPC bridge between renderer and main
  */
-/* eslint-disable */
 'use strict';
 
 const { contextBridge, ipcRenderer } = require('electron');

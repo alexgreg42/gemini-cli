@@ -2,7 +2,6 @@
  * Gemini CLI Studio — Electron main process
  * Handles: OAuth (same flow as native CLI), Code Assist API proxy, CLI background process
  */
-/* eslint-disable */
 'use strict';
 
 const {
@@ -18,7 +17,7 @@ const https = require('https');
 const net = require('net');
 const os = require('os');
 const fs = require('fs');
-const { execFile, spawn } = require('child_process');
+const { spawn } = require('child_process');
 const crypto = require('crypto');
 const { URL, URLSearchParams } = require('url');
 
@@ -177,7 +176,7 @@ function createWindow() {
   Menu.setApplicationMenu(null);
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5174');
+    mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
@@ -380,10 +379,10 @@ ipcMain.handle('oauth:start', async () => {
 
     // Start local callback server
     const loginPromise = new Promise((resolve, reject) => {
-      const timeout = setTimeout(
-        () => reject(new Error('Authentication timed out (5 min)')),
-        5 * 60 * 1000,
-      );
+      const timeout = setTimeout(() => {
+        server.close();
+        reject(new Error('Authentication timed out (5 min)'));
+      }, 5 * 60 * 1000);
 
       const server = http.createServer(async (req, res) => {
         try {
