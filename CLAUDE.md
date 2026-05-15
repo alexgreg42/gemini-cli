@@ -126,6 +126,20 @@ A standalone Electron + React + TypeScript app. Does **not** import from
 OAuth credentials are stored in `~/.gemini/oauth_creds.json` (same file as the
 native CLI).
 
+## Billing lock — Claude Pro $20/month
+
+**ANTHROPIC_API_KEY must never be set.** The user operates exclusively on the
+Claude Pro $20/month subscription. Setting this env var would switch Claude Code
+to pay-per-token API billing and generate charges outside the plan.
+
+- `effortLevel` is set to `"normal"` in `~/.claude/settings.json` — do **not**
+  change it to `"max"` (that enables Opus which costs more tokens).
+- If a task seems to require `effortLevel: max`, ask the user before changing
+  it.
+- Studio uses **Google OAuth → Code Assist API (free tier)** for all Gemini
+  calls — no Gemini API key is required or expected in normal use. A Gemini API
+  key in Settings is optional and only used as a fallback for image attachments.
+
 ## Pre-commit hook
 
 `scripts/pre-commit.js` runs automatically on every commit (Husky). It stashes,
