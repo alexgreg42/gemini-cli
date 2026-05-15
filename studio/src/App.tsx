@@ -294,6 +294,9 @@ const App: React.FC = () => {
   // Model selector
   const [modelOpen, setModelOpen] = useState(false);
   const modelRef = useRef<HTMLDivElement>(null);
+  const repoRef = useRef<HTMLDivElement>(null);
+  const [repoDropdownOpen, setRepoDropdownOpen] = useState(false);
+  const [repoDropdownSearch, setRepoDropdownSearch] = useState('');
 
   // File upload
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
@@ -357,6 +360,9 @@ const App: React.FC = () => {
     const handler = (e: MouseEvent) => {
       if (modelRef.current && !modelRef.current.contains(e.target as Node)) {
         setModelOpen(false);
+      }
+      if (repoRef.current && !repoRef.current.contains(e.target as Node)) {
+        setRepoDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -433,7 +439,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (githubToken && repos.length === 0)
-      React.startTransition(() => { loadRepos(githubToken); });
+      React.startTransition(() => {
+        loadRepos(githubToken);
+      });
   }, [githubToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -1080,9 +1088,118 @@ const App: React.FC = () => {
                     : 'Non authentifié — ouvrez les Paramètres'
               }
             />
+
+            {/* ── Repo picker dropdown ── */}
+            {githubToken && repos.length > 0 && (
+              <div className="repo-selector" ref={repoRef}>
+                <button
+                  className="repo-trigger"
+                  onClick={() => setRepoDropdownOpen((o) => !o)}
+                  title={
+                    selectedRepo
+                      ? selectedRepo.full_name
+                      : 'Sélectionner un dépôt'
+                  }
+                >
+                  <GitBranch
+                    size={14}
+                    color={selectedRepo ? '#10b981' : 'var(--text-secondary)'}
+                  />
+                  <span className="repo-trigger-name">
+                    {selectedRepo ? selectedRepo.name : 'Dépôt'}
+                  </span>
+                  <ChevronDown
+                    size={12}
+                    className={repoDropdownOpen ? 'rotated' : ''}
+                  />
+                </button>
+                <AnimatePresence>
+                  {repoDropdownOpen && (
+                    <motion.div
+                      className="repo-picker-dropdown"
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <div className="repo-picker-header">
+                        <span className="repo-picker-title">REPOSITORIES</span>
+                      </div>
+                      <input
+                        className="repo-picker-search"
+                        placeholder="Rechercher…"
+                        value={repoDropdownSearch}
+                        onChange={(e) => setRepoDropdownSearch(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="repo-picker-count">
+                        <CheckCircle size={12} color="#10b981" />
+                        {repos.length} repositories trouvés.
+                      </div>
+                      <div className="repo-picker-list">
+                        {repos
+                          .filter(
+                            (r) =>
+                              !repoDropdownSearch ||
+                              r.full_name
+                                .toLowerCase()
+                                .includes(repoDropdownSearch.toLowerCase()),
+                          )
+                          .map((repo) => (
+                            <button
+                              key={repo.id}
+                              className={`repo-picker-item${selectedRepo?.id === repo.id ? ' selected' : ''}`}
+                              onClick={() => {
+                                setSelectedRepo(repo);
+                                setRepoDropdownOpen(false);
+                                setRepoDropdownSearch('');
+                                setRightTab('github');
+                              }}
+                            >
+                              {repo.private ? (
+                                <Lock size={11} color="#f59e0b" />
+                              ) : (
+                                <Globe
+                                  size={11}
+                                  color="var(--text-secondary)"
+                                />
+                              )}
+                              <span>{repo.full_name}</span>
+                            </button>
+                          ))}
+                      </div>
+                      <div className="repo-picker-footer">
+                        <button
+                          className="repo-picker-github-btn"
+                          onClick={() => {
+                            setRepoDropdownOpen(false);
+                            setRightTab('github');
+                          }}
+                        >
+                          <GitBranch size={13} /> GitHub
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {selectedRepo && (
+              <button
+                className="push-header-btn"
+                onClick={() => {
+                  setRightTab('github');
+                  setShowCommit(true);
+                }}
+                title={`Git Push → ${selectedRepo.full_name}`}
+              >
+                <Upload size={14} />
+                <span>Push</span>
+              </button>
+            )}
             {sessionTokens.totalTokens > 0 && (
               <div
                 className="token-counter"
@@ -2253,6 +2370,30 @@ const App: React.FC = () => {
         /* ── Active project card ── */
         .active-project-card { margin: 12px 8px 0; background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.25); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
         .active-project-name { display: flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; color: var(--text-primary); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+        /* ── Repo picker dropdown (header) ── */
+        .repo-selector { position: relative; }
+        .repo-trigger { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.05); border: 1px solid var(--glass-border); border-radius: 8px; padding: 5px 10px; color: var(--text-primary); cursor: pointer; font-size: .82rem; font-family: inherit; transition: all .2s; max-width: 160px; }
+        .repo-trigger:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); }
+        .repo-trigger-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
+        .repo-picker-dropdown { position: absolute; top: calc(100% + 8px); left: 0; background: var(--bg-secondary); border: 1px solid var(--glass-border); border-radius: 12px; min-width: 280px; z-index: 300; box-shadow: 0 20px 48px rgba(0,0,0,.6); overflow: hidden; }
+        .repo-picker-header { padding: 12px 14px 6px; }
+        .repo-picker-title { font-size: .68rem; font-weight: 700; letter-spacing: .08em; color: var(--text-secondary); text-transform: uppercase; }
+        .repo-picker-search { display: block; width: 100%; background: rgba(255,255,255,.05); border: none; border-bottom: 1px solid var(--glass-border); padding: 8px 14px; color: var(--text-primary); font-size: .82rem; font-family: inherit; outline: none; }
+        .repo-picker-search:focus { background: rgba(255,255,255,.07); }
+        .repo-picker-count { display: flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: .75rem; color: var(--text-secondary); border-bottom: 1px solid var(--glass-border); }
+        .repo-picker-list { max-height: 260px; overflow-y: auto; padding: 4px; }
+        .repo-picker-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 7px; background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: .82rem; font-family: inherit; text-align: left; transition: background .12s; }
+        .repo-picker-item:hover { background: rgba(255,255,255,.06); }
+        .repo-picker-item.selected { background: rgba(59,130,246,.12); color: var(--accent-blue); }
+        .repo-picker-item span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .repo-picker-footer { padding: 8px; border-top: 1px solid var(--glass-border); }
+        .repo-picker-github-btn { display: flex; align-items: center; gap: 6px; width: 100%; padding: 7px 10px; border-radius: 7px; background: rgba(255,255,255,.04); border: 1px solid var(--glass-border); color: var(--text-secondary); cursor: pointer; font-size: .8rem; font-family: inherit; transition: all .2s; }
+        .repo-picker-github-btn:hover { color: var(--text-primary); background: rgba(255,255,255,.08); }
+
+        /* ── Push button (header) ── */
+        .push-header-btn { display: flex; align-items: center; gap: 6px; background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3); border-radius: 8px; padding: 5px 12px; color: #10b981; cursor: pointer; font-size: .82rem; font-family: inherit; font-weight: 600; transition: all .2s; white-space: nowrap; }
+        .push-header-btn:hover { background: rgba(16,185,129,.22); transform: translateY(-1px); }
       `,
         }}
       />
