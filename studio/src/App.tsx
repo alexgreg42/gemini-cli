@@ -370,17 +370,6 @@ const App: React.FC = () => {
     });
   }, []);
 
-  useEffect(() => {
-    if (githubToken && repos.length === 0) loadRepos(githubToken);
-  }, [githubToken]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (selectedRepo && githubToken) {
-      loadTreePath(selectedRepo.full_name, '');
-      setExpandedDirs(new Set());
-    }
-  }, [selectedRepo]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Cleanup CLI listener on component unmount
   useEffect(
     () => () => {
@@ -396,7 +385,7 @@ const App: React.FC = () => {
       .find((m) => m.role === 'model');
     if (last) {
       const html = extractHtml(last.content);
-      if (html) setPreviewHtml(html);
+      if (html) React.startTransition(() => setPreviewHtml(html));
     }
   }, [session.messages]);
 
@@ -441,6 +430,20 @@ const App: React.FC = () => {
     },
     [treeCache, githubToken],
   );
+
+  useEffect(() => {
+    if (githubToken && repos.length === 0)
+      React.startTransition(() => { loadRepos(githubToken); });
+  }, [githubToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (selectedRepo && githubToken) {
+      React.startTransition(() => {
+        loadTreePath(selectedRepo.full_name, '');
+        setExpandedDirs(new Set());
+      });
+    }
+  }, [selectedRepo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConnectGitHub = () => {
     const t = tokenInput.trim();
